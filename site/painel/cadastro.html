@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar cadastro — Phygital Brasil</title>
+<meta name="description" content="Crie sua conta na Phygital Brasil para inscrever times, acompanhar a triagem das inscrições e abrir chamados. Cadastro em três etapas: dados, confirmação de e-mail e pronto.">
+<meta name="theme-color" content="#0E1113">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes desta página — compostos sobre o design system */
+  .auth__caixa { width: min(520px, 100%); }
+
+  /* .campo__erro { display:flex } vence o atributo [hidden]: mantém o erro oculto até a validação */
+  .campo__erro[hidden] { display: none; }
+  /* .campo label vence .check na especificidade — devolve o alinhamento do checkbox */
+  .campo label.check { display: flex; font-family: var(--fonte-texto); font-weight: 400; margin-bottom: 0; }
+
+  /* Campo de senha com botão de exibição */
+  .campo-senha { position: relative; }
+  .campo-senha input { padding-right: 56px; }
+  .ver-senha {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 46px; height: 46px; display: grid; place-items: center;
+    background: none; border: 0; border-radius: var(--r-2);
+    color: var(--cinza); cursor: pointer;
+  }
+  .ver-senha:hover { color: var(--texto); background: rgba(14,17,19,.05); }
+  .ver-senha svg { width: 20px; height: 20px; }
+  .ver-senha .olho-off { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-on { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-off { display: block; }
+
+  /* Resumo dos termos */
+  .termos { border: 1px solid var(--linha-clara); border-radius: var(--r-3); background: var(--branco); margin-bottom: var(--e-4); }
+  .termos summary {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--e-3);
+    min-height: 48px; padding: 10px var(--e-3);
+    font-family: var(--fonte-display); font-size: var(--t-peq); font-weight: 600;
+    cursor: pointer; list-style: none;
+  }
+  .termos summary::-webkit-details-marker { display: none; }
+  .termos summary::after { content: "+"; font-size: 1.25rem; line-height: 1; color: var(--verde); }
+  .termos[open] summary::after { content: "–"; }
+  .termos[open] summary { border-bottom: 1px solid var(--linha-clara); }
+  .termos__corpo { padding: var(--e-3); font-size: var(--t-micro); color: var(--texto-suave); }
+  .termos__corpo ul { padding-left: 1.1em; margin-bottom: 0; }
+  .termos__corpo li { margin-bottom: 6px; }
+
+  .auth__lateral .auth__rodape-lateral { font-size: var(--t-micro); color: rgba(255,255,255,.6); line-height: 1.7; }
+  .auth__lateral .auth__rodape-lateral a { color: var(--amarelo); font-weight: 600; }
+  .auth__lateral .auth__rodape-lateral a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<main class="auth" id="conteudo">
+
+  <!-- ==================== LATERAL DE MARCA ==================== -->
+  <aside class="auth__lateral">
+    <a href="../index.html" aria-label="Phygital Brasil — página inicial">
+      <img class="logo" src="../assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+    </a>
+
+    <p class="auth__frase">Uma conta, <span>todos os campeonatos</span> da temporada</p>
+
+    <div class="auth__rodape-lateral">
+      <p>
+        A conta é do responsável — a mesma pessoa cadastra o time, o elenco e a comissão técnica,
+        e recebe por e-mail cada mudança de lista.
+      </p>
+      <p><a href="../index.html">Voltar ao site</a> · <a href="../inscricoes.html">Ver inscrições abertas</a></p>
+    </div>
+  </aside>
+
+  <!-- ==================== PAINEL DO FORMULÁRIO ==================== -->
+  <div class="auth__painel">
+    <div class="auth__caixa">
+
+      <div class="passos" role="list" aria-label="Etapas do cadastro">
+        <span class="passo passo--ativo" role="listitem" aria-current="step">
+          <span class="passo__num"><span>1</span></span> Dados
+        </span>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <span class="passo" role="listitem">
+          <span class="passo__num"><span>2</span></span> Confirmação de e-mail
+        </span>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <span class="passo" role="listitem">
+          <span class="passo__num"><span>3</span></span> Pronto
+        </span>
+      </div>
+
+      <h1>Criar cadastro</h1>
+      <p>
+        Leva menos de dois minutos. Depois de confirmar o e-mail você já pode montar times
+        e inscrever em qualquer campeonato com inscrições abertas.
+      </p>
+
+      <form data-validar data-demo="Cadastro registrado (protótipo). Enviamos o código de confirmação." data-ir-para="verificar-email.html">
+
+        <div class="campo">
+          <label for="nome">Nome do usuário<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <input type="text" id="nome" name="nome" autocomplete="name" placeholder="Nome e sobrenome" required>
+          <p class="campo__ajuda">Use o nome do responsável pela conta — é ele que assina as inscrições.</p>
+          <p class="campo__erro" hidden>Informe o nome do responsável pela conta.</p>
+        </div>
+
+        <div class="campo">
+          <label for="email">E-mail<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="voce@email.com.br" required>
+          <p class="campo__ajuda">Todo aviso do sistema — protocolo, triagem, lista oficial e lista de espera — chega neste endereço.</p>
+          <p class="campo__erro" hidden>Informe um e-mail válido.</p>
+        </div>
+
+        <div class="campo">
+          <label for="telefone">Telefone<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <input type="tel" id="telefone" name="telefone" autocomplete="tel" placeholder="(11) 98877-6655" data-mascara="telefone" required>
+          <p class="campo__ajuda">Com DDD. Usamos só para contato da organização em dia de competição.</p>
+          <p class="campo__erro" hidden>Informe um telefone com DDD.</p>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Criar senha<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <div class="campo-senha">
+            <input type="password" id="senha" name="senha" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" data-senha required>
+            <button type="button" class="ver-senha" data-ver-senha="senha" aria-pressed="false" aria-label="Mostrar senha">
+              <svg class="olho-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="olho-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
+          <p class="campo__ajuda">Pelo menos 8 caracteres. Evite repetir a senha de outros serviços.</p>
+          <p class="campo__erro" hidden>Crie uma senha com pelo menos 8 caracteres.</p>
+        </div>
+
+        <div class="campo">
+          <label for="senha2">Repetir senha<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <div class="campo-senha">
+            <input type="password" id="senha2" name="senha2" autocomplete="new-password" placeholder="Digite a senha novamente" data-senha-confirma required>
+            <button type="button" class="ver-senha" data-ver-senha="senha2" aria-pressed="false" aria-label="Mostrar senha repetida">
+              <svg class="olho-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="olho-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
+          <p class="campo__erro" hidden>As senhas não conferem.</p>
+        </div>
+
+        <details class="termos" id="termos">
+          <summary>O que você está aceitando</summary>
+          <div class="termos__corpo">
+            <ul>
+              <li>Os dados de atletas e comissão técnica são usados para validar elenco, emitir súmula e divulgar resultados.</li>
+              <li>A inscrição enviada entra na <strong>Lista de Inscritos (triagem)</strong>: ela confirma o recebimento, mas não garante vaga.</li>
+              <li>A organização move cada inscrição para a <strong>Lista Oficial</strong> ou para a <strong>Lista de Espera</strong>, e avisa por e-mail a cada mudança.</li>
+              <li>Você pode editar os dados livremente até a data de encerramento das inscrições; depois disso, só por chamado.</li>
+              <li>Você pode pedir a exclusão da conta a qualquer momento pelo e-mail de contato da federação.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div class="campo">
+          <label class="check" for="aceite">
+            <input type="checkbox" id="aceite" name="aceite" required>
+            <span>Li e aceito os termos de uso e a política de privacidade da Phygital Brasil.</span>
+          </label>
+          <p class="campo__ajuda">O resumo está no bloco <strong>“O que você está aceitando”</strong>, logo acima.</p>
+          <p class="campo__erro" hidden>É necessário aceitar os termos para criar a conta.</p>
+        </div>
+
+        <button class="btn btn--primario btn--bloco" type="submit">Criar conta</button>
+
+      </form>
+
+      <p class="auth__rodape">
+        Já tem cadastro? <a href="login.html">Entrar no painel</a>
+      </p>
+
+      <p class="txt-micro txt-suave txt-centro mt-3">
+        Protótipo sem cadastro real: nenhum dado digitado aqui é enviado ou armazenado em servidor.
+      </p>
+
+    </div>
+  </div>
+
+</main>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+
+</body>
+</html>

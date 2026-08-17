@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Visão geral da operação Phygital Brasil: campeonatos com inscrições abertas, ocupação das vagas, chamados em aberto e atividade recente do sistema.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes locais desta tela — compõem os componentes já existentes */
+
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+
+  /* ---- Grade de dois blocos (chamados + atividade) ---- */
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+
+  /* ---- Linha de campeonato aberto ---- */
+  .camp-adm { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: var(--e-4); padding: var(--e-4); border-bottom: 1px solid var(--linha-clara); }
+  .camp-adm:last-child { border-bottom: 0; }
+  .camp-adm__midia { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r-2); overflow: hidden; background: var(--grafite-80); }
+  .camp-adm__midia img { width: 100%; height: 100%; object-fit: cover; }
+  .camp-adm__mod {
+    position: absolute; left: 0; bottom: 0;
+    background: var(--grafite); color: #fff;
+    font-family: var(--fonte-display); font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px;
+  }
+  .camp-adm__titulo { font-size: 1.125rem; margin-bottom: 6px; }
+  .camp-adm__meta { display: flex; flex-wrap: wrap; gap: 6px var(--e-3); font-size: var(--t-micro); color: var(--texto-suave); margin-bottom: var(--e-3); }
+  .camp-adm__meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .camp-adm__meta svg { width: 14px; height: 14px; flex: none; }
+
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); gap: var(--e-2); margin-bottom: var(--e-3); }
+  .numeros > div { background: var(--claro); border-radius: var(--r-2); padding: 8px var(--e-2); }
+  .numeros strong { display: block; font-family: var(--fonte-display); font-size: 1.25rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .numeros span { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); }
+
+  .ocupacao { margin-bottom: var(--e-3); }
+  .ocupacao__topo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--e-3); font-size: var(--t-micro); color: var(--texto-suave); margin-bottom: 6px; }
+  .acoes-linha { display: flex; flex-wrap: wrap; gap: var(--e-2); }
+
+  @media (max-width: 720px) { .camp-adm { grid-template-columns: 1fr; padding: var(--e-3); } }
+
+  /* ---- Linha do tempo da atividade ---- */
+  .linha-tempo { list-style: none; margin: 0; padding: 0; }
+  .linha-tempo li { position: relative; padding: 0 0 var(--e-4) var(--e-5); }
+  .linha-tempo li::before { content: ""; position: absolute; left: 7px; top: 22px; bottom: 0; width: 2px; background: var(--linha-clara); }
+  .linha-tempo li:last-child { padding-bottom: 0; }
+  .linha-tempo li:last-child::before { display: none; }
+  .linha-tempo__ponto { position: absolute; left: 0; top: 5px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--verde); background: var(--branco); }
+  .linha-tempo__ponto--amarelo { border-color: var(--ambar); }
+  .linha-tempo__ponto--azul { border-color: var(--azul); }
+  .linha-tempo__ponto--cinza { border-color: var(--cinza-40); }
+  .linha-tempo__titulo { font-family: var(--fonte-display); font-weight: 700; font-size: .9375rem; line-height: 1.3; }
+  .linha-tempo__texto { font-size: var(--t-peq); color: var(--texto); line-height: 1.5; }
+  .linha-tempo__meta { font-size: var(--t-micro); color: var(--texto-suave); margin-top: 2px; }
+
+  /* Chamados: quebra o assunto em vez de vazar */
+  .lista-linhas .chamado-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
+  .lista-linhas .chamado__assunto { display: block; line-height: 1.35; }
+  .lista-linhas .chamado__meta { display: block; overflow-wrap: anywhere; }
+  .lista-linhas .chamado__protocolo { padding-top: 2px; }
+  @media (max-width: 620px) {
+    .lista-linhas .chamado-item { grid-template-columns: minmax(0, 1fr); }
+    .lista-linhas .chamado-item > * { grid-column: 1; justify-self: start; }
+  }
+
+  @media (max-width: 640px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="index.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Dashboard</h1>
+        <p class="sub" id="sub-topo">Temporada 2026 · visão geral da operação</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a>
+        <a class="btn btn--primario btn--pequeno" href="campeonato-novo.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Criar Novo Campeonato
+        </a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- ---------- NÚMEROS DA OPERAÇÃO ---------- -->
+      <section aria-labelledby="titulo-numeros">
+        <h2 id="titulo-numeros" class="sr-only">Números da operação</h2>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <!-- ---------- CAMPEONATOS ABERTOS ---------- -->
+      <section class="bloco" aria-labelledby="titulo-abertos">
+        <div class="bloco__topo">
+          <h2 id="titulo-abertos">Campeonatos abertos no momento</h2>
+          <a class="link-seta" href="campeonatos.html">Gerenciar todos</a>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat" id="lista-abertos"></div>
+      </section>
+
+      <!-- ---------- CHAMADOS + ATIVIDADE ---------- -->
+      <div class="painel-grade">
+
+        <section class="bloco lista-linhas" aria-labelledby="titulo-chamados">
+          <div class="bloco__topo">
+            <h2 id="titulo-chamados">Chamados recentes</h2>
+            <a class="link-seta" href="chamados.html">Ver todos</a>
+          </div>
+          <div class="bloco__corpo bloco__corpo--flat" id="lista-chamados"></div>
+        </section>
+
+        <section class="bloco" aria-labelledby="titulo-atividade">
+          <div class="bloco__topo">
+            <h2 id="titulo-atividade">Atividade recente</h2>
+            <span class="txt-micro txt-suave">Últimos 5 dias</span>
+          </div>
+          <div class="bloco__corpo">
+            <ol class="linha-tempo">
+              <li>
+                <span class="linha-tempo__ponto" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">Nova inscrição recebida</p>
+                <p class="linha-tempo__texto">Alpha Squad BR enviou o elenco para o Phygital Shooter Open — protocolo <span class="mono-num">2026-000512</span>. A inscrição entrou na <strong>lista de inscritos (triagem)</strong> e aguarda decisão da organização.</p>
+                <p class="linha-tempo__meta">Hoje, 09:14 · e-mail de confirmação com protocolo disparado ao responsável</p>
+              </li>
+              <li>
+                <span class="linha-tempo__ponto linha-tempo__ponto--amarelo" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">Chamado aberto</p>
+                <p class="linha-tempo__texto">Protocolo <span class="mono-num">2026-000121</span> · “Solicitação de cancelamento de inscrição”, aberto por Litoral Gaming no Shooter Open 2026.</p>
+                <p class="linha-tempo__meta">Hoje, 08:05 · aguardando primeira resposta da operação</p>
+              </li>
+              <li>
+                <span class="linha-tempo__ponto" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">Time movido para a lista oficial</p>
+                <p class="linha-tempo__texto">Cangaço 3x3 saiu da triagem e ocupou vaga no Circuito Phygital Basquete 3x3. O e-mail automático de mudança de status foi enviado ao responsável do time.</p>
+                <p class="linha-tempo__meta">Ontem, 16:40 · Carlos Eduardo Pinto (Operação)</p>
+              </li>
+              <li>
+                <span class="linha-tempo__ponto linha-tempo__ponto--azul" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">E-mail disparado</p>
+                <p class="linha-tempo__texto">“Atualização do regulamento — Shooter Open” enviado para 14 destinatários pelo SMTP único (<span class="mono-num">smtp.phygitalgamesbr.com.br</span>). Nenhuma falha de entrega registrada.</p>
+                <p class="linha-tempo__meta">12/08/2026, 11:02 · Ana Beatriz Lopes (Gestor de Campeonato)</p>
+              </li>
+              <li>
+                <span class="linha-tempo__ponto linha-tempo__ponto--amarelo" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">Time movido para a lista de espera</p>
+                <p class="linha-tempo__texto">Guarani Byte passou para a lista de espera da Copa Phygital Futebol 2026. Entra automaticamente na fila caso um time da lista oficial desista.</p>
+                <p class="linha-tempo__meta">11/08/2026, 10:22 · Carlos Eduardo Pinto (Operação)</p>
+              </li>
+              <li>
+                <span class="linha-tempo__ponto linha-tempo__ponto--cinza" aria-hidden="true"></span>
+                <p class="linha-tempo__titulo">Banner publicado</p>
+                <p class="linha-tempo__texto">“Shooter Open — Temporada 2026” entrou na 3ª posição do carrossel — o mesmo banner aparece na tela inicial do site e no Painel do Competidor.</p>
+                <p class="linha-tempo__meta">10/08/2026, 15:48 · Inscrições Phygital (Master)</p>
+              </li>
+            </ol>
+            <p class="txt-micro txt-suave mt-4" style="margin-bottom:0">
+              Cada mudança de lista dispara um e-mail automático pelo SMTP configurado em
+              <a href="email.html" style="color:var(--verde);font-weight:600">Disparo de E-mail → Configurações</a>.
+            </p>
+          </div>
+        </section>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/exportar.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   ADMIN — DASHBOARD
+   Roda durante o parse: tudo que este script cria já existe quando o
+   phygital.js liga o revelar, os modais e as confirmações.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Os caminhos de imagem vêm da raiz do site; aqui estamos em /admin/ */
+  function img(p) { return /^assets\//.test(String(p)) ? '../' + p : String(p || ''); }
+  function plural(n, um, muitos) { return n + ' ' + (n === 1 ? um : muitos); }
+
+  var met = D.metricas();
+  var abertos = D.inscricoesAbertas();
+  var chamados = D.adminChamados('abertos');
+  var todos = D.campeonatos();
+
+  /* Triagem = inscritos que ainda não foram movidos para oficial nem para espera */
+  var triagem = Math.max(0, met.inscritos - met.oficial - met.espera);
+  var aguardando = chamados.filter(function (c) { return c.status === 'aberto'; }).length;
+
+  document.getElementById('sub-topo').textContent =
+    'Temporada 2026 · ' + plural(abertos.length, 'campeonato com inscrições abertas', 'campeonatos com inscrições abertas') +
+    ' · ' + plural(triagem, 'inscrição em triagem', 'inscrições em triagem');
+
+  /* Contador do menu lateral sempre igual ao número real de chamados em aberto */
+  document.querySelectorAll('[data-conta-chamados]').forEach(function (el) {
+    el.textContent = met.chamadosAbertos;
+  });
+
+  /* ---- Cartões de estatística ---- */
+  function renderStats() {
+    var vagasAbertas = abertos.reduce(function (t, c) { return t + (c.vagas || 0); }, 0);
+    var oficialAbertos = abertos.reduce(function (t, c) { return t + (c.oficial || 0); }, 0);
+
+    var cartoes = [
+      { classe: 'stat--verde', rotulo: 'Campeonatos abertos', valor: met.campeonatosAbertos,
+        nota: 'de ' + todos.length + ' no calendário · ' + vagasAbertas + ' vagas em disputa' },
+      { classe: 'stat--azul', rotulo: 'Inscrições recebidas', valor: met.inscritos,
+        nota: triagem ? triagem + ' ainda em triagem, aguardando decisão' : 'nenhuma inscrição em triagem' },
+      { classe: 'stat--verde', rotulo: 'Times na lista oficial', valor: met.oficial,
+        nota: oficialAbertos + ' deles nos campeonatos abertos' },
+      { classe: 'stat--amarela', rotulo: 'Times na lista de espera', valor: met.espera,
+        nota: met.espera ? 'entram na fila se houver desistência' : 'nenhum time aguardando vaga' },
+      { classe: 'stat--cinza', rotulo: 'Chamados abertos', valor: met.chamadosAbertos,
+        nota: aguardando ? aguardando + ' sem nenhuma resposta ainda' : 'todos já respondidos' }
+    ];
+
+    document.getElementById('stats').innerHTML = cartoes.map(function (c, i) {
+      return '' +
+      '<div class="stat ' + c.classe + ' revelar" data-atraso="' + (i * 60) + '">' +
+        '<div class="stat__rotulo">' + esc(c.rotulo) + '</div>' +
+        '<div class="stat__valor num">' + esc(c.valor) + '</div>' +
+        '<div class="stat__nota">' + esc(c.nota) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---- Campeonatos com inscrições abertas ---- */
+  var ICO = {
+    calendario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    local: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    relogio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
+
+  function renderAbertos() {
+    var caixa = document.getElementById('lista-abertos');
+
+    if (!abertos.length) {
+      caixa.innerHTML = '' +
+        '<div class="vazio" style="border:0">' +
+          '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>' +
+          '<h3 style="font-size:1.125rem">Nenhum campeonato com inscrições abertas</h3>' +
+          '<p>Enquanto nenhum campeonato estiver publicado com inscrições abertas, a seção de inscrições também não aparece na home do site.</p>' +
+          '<a class="btn btn--primario" href="campeonato-novo.html">Criar Novo Campeonato</a>' +
+        '</div>';
+      return;
+    }
+
+    caixa.innerHTML = abertos.map(function (c, i) {
+      var m = D.modalidade(c.modalidade);
+      var tri = Math.max(0, (c.inscritos || 0) - (c.oficial || 0) - (c.espera || 0));
+      var pct = c.vagas ? Math.min(100, Math.round((c.oficial || 0) / c.vagas * 100)) : 0;
+      var dias = F.diasAte(c.encerramentoInscricoes);
+      var urgente = dias >= 0 && dias <= 10;
+
+      return '' +
+      '<article class="camp-adm revelar" data-atraso="' + (i * 70) + '">' +
+        '<div class="camp-adm__midia">' +
+          '<img src="' + esc(img(c.banner)) + '" alt="Banner do campeonato ' + esc(c.nome) + '">' +
+          '<span class="camp-adm__mod">' + esc(m.curto) + '</span>' +
+        '</div>' +
+        '<div>' +
+          '<div class="flex-entre envolve" style="align-items:flex-start;margin-bottom:6px">' +
+            '<h3 class="camp-adm__titulo" style="margin-bottom:0">' + esc(c.nome) + '</h3>' +
+            '<span class="tag ' + (urgente ? 'tag--amarela' : 'tag--verde') + '">' +
+              (dias > 0 ? 'Encerra em ' + plural(dias, 'dia', 'dias') : dias === 0 ? 'Encerra hoje' : 'Prazo vencido') +
+            '</span>' +
+          '</div>' +
+          '<div class="camp-adm__meta">' +
+            '<span>' + ICO.calendario + 'Disputa ' + esc(F.periodo(c.data, c.dataFim)) + '</span>' +
+            '<span>' + ICO.local + esc(c.local) + '</span>' +
+            '<span>' + ICO.relogio + 'Inscrições de ' + esc(F.data(c.aberturaInscricoes)) + ' a ' + esc(F.data(c.encerramentoInscricoes)) + '</span>' +
+          '</div>' +
+
+          '<div class="numeros">' +
+            '<div><strong>' + esc(c.inscritos) + '</strong><span>Inscritos</span></div>' +
+            '<div><strong>' + esc(c.oficial) + '</strong><span>Lista oficial</span></div>' +
+            '<div><strong>' + esc(c.espera) + '</strong><span>Lista de espera</span></div>' +
+            '<div><strong>' + esc(tri) + '</strong><span>Em triagem</span></div>' +
+          '</div>' +
+
+          '<div class="ocupacao">' +
+            '<div class="ocupacao__topo">' +
+              '<span>Ocupação das vagas oficiais</span>' +
+              '<span><strong class="mono-num">' + esc(c.oficial) + '</strong> de ' + esc(c.vagas) + ' · ' + pct + '%</span>' +
+            '</div>' +
+            '<div class="vagas">' +
+              '<div class="vagas__barra">' +
+                '<i class="' + (pct >= 100 ? '' : 'incompleto') + '" style="width:' + pct + '%"></i>' +
+              '</div>' +
+              '<span class="txt-micro txt-suave">' +
+                (pct >= 100 ? 'lotado · só entra pela lista de espera' : (c.vagas - c.oficial) + ' vagas livres') +
+              '</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="acoes-linha">' +
+            '<a class="btn btn--primario btn--pequeno" href="campeonato-gerenciar.html?id=' + esc(c.id) + '">Gerenciar</a>' +
+            '<a class="btn btn--contorno btn--pequeno" href="campeonato-editar.html?id=' + esc(c.id) + '">Editar informações</a>' +
+            '<button class="btn btn--fantasma btn--pequeno" type="button" data-exportar="' + esc(c.id) + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>' +
+              'Exportar informações' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---- Chamados em aberto ---- */
+  function renderChamados() {
+    var caixa = document.getElementById('lista-chamados');
+
+    if (!chamados.length) {
+      caixa.innerHTML = '' +
+        '<div class="vazio" style="border:0">' +
+          '<h3 style="font-size:1.125rem">Nenhum chamado em aberto</h3>' +
+          '<p>Todos os chamados dos competidores foram respondidos e encerrados.</p>' +
+          '<a class="btn btn--contorno btn--pequeno" href="chamados.html">Ver histórico de chamados</a>' +
+        '</div>';
+      return;
+    }
+
+    var ordenados = chamados.slice().sort(function (a, b) { return a.abertoEm < b.abertoEm ? 1 : -1; });
+
+    caixa.innerHTML = ordenados.map(function (c) {
+      var s = D.STATUS_CHAMADO[c.status] || { rotulo: c.status, classe: 'tag--cinza' };
+      var camp = D.campeonato(c.campeonato);
+      return '' +
+      '<a class="chamado-item" href="chamado.html?id=' + esc(c.id) + '">' +
+        '<span class="chamado__protocolo">' + esc(c.protocolo) + '</span>' +
+        '<span>' +
+          '<span class="chamado__assunto">' + esc(c.assunto) + '</span>' +
+          '<span class="chamado__meta">' + esc(c.time) + ' · ' + esc(camp ? camp.nome : c.campeonato) +
+            ' · aberto em ' + esc(F.data(c.abertoEm)) + '</span>' +
+        '</span>' +
+        '<span class="tag ' + esc(s.classe) + '">' + esc(s.rotulo) + '</span>' +
+      '</a>';
+    }).join('');
+  }
+
+  /* ---- Exportação (protótipo) ---- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-exportar]') : null;
+    if (!b) return;
+    var c = D.campeonato(b.getAttribute('data-exportar'));
+    PB.toast('Exportação gerada',
+      'Planilha de "' + (c ? c.nome : 'campeonato') + '" com lista de inscritos, lista oficial, lista de espera, elencos e contatos dos responsáveis.',
+      'info');
+  });
+
+  renderStats();
+  renderAbertos();
+  renderChamados();
+})();
+</script>
+
+</body>
+</html>

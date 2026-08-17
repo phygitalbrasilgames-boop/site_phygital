@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog — Phygital Brasil</title>
+<meta name="description" content="Notícias, regulamento e bastidores da Phygital Brasil: aberturas de inscrição, mudanças no regulamento, cobertura das etapas e guias para inscrever seu time sem pendência.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes exclusivos da listagem do blog — compostos sobre o design system */
+
+  /* Post em destaque: mídia e texto lado a lado */
+  .destaque { display: grid; grid-template-columns: 1.1fr 1fr; align-items: stretch; }
+  .destaque__midia { position: relative; min-height: 340px; overflow: hidden; background: var(--grafite-80); }
+  .destaque__midia img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--lento) var(--curva); }
+  .destaque:hover .destaque__midia img { transform: scale(1.04); }
+  .destaque__corpo { display: flex; flex-direction: column; justify-content: center; gap: var(--e-3); padding: var(--e-5); }
+  .destaque__titulo { font-size: clamp(1.5rem, 2.6vw, 2.25rem); margin: 0; }
+  .destaque__titulo a:hover { color: var(--verde); }
+  @media (max-width: 900px) {
+    .destaque { grid-template-columns: 1fr; }
+    .destaque__midia { min-height: 220px; aspect-ratio: 16 / 9; }
+    .destaque__corpo { padding: var(--e-4); }
+  }
+
+  /* Paginação */
+  .paginacao { display: flex; gap: var(--e-2); justify-content: center; align-items: center; flex-wrap: wrap; margin-top: var(--e-6); }
+  .paginacao a, .paginacao span {
+    display: grid; place-items: center;
+    min-width: 44px; height: 44px; padding: 0 var(--e-3);
+    border: 1.5px solid var(--cinza-20); border-radius: var(--r-2);
+    background: var(--branco);
+    font-family: var(--fonte-display); font-weight: 600; font-size: var(--t-peq);
+  }
+  .paginacao a:hover { border-color: var(--grafite); }
+  .paginacao [aria-current="page"] { background: var(--grafite); color: #fff; border-color: var(--grafite); }
+  .paginacao [aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+  /* Blocos finais: mais lidos, categorias e newsletter */
+  .blog-extras { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: var(--e-4); align-items: start; }
+  @media (max-width: 1024px) { .blog-extras { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 720px) { .blog-extras { grid-template-columns: 1fr; } }
+
+  .bloco-lista { list-style: none; padding: 0; margin: 0; }
+  .bloco-lista li { border-bottom: 1px solid var(--linha-clara); }
+  .bloco-lista li:last-child { border-bottom: 0; }
+  .lidos__item { display: flex; gap: var(--e-3); align-items: flex-start; padding: var(--e-3) 0; }
+  .lidos__item .pos { flex: none; }
+  .lidos__titulo { font-family: var(--fonte-display); font-weight: 600; font-size: .9375rem; line-height: 1.25; display: block; }
+  .lidos__item a:hover .lidos__titulo { color: var(--verde); }
+  .cats__botao {
+    display: flex; width: 100%; align-items: center; justify-content: space-between; gap: var(--e-3);
+    min-height: 46px; padding: 10px 0;
+    background: none; border: 0; cursor: pointer;
+    font-family: var(--fonte-display); font-weight: 600; font-size: .9375rem; color: var(--texto); text-align: left;
+  }
+  .cats__botao:hover { color: var(--verde); }
+
+  /* Toast (o CSS do componente vive em painel.css, não carregado no site público) */
+  .toasts { position: fixed; bottom: var(--e-4); right: var(--e-4); z-index: 200; display: grid; gap: var(--e-2); max-width: calc(100vw - 2 * var(--e-4)); }
+  .toast {
+    display: flex; align-items: flex-start; gap: var(--e-3);
+    min-width: 280px; max-width: 400px; padding: var(--e-3) var(--e-4);
+    background: var(--grafite); color: #fff; border-radius: var(--r-3);
+    box-shadow: var(--sombra-3); font-size: var(--t-peq);
+  }
+  .toast::before { content: ""; width: 4px; align-self: stretch; border-radius: var(--r-pill); background: var(--verde); flex: none; }
+  .toast--info::before { background: var(--azul-claro); }
+  .toast strong { font-family: var(--fonte-display); display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="blog.html" aria-current="page">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container">
+      <div class="pagina-topo__conteudo">
+        <nav class="trilha" aria-label="Você está em">
+          <a href="index.html">Home</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">Blog</span>
+        </nav>
+        <p class="eyebrow">Conteúdo oficial</p>
+        <h1>Notícias, regulamento e bastidores</h1>
+        <p>
+          Tudo o que sai da arena e da mesa de organização: abertura de inscrições, mudanças no
+          regulamento, cobertura das etapas e os guias que evitam pendência na hora de inscrever o time.
+        </p>
+        <p class="txt-peq mt-3" style="color:rgba(255,255,255,.6)" id="topo-resumo"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== POST EM DESTAQUE ==================== -->
+  <section class="secao secao--branca secao--compacta">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Em destaque</p>
+          <h2>A publicação mais recente</h2>
+        </div>
+        <a class="link-seta" href="inscricoes.html">Ver inscrições abertas</a>
+      </div>
+      <div id="post-destaque"></div>
+    </div>
+  </section>
+
+  <!-- ==================== LISTAGEM ==================== -->
+  <section class="secao secao--clara" id="publicacoes">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Arquivo</p>
+          <h2>Todas as publicações</h2>
+          <p>Filtre por assunto para chegar direto ao que interessa ao seu time.</p>
+        </div>
+      </div>
+
+      <div class="filtros" data-filtros="#lista-blog" role="group" aria-label="Filtrar publicações por categoria">
+        <button class="filtro" type="button" data-valor="todos" aria-pressed="true">Todas</button>
+        <button class="filtro" type="button" data-valor="campeonatos" aria-pressed="false">Campeonatos</button>
+        <button class="filtro" type="button" data-valor="regulamento" aria-pressed="false">Regulamento</button>
+        <button class="filtro" type="button" data-valor="institucional" aria-pressed="false">Institucional</button>
+        <button class="filtro" type="button" data-valor="inscricoes" aria-pressed="false">Inscrições</button>
+        <button class="filtro" type="button" data-valor="eventos" aria-pressed="false">Eventos</button>
+      </div>
+
+      <p class="txt-peq txt-suave mb-4" id="contador-publicacoes" role="status"></p>
+
+      <div class="grade grade--3" id="lista-blog"></div>
+
+      <div class="vazio esconder mt-4" id="lista-blog-vazio">
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>
+        <h3>Nenhuma publicação nesta categoria</h3>
+        <p>Ainda não publicamos nada com esse assunto. Volte para a lista completa ou fale com a organização.</p>
+        <button class="btn btn--contorno" type="button" data-limpar-filtro>Ver todas as publicações</button>
+      </div>
+
+      <nav class="paginacao" aria-label="Paginação das publicações">
+        <span aria-disabled="true">Anterior</span>
+        <a href="blog.html" aria-current="page" aria-label="Página 1, página atual">1</a>
+        <a href="#" aria-disabled="true" tabindex="-1" aria-label="Página 2 (indisponível no protótipo)">2</a>
+        <a href="#" aria-disabled="true" tabindex="-1" aria-label="Página 3 (indisponível no protótipo)">3</a>
+        <a href="#" aria-disabled="true" tabindex="-1" aria-label="Próxima página (indisponível no protótipo)">Próxima</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ==================== MAIS LIDOS · CATEGORIAS · NEWSLETTER ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Explore</p>
+        <h2>Atalhos do blog</h2>
+      </div>
+
+      <div class="blog-extras">
+        <article class="card card--fita">
+          <div class="card__corpo">
+            <h3 class="card__titulo">Mais lidos do mês</h3>
+            <p class="txt-micro txt-suave mb-3">Leituras entre 1º e 14 de agosto de 2026.</p>
+            <ul class="bloco-lista" id="lista-lidos"></ul>
+          </div>
+        </article>
+
+        <article class="card card--fita">
+          <div class="card__corpo">
+            <h3 class="card__titulo">Categorias</h3>
+            <p class="txt-micro txt-suave mb-3">Clique para filtrar a lista de publicações.</p>
+            <ul class="bloco-lista" id="lista-categorias"></ul>
+          </div>
+        </article>
+
+        <article class="card card--fita">
+          <div class="card__corpo">
+            <h3 class="card__titulo">Receba cada abertura de inscrição</h3>
+            <p class="txt-peq txt-suave">
+              Um e-mail curto quando um campeonato abre inscrição, quando faltam poucos dias para o
+              encerramento e quando o ranking nacional é atualizado após a apuração. Sem envio diário.
+            </p>
+            <form class="mt-4" data-validar data-demo="Cadastro na lista de avisos registrado (protótipo).">
+              <div class="campo">
+                <label for="news-blog">Seu e-mail</label>
+                <input type="email" id="news-blog" name="email" placeholder="voce@email.com" autocomplete="email" required>
+                <p class="campo__erro" hidden>Informe um e-mail válido para receber os avisos.</p>
+              </div>
+              <div class="campo">
+                <label class="check" for="news-aceite">
+                  <input type="checkbox" id="news-aceite" name="aceite" required>
+                  <span>Autorizo a Phygital Brasil a enviar avisos sobre campeonatos e inscrições.</span>
+                </label>
+                <p class="campo__erro" hidden>É preciso autorizar o envio para concluir o cadastro.</p>
+              </div>
+              <button class="btn btn--primario btn--bloco" type="submit">Quero receber</button>
+            </form>
+            <p class="txt-micro txt-suave mt-3">
+              Dúvidas sobre inscrição? Abra um chamado pelo <a href="painel/chamados.html" style="color:var(--verde);font-weight:600">Painel do Competidor</a>.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   BLOG — listagem de publicações
+   Renderiza destaque, grade filtrável, mais lidos e categorias a partir
+   de PB.dados.posts().
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Slug sem acento — usado como valor de filtro (data-cat / data-valor) */
+  function slug(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[áàâã]/g, 'a').replace(/[éèê]/g, 'e').replace(/[íì]/g, 'i')
+      .replace(/[óòôõ]/g, 'o').replace(/[úùü]/g, 'u').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  /* Tempo de leitura e leituras do mês: métricas editoriais do protótipo.
+     O mesmo mapa de tempo é usado em post.html. */
+  var TEMPO = { p1: 6, p2: 5, p3: 4, p4: 4, p5: 5, p6: 4 };
+  var LEITURAS = { p1: 4820, p2: 3960, p3: 2740, p4: 1980, p5: 2150, p6: 1470 };
+
+  var todos = D.posts();
+  var destaque = todos[0];
+  var demais = todos.slice(1);
+
+  /* ---- Resumo no topo da página ---- */
+  var cats = {};
+  todos.forEach(function (p) { cats[p.cat] = (cats[p.cat] || 0) + 1; });
+  var nCats = Object.keys(cats).length;
+  document.getElementById('topo-resumo').textContent =
+    todos.length + ' publicações · ' + nCats + ' categorias · última atualização em ' + F.dataCurta(destaque.data);
+
+  /* ---- Post em destaque (layout largo) ---- */
+  document.getElementById('post-destaque').innerHTML = '' +
+    '<article class="card card--fita card--interativo destaque revelar">' +
+      '<div class="destaque__midia">' +
+        '<span class="post-card__cat">' + esc(destaque.cat) + '</span>' +
+        '<img src="' + esc(destaque.img) + '" alt="Imagem da publicação: ' + esc(destaque.titulo) + '">' +
+      '</div>' +
+      '<div class="destaque__corpo">' +
+        '<div class="post-meta">' +
+          '<span>' + esc(F.dataExtenso(destaque.data)) + '</span><span class="sep">·</span>' +
+          '<span>' + esc(destaque.autor) + '</span><span class="sep">·</span>' +
+          '<span>' + (TEMPO[destaque.id] || 5) + ' min de leitura</span>' +
+        '</div>' +
+        '<h3 class="destaque__titulo"><a href="post.html?id=' + esc(destaque.id) + '">' + esc(destaque.titulo) + '</a></h3>' +
+        '<p class="txt-suave" style="margin:0">' + esc(destaque.resumo) + '</p>' +
+        '<p style="margin:0"><a class="btn btn--primario" href="post.html?id=' + esc(destaque.id) + '">Ler publicação completa</a></p>' +
+      '</div>' +
+    '</article>';
+
+  /* ---- Grade com as demais publicações ---- */
+  document.getElementById('lista-blog').innerHTML = demais.map(function (p, i) {
+    return '' +
+    '<article class="card card--fita card--interativo revelar" data-cat="' + esc(slug(p.cat)) + '" data-atraso="' + (i * 70) + '">' +
+      '<div class="card__midia">' +
+        '<span class="post-card__cat">' + esc(p.cat) + '</span>' +
+        '<img src="' + esc(p.img) + '" alt="Imagem da publicação: ' + esc(p.titulo) + '">' +
+      '</div>' +
+      '<div class="card__corpo">' +
+        '<h3 class="post-card__titulo"><a href="post.html?id=' + esc(p.id) + '">' + esc(p.titulo) + '</a></h3>' +
+        '<p class="txt-peq txt-suave">' + esc(p.resumo) + '</p>' +
+        '<div class="post-meta mt-3">' +
+          '<span>' + esc(F.dataCurta(p.data)) + '</span><span class="sep">·</span>' +
+          '<span>' + esc(p.autor) + '</span><span class="sep">·</span>' +
+          '<span>' + (TEMPO[p.id] || 5) + ' min</span>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('');
+
+  /* ---- Contador "mostrando X de Y" (o filtro em si é do phygital.js) ---- */
+  var contador = document.getElementById('contador-publicacoes');
+
+  function atualizarContador(valor) {
+    var visiveis = valor === 'todos'
+      ? demais.length
+      : demais.filter(function (p) { return slug(p.cat) === valor; }).length;
+    var rotulo = valor === 'todos' ? '' : ' na categoria selecionada';
+    contador.textContent = 'Mostrando ' + visiveis + ' de ' + demais.length + ' publicações do arquivo' + rotulo + '.';
+  }
+  atualizarContador('todos');
+
+  var botoesFiltro = Array.prototype.slice.call(document.querySelectorAll('.filtros .filtro'));
+  botoesFiltro.forEach(function (b) {
+    b.addEventListener('click', function () { atualizarContador(b.getAttribute('data-valor')); });
+  });
+
+  function aplicarFiltro(valor) {
+    var alvo = botoesFiltro.filter(function (b) { return b.getAttribute('data-valor') === valor; })[0];
+    if (alvo) alvo.click();
+  }
+
+  var limpar = document.querySelector('[data-limpar-filtro]');
+  if (limpar) limpar.addEventListener('click', function () { aplicarFiltro('todos'); });
+
+  /* ---- Mais lidos ---- */
+  var lidos = todos.slice().sort(function (a, b) {
+    return (LEITURAS[b.id] || 0) - (LEITURAS[a.id] || 0);
+  }).slice(0, 4);
+
+  document.getElementById('lista-lidos').innerHTML = lidos.map(function (p, i) {
+    var pos = i + 1;
+    return '' +
+    '<li><a class="lidos__item" href="post.html?id=' + esc(p.id) + '">' +
+      '<span class="pos' + (pos <= 3 ? ' pos--' + pos : '') + '">' + pos + '</span>' +
+      '<span>' +
+        '<span class="lidos__titulo">' + esc(p.titulo) + '</span>' +
+        '<span class="txt-micro txt-suave">' + esc(p.cat) + ' · ' + F.numero(LEITURAS[p.id] || 0) + ' leituras</span>' +
+      '</span>' +
+    '</a></li>';
+  }).join('');
+
+  /* ---- Categorias com contagem ---- */
+  var ordemCats = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; });
+  document.getElementById('lista-categorias').innerHTML = ordemCats.map(function (nome) {
+    return '' +
+    '<li><button class="cats__botao" type="button" data-cat-filtro="' + esc(slug(nome)) + '">' +
+      '<span>' + esc(nome) + '</span>' +
+      '<span class="tag tag--verde">' + cats[nome] + '</span>' +
+    '</button></li>';
+  }).join('');
+
+  Array.prototype.slice.call(document.querySelectorAll('[data-cat-filtro]')).forEach(function (b) {
+    b.addEventListener('click', function () {
+      aplicarFiltro(b.getAttribute('data-cat-filtro'));
+      var secao = document.getElementById('publicacoes');
+      if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ---- Reobserva os elementos criados dinamicamente ---- */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

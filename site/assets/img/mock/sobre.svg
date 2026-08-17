@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="1000" height="700" role="img" aria-label="PHYGITAL">
+  <defs>
+    <linearGradient id="gs0v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#009B4A"/><stop offset="1" stop-color="#004A1B"/></linearGradient>
+    <linearGradient id="gs0a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FCE001"/><stop offset="1" stop-color="#DF9911"/></linearGradient>
+    <linearGradient id="gs0z" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D93D6"/><stop offset="1" stop-color="#0A66B1"/></linearGradient>
+    <linearGradient id="gs0f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1113" stop-opacity=".15"/><stop offset="1" stop-color="#0E1113" stop-opacity=".85"/></linearGradient>
+  </defs>
+  <rect width="1000" height="700" fill="#0E1113"/>
+  <g opacity=".55" clip-path="url(#cs0)"><rect x="520" y="-210" width="110" height="1120" fill="url(#gs0v)" opacity="0.9" transform="skewX(-14)"/>
+  <rect x="668" y="-210" width="110" height="1120" fill="url(#gs0a)" opacity="0.765" transform="skewX(-14)"/>
+  <rect x="817" y="-210" width="110" height="1120" fill="url(#gs0z)" opacity="0.9" transform="skewX(-14)"/></g>
+  <clipPath id="cs0"><rect width="1000" height="700"/></clipPath>
+  <rect width="1000" height="700" fill="url(#gs0f)" opacity=".55"/>
+  <rect x="60.0" y="458.5" width="350.0" height="4" fill="url(#gs0v)"/>
+</svg>

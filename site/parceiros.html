@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parceiros e patrocinadores — Phygital Brasil</title>
+<meta name="description" content="Patrocinadores, fornecedores, transmissão, apoio institucional e projetos sociais que constroem a Phygital Brasil. Veja as cotas de patrocínio, os números da temporada e fale com o comercial.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes exclusivos desta página — o restante vem do design system */
+
+  /* Cartão de parceiro: logo + nome + tipo */
+  .parceiros .parceiro { gap: 10px; text-align: center; align-content: center; }
+  .parceiro__nome { font-family: var(--fonte-display); font-weight: 600; font-size: var(--t-peq); margin: 0; }
+  .parceiro__tipo { font-size: var(--t-micro); color: var(--texto-suave); margin: 0; text-transform: uppercase; letter-spacing: .08em; }
+
+  /* Cartão de número */
+  .numero-card__rotulo { font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); margin: 0; }
+  .numero-card__valor { font-family: var(--fonte-display); font-size: clamp(1.75rem, 4vw, 2.25rem); font-weight: 700; line-height: 1.1; margin: 6px 0 4px; }
+  .numero-card__nota { font-size: var(--t-micro); color: var(--texto-suave); margin: 0; }
+
+  /* Lista de entregas dentro dos cards */
+  .entregas { list-style: none; padding: 0; margin: var(--e-3) 0 0; }
+  .entregas li { position: relative; padding-left: 22px; font-size: var(--t-peq); margin-bottom: 8px; }
+  .entregas li::before { content: ""; position: absolute; left: 0; top: .55em; width: 12px; height: 3px; background: var(--fita-tripla); }
+  .entregas li:last-child { margin-bottom: 0; }
+
+  /* Toast: o componente vive em painel.css, que não é carregado no site público */
+  .toasts { position: fixed; bottom: var(--e-4); right: var(--e-4); z-index: 200; display: grid; gap: var(--e-2); max-width: calc(100vw - 2 * var(--e-4)); }
+  .toast {
+    display: flex; align-items: flex-start; gap: var(--e-3);
+    min-width: 280px; max-width: 400px;
+    padding: var(--e-3) var(--e-4);
+    background: var(--grafite); color: #fff;
+    border-radius: var(--r-3);
+    box-shadow: var(--sombra-3);
+    font-size: var(--t-peq);
+  }
+  .toast::before { content: ""; width: 4px; align-self: stretch; border-radius: var(--r-pill); background: var(--verde); flex: none; }
+  .toast--info::before { background: var(--azul-claro); }
+  .toast--alerta::before { background: var(--amarelo); }
+  .toast--erro::before { background: var(--erro); }
+  .toast strong { font-family: var(--fonte-display); display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="parceiros.html" aria-current="page">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container pagina-topo__conteudo">
+      <nav class="trilha" aria-label="Trilha de navegação">
+        <a href="index.html">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Parceiros</span>
+      </nav>
+      <p class="eyebrow">Quem constrói junto</p>
+      <h1>Parceiros e patrocinadores</h1>
+      <p>
+        Nenhuma etapa phygital acontece sozinha: são marcas, fornecedores, emissoras,
+        órgãos públicos e projetos sociais dividindo arena, estrutura e transmissão.
+        Conheça quem está com a gente na temporada 2026 — e como sua empresa entra.
+      </p>
+      <p class="mt-4">
+        <a class="btn btn--destaque" href="#seja-parceiro">Quero ser parceiro</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== GRUPOS DE PARCEIROS ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Temporada 2026</p>
+        <h2>Quem está com a Phygital Brasil</h2>
+        <p>
+          Cada parceiro entra com uma função clara dentro da competição. Abaixo, a rede
+          completa organizada por tipo de participação.
+        </p>
+      </div>
+
+      <!-- Grupos renderizados a partir de PB.dados.parceiros() -->
+      <div id="grupos-parceiros"></div>
+    </div>
+  </section>
+
+  <!-- ==================== SEJA UM PARCEIRO ==================== -->
+  <section class="secao secao--clara" id="seja-parceiro">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Seja um parceiro</p>
+        <h2>Sua marca entre o console e a quadra</h2>
+        <p>
+          O público phygital assiste e joga. Ele passa a etapa inteira dentro da arena —
+          e o restante da semana acompanhando a mesma disputa no digital. É esse trânsito
+          entre os dois mundos que sua marca patrocina.
+        </p>
+      </div>
+
+      <div class="grade grade--4 mb-6">
+        <article class="card revelar">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="numero-card__rotulo">Atletas ativos</p>
+            <p class="numero-card__valor num"><span data-contar="1240">0</span></p>
+            <p class="numero-card__nota">Competidores registrados nas quatro modalidades.</p>
+          </div>
+        </article>
+
+        <article class="card revelar" data-atraso="80">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="numero-card__rotulo">Alcance nacional</p>
+            <p class="numero-card__valor num"><span data-contar="17">0</span> estados</p>
+            <p class="numero-card__nota">Times registrados das seletivas regionais à final.</p>
+          </div>
+        </article>
+
+        <article class="card revelar" data-atraso="160">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="numero-card__rotulo">Transmissões</p>
+            <p class="numero-card__valor num"><span data-contar="1200000">0</span></p>
+            <p class="numero-card__nota">Visualizações somadas em YouTube e Twitch na temporada 2025.</p>
+          </div>
+        </article>
+
+        <article class="card revelar" data-atraso="240">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="numero-card__rotulo">Etapas presenciais</p>
+            <p class="numero-card__valor num"><span data-contar="6">0</span> em 2026</p>
+            <p class="numero-card__nota">Arenas em ginásio, praça pública e shopping center.</p>
+          </div>
+        </article>
+      </div>
+
+      <h3 class="mb-4">Onde a sua marca aparece</h3>
+
+      <div class="grade grade--3">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/>
+            </svg>
+            <h4 class="card__titulo mt-3">Na arena</h4>
+            <p class="txt-peq txt-suave">O ponto de encontro entre o público físico e a partida digital.</p>
+            <ul class="entregas">
+              <li>Backdrop de entrada e telão de placar combinado</li>
+              <li>Placas de quadra e adesivação das estações de jogo</li>
+              <li>Estande de ativação com experiência jogável</li>
+              <li>Citação do locutor a cada rodada</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M10 10l5 2-5 2z"/>
+            </svg>
+            <h4 class="card__titulo mt-3">Na transmissão</h4>
+            <p class="txt-peq txt-suave">Toda etapa vai ao ar ao vivo, com replay disponível na semana seguinte.</p>
+            <ul class="entregas">
+              <li>Vinheta de abertura e encerramento</li>
+              <li>Marca fixa no overlay de placar</li>
+              <li>Quadro patrocinado entre a metade digital e a física</li>
+              <li>Direito de uso dos melhores momentos</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/>
+            </svg>
+            <h4 class="card__titulo mt-3">No digital</h4>
+            <p class="txt-peq txt-suave">Conteúdo publicado antes, durante e depois de cada etapa.</p>
+            <ul class="entregas">
+              <li>Posts e stories no Instagram oficial</li>
+              <li>Assinatura no e-mail enviado aos responsáveis de time</li>
+              <li>Marca nas páginas de campeonato e no ranking nacional</li>
+              <li>Crédito nos álbuns de fotos dos eventos</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== COTAS ==================== -->
+  <section class="secao secao--branca secao--compacta">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Cotas 2026</p>
+        <h2>O que cada cota inclui</h2>
+        <p>
+          Quadro-resumo das cotas da temporada. O plano final é montado junto com a
+          sua equipe de marketing, etapa por etapa.
+        </p>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <caption class="sr-only">Comparativo das cotas de patrocínio da temporada 2026</caption>
+          <thead>
+            <tr>
+              <th scope="col">Cota</th>
+              <th scope="col">Arena</th>
+              <th scope="col">Transmissão</th>
+              <th scope="col">Digital</th>
+              <th scope="col">Ativação</th>
+              <th scope="col">Vagas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Master</th>
+              <td>Nome no evento, telão e uniforme oficial</td>
+              <td>Abertura, overlay de placar e citação por rodada</td>
+              <td>4 publicações por etapa + assinatura de e-mail</td>
+              <td>Estande de 30 m²</td>
+              <td><span class="tag tag--verde">1 exclusiva</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Patrocinador</th>
+              <td>Backdrop, placas de quadra e telão</td>
+              <td>Citação e marca no overlay</td>
+              <td>2 publicações por etapa</td>
+              <td>Estande de 12 m²</td>
+              <td><span class="tag tag--amarela">4 vagas</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Fornecedor oficial</th>
+              <td>Selo de fornecedor nas estações de jogo</td>
+              <td>Selo nos créditos e no quadro técnico</td>
+              <td>1 publicação por etapa</td>
+              <td>Ponto de teste de produto</td>
+              <td><span class="tag tag--azul">6 vagas</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Apoio institucional</th>
+              <td>Marca no material oficial da etapa</td>
+              <td>Créditos de encerramento</td>
+              <td>Menção mensal nas redes</td>
+              <td>Sob acordo</td>
+              <td><span class="tag tag--cinza">Sem limite</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="txt-peq txt-suave mt-4">
+        Valores de investimento e disponibilidade por etapa são enviados no midiakit,
+        junto com o calendário completo da temporada.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== MIDIAKIT ==================== -->
+  <section class="cta-faixa secao secao--compacta">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Material comercial</p>
+          <h2 style="color:#fff">Midiakit Phygital Brasil 2026</h2>
+          <p style="color:rgba(255,255,255,.75)">
+            Um PDF com o perfil do público, os números de audiência de 2025, o calendário
+            das seis etapas, o detalhamento das cotas e o manual de aplicação da marca
+            em arena e transmissão.
+          </p>
+          <ul class="entregas" style="color:rgba(255,255,255,.85)">
+            <li>Perfil demográfico do público das arenas</li>
+            <li>Relatório de audiência das transmissões</li>
+            <li>Formatos de ativação com fotos das etapas anteriores</li>
+          </ul>
+        </div>
+        <div class="hero__acoes">
+          <button class="btn btn--destaque btn--grande" type="button" id="btn-midiakit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M7 12l5 5 5-5"/><path d="M4 21h16"/></svg>
+            Baixar o midiakit
+          </button>
+          <a class="btn btn--contorno-claro btn--grande" href="#form-comercial">Falar com o comercial</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONTATO COMERCIAL ==================== -->
+  <section class="secao secao--clara">
+    <div class="container">
+      <div class="contato-grade">
+        <div>
+          <div class="secao-titulo">
+            <p class="eyebrow">Contato comercial</p>
+            <h2>Vamos montar sua cota</h2>
+            <p>
+              Conte em qual modalidade e em quais etapas sua marca quer estar. Respondemos
+              com a proposta e a disponibilidade de cada arena.
+            </p>
+          </div>
+
+          <h3 class="mb-2">Canais diretos</h3>
+
+          <div class="contato-item">
+            <span class="contato-item__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            </span>
+            <div>
+              <h4>E-mail comercial</h4>
+              <p><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></p>
+            </div>
+          </div>
+
+          <div class="contato-item">
+            <span class="contato-item__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg>
+            </span>
+            <div>
+              <h4>Telefone e WhatsApp</h4>
+              <p>(11) 4000-2026</p>
+            </div>
+          </div>
+
+          <div class="contato-item">
+            <span class="contato-item__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            <div>
+              <h4>Prazo de resposta</h4>
+              <p>Até 2 dias úteis, de segunda a sexta</p>
+            </div>
+          </div>
+
+          <div class="aviso mt-4">
+            <p>
+              <strong>Já é parceiro?</strong> Pedidos de arte, relatório de mídia e credenciais
+              para as etapas são tratados direto pelo e-mail comercial.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <h3 class="mb-4">Proposta comercial</h3>
+
+            <form id="form-comercial" data-validar
+                  data-demo="Proposta registrada. A equipe comercial responde em até 2 dias úteis (protótipo).">
+              <div class="form-grade">
+                <div class="campo col-2">
+                  <label for="empresa">Empresa <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <input type="text" id="empresa" name="empresa" autocomplete="organization" required>
+                  <p class="campo__erro" hidden>Informe a razão social ou o nome fantasia da empresa.</p>
+                </div>
+
+                <div class="campo">
+                  <label for="responsavel">Responsável <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <input type="text" id="responsavel" name="responsavel" autocomplete="name" required>
+                  <p class="campo__erro" hidden>Informe o nome de quem vai acompanhar a negociação.</p>
+                </div>
+
+                <div class="campo">
+                  <label for="cargo">Cargo</label>
+                  <input type="text" id="cargo" name="cargo" autocomplete="organization-title">
+                </div>
+
+                <div class="campo">
+                  <label for="email-comercial">E-mail corporativo <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <input type="email" id="email-comercial" name="email" autocomplete="email" required>
+                  <p class="campo__erro" hidden>Informe um e-mail válido para receber a proposta.</p>
+                </div>
+
+                <div class="campo">
+                  <label for="telefone-comercial">Telefone <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <input type="tel" id="telefone-comercial" name="telefone" data-mascara="telefone"
+                         inputmode="tel" placeholder="(11) 90000-0000" autocomplete="tel" required>
+                  <p class="campo__erro" hidden>Informe um telefone com DDD.</p>
+                </div>
+
+                <div class="campo col-2">
+                  <label for="interesse">Tipo de interesse <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <select id="interesse" name="interesse" required>
+                    <option value="">Selecione uma opção</option>
+                    <option>Patrocínio master da temporada</option>
+                    <option>Patrocínio de etapa</option>
+                    <option>Fornecedor oficial</option>
+                    <option>Transmissão e mídia</option>
+                    <option>Apoio institucional</option>
+                    <option>Projeto social</option>
+                    <option>Levar uma etapa para minha cidade</option>
+                  </select>
+                  <p class="campo__erro" hidden>Escolha o tipo de parceria que você procura.</p>
+                </div>
+
+                <div class="campo col-2">
+                  <label for="mensagem">Mensagem <span class="obrigatorio" aria-hidden="true">*</span></label>
+                  <textarea id="mensagem" name="mensagem" required
+                            placeholder="Conte em quais modalidades e etapas sua marca quer estar, e qual é o objetivo da ação."></textarea>
+                  <p class="campo__erro" hidden>Escreva uma mensagem para a equipe comercial.</p>
+                </div>
+
+                <div class="campo col-2">
+                  <label class="check" for="consentimento">
+                    <input type="checkbox" id="consentimento" name="consentimento" required>
+                    <span>Autorizo a Phygital Brasil a usar estes dados para retornar o contato comercial.</span>
+                  </label>
+                  <p class="campo__erro" hidden>É preciso autorizar o contato para enviar a proposta.</p>
+                </div>
+              </div>
+
+              <button class="btn btn--primario btn--bloco" type="submit">Enviar proposta</button>
+              <p class="campo__ajuda txt-centro mt-3">
+                Protótipo: nenhum dado é enviado ou armazenado neste formulário.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PARCEIROS — rede agrupada por tipo de participação
+   ========================================================================== */
+(function () {
+  var D = PB.dados;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Cada grupo reúne os tipos vindos de PB.dados.parceiros() */
+  var GRUPOS = [
+    {
+      titulo: 'Patrocinador master',
+      tipos: ['Patrocinador master'],
+      texto: 'Uma única marca assina a temporada inteira: nome no evento, telão da arena, uniforme oficial e abertura de toda transmissão.'
+    },
+    {
+      titulo: 'Patrocinadores',
+      tipos: ['Patrocinador'],
+      texto: 'Marcas presentes nas etapas, nas ativações de arena e no conteúdo oficial das quatro modalidades.'
+    },
+    {
+      titulo: 'Fornecedores e transmissão',
+      tipos: ['Fornecedor oficial', 'Transmissão'],
+      texto: 'Quem entrega equipamento, estações de jogo e o sinal de vídeo que leva cada etapa para o país inteiro.'
+    },
+    {
+      titulo: 'Apoio institucional',
+      tipos: ['Apoio institucional', 'Sede oficial'],
+      texto: 'Órgãos públicos, entidades esportivas e as sedes que abrigam as finais nacionais.'
+    },
+    {
+      titulo: 'Projeto social',
+      tipos: ['Projeto social'],
+      texto: 'Iniciativas que levam o formato phygital para escolas, projetos de bairro e programas de iniciação esportiva.'
+    }
+  ];
+
+  var parceiros = D.parceiros();
+
+  /* O logo segue o índice original da lista: o mesmo parceiro usa a mesma
+     imagem aqui e na home, independentemente do agrupamento. */
+  parceiros.forEach(function (p, i) {
+    p.img = 'assets/img/mock/parceiro-' + ((i % 8) + 1) + '.svg';
+  });
+
+  function cartao(p) {
+    return '' +
+    '<div class="parceiro">' +
+      '<img src="' + esc(p.img) + '" alt="">' +
+      '<p class="parceiro__nome">' + esc(p.nome) + '</p>' +
+      '<p class="parceiro__tipo">' + esc(p.tipo) + '</p>' +
+    '</div>';
+  }
+
+  function secaoGrupo(titulo, texto, lista) {
+    return '' +
+    '<div class="mb-6">' +
+      '<div class="secao-titulo mb-4">' +
+        '<h3>' + esc(titulo) + '</h3>' +
+        '<p>' + esc(texto) + '</p>' +
+      '</div>' +
+      '<div class="parceiros">' + lista.map(cartao).join('') + '</div>' +
+    '</div>';
+  }
+
+  function render() {
+    var usados = {};
+    var html = '';
+
+    GRUPOS.forEach(function (g) {
+      var lista = parceiros.filter(function (p) {
+        return g.tipos.indexOf(p.tipo) > -1;
+      });
+      lista.forEach(function (p) { usados[p.nome] = true; });
+      if (!lista.length) return;
+      html += secaoGrupo(g.titulo, g.texto, lista);
+    });
+
+    /* Qualquer tipo novo cadastrado no admin continua aparecendo na página */
+    var restantes = parceiros.filter(function (p) { return !usados[p.nome]; });
+    if (restantes.length) {
+      html += secaoGrupo('Outros parceiros',
+        'Parceiros de áreas específicas, com acordo firmado para etapas pontuais.', restantes);
+    }
+
+    document.getElementById('grupos-parceiros').innerHTML = html;
+  }
+
+  render();
+
+  /* ---- Midiakit (protótipo: sem arquivo para baixar) -------------------- */
+  var btn = document.getElementById('btn-midiakit');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      PB.toast('Protótipo',
+        'O midiakit em PDF fica disponível na versão final do site. Enquanto isso, peça o material pelo formulário abaixo.',
+        'info');
+    });
+  }
+
+  /* Reobserva os elementos criados dinamicamente */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

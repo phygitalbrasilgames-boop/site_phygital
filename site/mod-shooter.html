@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phygital Shooter — Phygital Brasil</title>
+<meta name="description" content="Cinco jogadores no servidor oficial e cinco na arena. Regras de elenco do Phygital Shooter, campos obrigatórios de Steam64 e Faceit, calendário do Shooter Open 2026 e ranking nacional.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Complementos desta página — compõem o design system, não o substituem */
+  .duo { display: grid; grid-template-columns: 1.15fr .85fr; gap: var(--e-6); align-items: start; }
+  @media (max-width: 900px) { .duo { grid-template-columns: 1fr; } }
+  .podio { list-style: none; padding: 0; margin: var(--e-3) 0 0; display: grid; gap: var(--e-2); }
+  .podio li { display: flex; align-items: center; gap: var(--e-3); font-size: var(--t-peq); }
+  .podio .uf { color: var(--texto-suave); font-size: var(--t-micro); letter-spacing: .1em; text-transform: uppercase; }
+  .etapa-num { font-family: var(--fonte-display); font-size: 2.25rem; font-weight: 700; line-height: 1; color: var(--azul); }
+  .codigo { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: var(--t-peq); background: var(--claro); border: 1px solid var(--linha-clara); border-radius: var(--r-2); padding: 2px 7px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop nav__item--ativo">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html" aria-current="page"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html" aria-current="page">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container pagina-topo__conteudo">
+      <nav class="trilha" aria-label="Trilha de navegação">
+        <a href="index.html">Home</a>
+        <span aria-hidden="true">›</span>
+        <a href="modalidades.html">Modalidades</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Phygital Shooter</span>
+      </nav>
+      <p class="eyebrow">Equipe de 5 jogadores</p>
+      <h1>Phygital Shooter</h1>
+      <p>
+        Cinco no servidor, cinco na arena. As rodadas classificatórias acontecem no servidor oficial
+        da Phygital Brasil e a final é presencial — quando a soma empata, quem decide é a prova
+        física de desempate.
+      </p>
+      <div class="flex gap-3 envolve mt-5">
+        <a class="btn btn--destaque" href="inscricoes.html#cbs-2026">Inscrever time no Shooter Open</a>
+        <a class="btn btn--contorno-claro" href="#regras">Ver regras de elenco</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== COMO FUNCIONA ==================== -->
+  <section class="secao secao--branca" id="como-funciona">
+    <div class="container">
+      <div class="duo">
+        <div>
+          <p class="eyebrow">Como funciona</p>
+          <h2>Classificatória no servidor, final na arena</h2>
+          <p>
+            A temporada de Phygital Shooter começa online. São <strong>cinco rodadas
+            classificatórias</strong> disputadas no servidor oficial da Phygital Brasil, com o pool
+            de mapas divulgado no edital e anti-cheat obrigatório em todas as máquinas. Cada rodada
+            distribui pontos por resultado e por saldo de rounds.
+          </p>
+          <p>
+            As oito equipes mais bem pontuadas avançam para a <strong>final presencial</strong>, jogada
+            em palco, em estações padronizadas montadas pela produção — mesmo periférico, mesma
+            configuração, mesma latência para todo mundo.
+          </p>
+          <p>
+            Quando duas equipes chegam empatadas ao fim do confronto, a decisão sai da tela: a
+            <strong>prova física de desempate</strong> coloca os cinco titulares em um circuito
+            cronometrado de agilidade com finalização em alvo eletrônico. Vence o menor tempo somado
+            da equipe.
+          </p>
+
+          <div class="tabela-wrap mt-5">
+            <table>
+              <caption class="sr-only">Pontuação das rodadas classificatórias do Phygital Shooter</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Etapa</th>
+                  <th scope="col">Onde</th>
+                  <th scope="col">Como pontua</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Rodadas classificatórias</strong></td>
+                  <td>Servidor oficial</td>
+                  <td>3 pontos por vitória, 1 por empate no tempo regulamentar, desempate por saldo de rounds</td>
+                </tr>
+                <tr>
+                  <td><strong>Final presencial</strong></td>
+                  <td>Arena da etapa</td>
+                  <td>Melhor de três mapas, com os cinco titulares inscritos em quadra</td>
+                </tr>
+                <tr>
+                  <td><strong>Prova física</strong></td>
+                  <td>Pista da arena</td>
+                  <td>Circuito de agilidade com alvo eletrônico — só entra em jogo no empate</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="txt-micro txt-suave mt-3">
+            Substituição por reserva é permitida entre mapas, desde que o reserva conste na lista
+            oficial homologada antes do encerramento das inscrições.
+          </p>
+        </div>
+
+        <figure class="card card--fita" style="margin:0">
+          <img src="assets/img/mock/mod-shooter.svg" alt="Equipe de Phygital Shooter em estação de jogo na arena">
+          <figcaption class="card__corpo">
+            <h3 class="card__titulo">Conta em ordem antes de tudo</h3>
+            <p class="txt-peq txt-suave">
+              O <strong>Steam64</strong> e o <strong>perfil Faceit</strong> informados são conferidos
+              na triagem. Conta com banimento ativo — VAC, Faceit ou sanção da própria organização —
+              elimina o jogador e, se for titular, deixa a equipe incompleta.
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+
+      <div class="grade grade--3 mt-6">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <div class="etapa-num">01</div>
+            <h3 class="card__titulo mt-2">Homologação das contas</h3>
+            <p class="txt-peq txt-suave">
+              A organização valida Steam64 e Faceit de cada atleta inscrito, titular ou reserva.
+              Divergência entre a conta informada e a usada em partida gera W.O.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <div class="etapa-num">02</div>
+            <h3 class="card__titulo mt-2">Cinco rodadas online</h3>
+            <p class="txt-peq txt-suave">
+              Uma rodada por semana, em horário fixo, no servidor oficial. Demos gravadas ficam à
+              disposição da arbitragem por 30 dias após a etapa.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <div class="etapa-num">03</div>
+            <h3 class="card__titulo mt-2">Final presencial</h3>
+            <p class="txt-peq txt-suave">
+              Oito equipes na arena, mata-mata em melhor de três. Credenciamento com documento com
+              foto obrigatório para os cinco titulares e para o treinador.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REGRAS DE ELENCO ==================== -->
+  <section class="secao secao--clara" id="regras">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Regras de elenco</p>
+        <h2>Exatamente cinco titulares — sem exceção</h2>
+        <p>
+          O Phygital Shooter é a única modalidade com número fechado: nem quatro, nem seis. A
+          inscrição só é aceita com os cinco titulares completos, todos com Steam64 e perfil Faceit
+          válidos. Reservas e treinador são registrados no mesmo formulário.
+        </p>
+      </div>
+
+      <div class="grade grade--3 mb-5">
+        <div class="card">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="card__meta">Titulares</p>
+            <p class="etapa-num mb-2">5</p>
+            <p class="txt-peq txt-suave mb-0">Mínimo 5, máximo 5. Todos obrigatórios já na inscrição.</p>
+          </div>
+        </div>
+        <div class="card">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="card__meta">Reservas</p>
+            <p class="etapa-num mb-2">3</p>
+            <p class="txt-peq txt-suave mb-0">Até três, opcionais — mas só entram em quadra se inscritos antes do prazo.</p>
+          </div>
+        </div>
+        <div class="card">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <p class="card__meta">Comissão</p>
+            <p class="etapa-num mb-2">1</p>
+            <p class="txt-peq txt-suave mb-0">Um treinador, com credencial de área técnica na final presencial.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="mb-3">Campos de cada jogador</h3>
+      <div class="tabela-wrap">
+        <table>
+          <caption class="sr-only">Campos exigidos no cadastro de jogadores de Phygital Shooter</caption>
+          <thead>
+            <tr>
+              <th scope="col">Campo</th>
+              <th scope="col">Obrigatório</th>
+              <th scope="col">Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Nome completo</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Como consta no documento apresentado no credenciamento</td></tr>
+            <tr><td><strong>Apelido</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Nick usado em partida — precisa bater com o nick da conta homologada</td></tr>
+            <tr><td><strong>E-mail</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Recebe o protocolo e as mudanças de lista</td></tr>
+            <tr><td><strong>Telefone</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Com DDD, preferencialmente com WhatsApp</td></tr>
+            <tr><td><strong>Data de nascimento</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Menores de 18 anos exigem autorização assinada pelo responsável legal</td></tr>
+            <tr><td><strong>Steam64</strong></td><td><span class="tag tag--azul">Obrigatório</span></td><td>17 dígitos, iniciando em <span class="codigo">7656119…</span>. Precisa ser a conta usada no servidor oficial</td></tr>
+            <tr><td><strong>Link do perfil Faceit</strong></td><td><span class="tag tag--azul">Obrigatório</span></td><td>URL completa, no formato <span class="codigo">https://faceit.com/br/players/nick</span></td></tr>
+            <tr><td><strong>Foto</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Proporção 3:4, mínimo 600×800 px, JPG ou PNG de até 5 MB</td></tr>
+            <tr><td><strong>@Instagram</strong></td><td><span class="tag tag--cinza">Opcional</span></td><td>Usado na divulgação da etapa e nas artes de resultado</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="txt-micro txt-suave mt-3">
+        Os mesmos campos valem para os reservas. O Phygital Shooter não usa número de camisa,
+        categoria nem função — esses campos aparecem apenas em futebol e basquete.
+      </p>
+
+      <h3 class="mb-3 mt-6">Campos do treinador</h3>
+      <div class="tabela-wrap">
+        <table>
+          <caption class="sr-only">Campos exigidos no cadastro do treinador de Phygital Shooter</caption>
+          <thead>
+            <tr>
+              <th scope="col">Campo</th>
+              <th scope="col">Obrigatório</th>
+              <th scope="col">Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Nome completo</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Vira o nome impresso na credencial de área técnica</td></tr>
+            <tr><td><strong>E-mail</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Recebe cópia das comunicações do campeonato</td></tr>
+            <tr><td><strong>Telefone</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Com DDD</td></tr>
+            <tr><td><strong>Data de nascimento</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Maior de 18 anos para acessar a área técnica</td></tr>
+            <tr><td><strong>Foto</strong></td><td><span class="tag tag--verde">Sim</span></td><td>Mesmo padrão da foto dos jogadores</td></tr>
+            <tr><td><strong>@Instagram</strong></td><td><span class="tag tag--cinza">Opcional</span></td><td>Usado apenas na divulgação</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="aviso mt-5">
+        <div>
+          <strong>Como sua inscrição anda depois do envio.</strong>
+          Toda inscrição entra primeiro na <strong>Lista de Inscritos (triagem)</strong>. A organização
+          então move o time para a <strong>Lista Oficial</strong> ou para a <strong>Lista de Espera</strong>,
+          e cada mudança dispara um e-mail. O primeiro e-mail traz o <strong>número de protocolo</strong> e
+          confirma que a inscrição foi recebida — o que <strong>não</strong> é garantia de vaga.
+        </div>
+      </div>
+      <div class="aviso aviso--alerta mt-3">
+        <div>
+          <strong>Prazo de edição.</strong>
+          O responsável edita o elenco livremente até a data de encerramento das inscrições. Depois
+          disso, troca de jogador, correção de Steam64 ou de link do Faceit só por
+          <a href="painel/chamados.html">chamado</a>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PRÓXIMOS CAMPEONATOS ==================== -->
+  <section class="secao secao--branca" id="proximos">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Calendário</p>
+          <h2>Próximos campeonatos de Shooter</h2>
+          <p>Etapas com inscrição aberta neste momento. A inscrição do time é feita pelo Painel do Competidor.</p>
+        </div>
+        <a class="link-seta" href="inscricoes.html">Todas as inscrições</a>
+      </div>
+      <div id="lista-proximos" class="grade"></div>
+    </div>
+  </section>
+
+  <!-- ==================== RANKING DA MODALIDADE ==================== -->
+  <section class="secao secao--escura" id="ranking">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Ranking nacional</p>
+          <h2>Classificação do Phygital Shooter</h2>
+          <p>Somatório de todas as edições apuradas pela organização, da primeira temporada até hoje.</p>
+        </div>
+        <a class="link-seta" href="painel/ranking.html">Ranking completo</a>
+      </div>
+      <div id="tabela-ranking"></div>
+      <p class="txt-micro mt-3" style="color:rgba(255,255,255,.6)">
+        V = confrontos vencidos · D = derrotas · Camp. = edições disputadas ·
+        GOTF = já representou o Brasil na seletiva do Games of the Future.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== EDIÇÕES ANTERIORES ==================== -->
+  <section class="secao secao--clara" id="edicoes">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Histórico</p>
+          <h2>Edições anteriores</h2>
+          <p>Campeonatos e etapas de Shooter já realizados pela Phygital Brasil.</p>
+        </div>
+        <a class="link-seta" href="eventos.html">Ver todos os eventos</a>
+      </div>
+      <div id="lista-edicoes" class="grade grade--2"></div>
+    </div>
+  </section>
+
+  <!-- ==================== GALERIA ==================== -->
+  <section class="secao secao--branca" id="galeria">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Galeria</p>
+          <h2>Shooter na arena</h2>
+          <p>Palco, estações padronizadas e a prova física que decide o empate.</p>
+        </div>
+        <a class="link-seta" href="eventos.html">Galeria completa</a>
+      </div>
+      <div class="galeria">
+        <figure class="galeria__item revelar"><img src="assets/img/mock/evento-3.svg" alt="Equipes em estações padronizadas na final do Shooter Open"><figcaption>Final · Porto Alegre 2025</figcaption></figure>
+        <figure class="galeria__item revelar" data-atraso="60"><img src="assets/img/mock/evento-6.svg" alt="Prova física de desempate no circuito de agilidade"><figcaption>Prova física · 2025</figcaption></figure>
+        <figure class="galeria__item revelar" data-atraso="120"><img src="assets/img/mock/evento-8.svg" alt="Arbitragem acompanhando a rodada classificatória"><figcaption>Arbitragem · 2025</figcaption></figure>
+        <figure class="galeria__item revelar" data-atraso="180"><img src="assets/img/mock/evento-11.svg" alt="Premiação da etapa sul do Shooter Open"><figcaption>Premiação · Etapa Sul</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="cta-faixa secao">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Fique por dentro</p>
+          <h2 style="color:#fff">Acompanhe o Shooter Open 2026</h2>
+          <p style="color:rgba(255,255,255,.75);margin-bottom:0">
+            Avisamos por e-mail quando o pool de mapas é publicado, quando as vagas estão acabando e
+            quando a classificação de cada rodada é atualizada.
+          </p>
+        </div>
+        <form class="form-inline" data-validar data-demo="Aviso do Phygital Shooter registrado (protótipo).">
+          <label class="sr-only" for="aviso-shooter">Seu e-mail</label>
+          <input type="email" id="aviso-shooter" name="email" placeholder="seu@email.com" required>
+          <button class="btn btn--destaque" type="submit">Quero receber</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PHYGITAL SHOOTER — blocos dinâmicos
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt, MOD = 'shooter';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var ICO_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  var ICO_LOCAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var ICO_GENTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+  var ICO_FOTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 5l1.5-2h5L16 5"/></svg>';
+
+  /* ---- Próximos campeonatos ---- */
+  function renderProximos() {
+    var lista = D.campeonatos({ modalidade: MOD, status: 'inscricoes' });
+    var alvo = document.getElementById('lista-proximos');
+
+    if (!lista.length) {
+      alvo.innerHTML = '' +
+        '<div class="vazio">' +
+          '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg>' +
+          '<h3>Nenhuma etapa de Shooter com inscrição aberta</h3>' +
+          '<p>Assim que o edital da próxima temporada for publicado, a etapa aparece aqui com prazo e pool de mapas.</p>' +
+          '<a class="btn btn--primario" href="inscricoes.html">Ver inscrições abertas</a>' +
+        '</div>';
+      return;
+    }
+
+    alvo.innerHTML = lista.map(function (c) {
+      var dias = F.diasAte(c.encerramentoInscricoes);
+      var urgente = dias >= 0 && dias <= 10;
+      return '' +
+      '<article class="card card--fita camp-card revelar">' +
+        '<div class="camp-card__midia">' +
+          '<img src="' + esc(c.banner) + '" alt="">' +
+          '<span class="camp-card__mod">Shooter</span>' +
+        '</div>' +
+        '<div class="camp-card__corpo">' +
+          '<h3 class="camp-card__titulo">' + esc(c.nome) + '</h3>' +
+          '<div class="camp-card__infos">' +
+            '<span class="camp-card__info">' + ICO_CAL + esc(F.periodo(c.data, c.dataFim)) + '</span>' +
+            '<span class="camp-card__info">' + ICO_LOCAL + esc(c.local) + '</span>' +
+            '<span class="camp-card__info">' + ICO_GENTE + esc(c.vagas) + ' vagas · elenco de 5 + 3</span>' +
+          '</div>' +
+          '<p class="txt-peq txt-suave" style="margin:0">' + esc(c.descricao) + '</p>' +
+          '<p class="txt-micro txt-suave" style="margin:0">' + esc(c.termos || '') + '</p>' +
+        '</div>' +
+        '<div class="camp-card__lateral">' +
+          '<span class="' + (urgente ? 'tag tag--amarela' : 'tag tag--verde') + '">' +
+            (dias >= 0 ? 'Encerra em ' + dias + ' dia' + (dias === 1 ? '' : 's') : 'Encerrado') +
+          '</span>' +
+          '<div class="txt-micro txt-suave txt-centro">Inscrições até<br><strong>' + esc(F.data(c.encerramentoInscricoes)) + '</strong></div>' +
+          '<a class="btn btn--primario btn--pequeno" href="inscricoes.html#' + esc(c.id) + '">Inscrever time</a>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---- Ranking da modalidade ---- */
+  function renderRanking() {
+    var linhas = D.ranking(MOD);
+    var alvo = document.getElementById('tabela-ranking');
+
+    if (!linhas.length) {
+      alvo.innerHTML = '<div class="aviso">Ainda não há resultados apurados para esta modalidade.</div>';
+      return;
+    }
+
+    alvo.innerHTML = '' +
+    '<div class="tabela-wrap">' +
+      '<table class="tabela--ranking">' +
+        '<caption class="sr-only">Ranking nacional de Phygital Shooter</caption>' +
+        '<thead><tr>' +
+          '<th scope="col">Pos</th>' +
+          '<th scope="col">Time</th>' +
+          '<th scope="col">UF</th>' +
+          '<th scope="col">V</th>' +
+          '<th scope="col">D</th>' +
+          '<th scope="col">Camp.</th>' +
+          '<th scope="col">Títulos</th>' +
+          '<th scope="col">GOTF</th>' +
+        '</tr></thead>' +
+        '<tbody>' + linhas.map(function (t, i) {
+          var pos = i + 1;
+          return '<tr>' +
+            '<td><span class="pos' + (pos <= 3 ? ' pos--' + pos : '') + '">' + pos + '</span></td>' +
+            '<td><div class="celula-time"><img src="assets/img/mock/escudo-' + ((i % 12) + 1) + '.svg" alt=""><strong>' + esc(t.nome) + '</strong></div></td>' +
+            '<td>' + esc(t.uf) + '</td>' +
+            '<td>' + t.v + '</td>' +
+            '<td>' + t.d + '</td>' +
+            '<td>' + t.camp + '</td>' +
+            '<td>' + t.titulos + '</td>' +
+            '<td>' + (t.gotf ? '<span class="tag tag--verde">Sim</span>' : '<span class="txt-suave">—</span>') + '</td>' +
+          '</tr>';
+        }).join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
+  /* ---- Edições anteriores: campeonatos encerrados; sem eles, os eventos realizados ---- */
+  function renderEdicoes() {
+    var lista = D.campeonatos({ modalidade: MOD, status: 'encerrado' });
+    var alvo = document.getElementById('lista-edicoes');
+
+    if (lista.length) {
+      alvo.innerHTML = lista.map(function (c, i) {
+        var podio = (c.classificacao || []).map(function (p) {
+          return '<li><span class="pos pos--' + p.pos + '">' + p.pos + '</span> <strong>' + esc(p.nome) + '</strong> <span class="uf">' + esc(p.uf) + '</span></li>';
+        }).join('');
+        return '' +
+        '<article class="card card--fita revelar" data-atraso="' + (i * 80) + '">' +
+          '<div class="card__midia"><img src="' + esc(c.banner) + '" alt=""><span class="camp-card__mod">Encerrado</span></div>' +
+          '<div class="card__corpo">' +
+            '<h3 class="card__titulo">' + esc(c.nome) + '</h3>' +
+            '<div class="camp-card__infos mb-3">' +
+              '<span class="camp-card__info">' + ICO_CAL + esc(F.periodo(c.data, c.dataFim)) + '</span>' +
+              '<span class="camp-card__info">' + ICO_LOCAL + esc(c.local) + '</span>' +
+            '</div>' +
+            '<p class="txt-peq txt-suave">' + esc(c.descricao) + '</p>' +
+            (podio ? '<p class="card__meta mt-4">Pódio</p><ol class="podio">' + podio + '</ol>' : '') +
+          '</div>' +
+        '</article>';
+      }).join('');
+      return;
+    }
+
+    /* Sem campeonato encerrado no sistema: mostramos as etapas já realizadas */
+    var eventos = D.eventos(MOD);
+    if (!eventos.length) {
+      alvo.innerHTML = '' +
+        '<div class="vazio">' +
+          '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>' +
+          '<h3>Nenhuma edição encerrada até aqui</h3>' +
+          '<p>As edições aparecem nesta lista depois que a organização encerra e apura a classificação final.</p>' +
+          '<a class="btn btn--contorno" href="eventos.html">Ver eventos realizados</a>' +
+        '</div>';
+      return;
+    }
+
+    alvo.innerHTML = eventos.map(function (e, i) {
+      return '' +
+      '<article class="card card--fita revelar" data-atraso="' + (i * 80) + '">' +
+        '<div class="card__midia"><img src="assets/img/mock/camp-shooter.svg" alt=""><span class="camp-card__mod">' + esc(e.ano) + '</span></div>' +
+        '<div class="card__corpo">' +
+          '<h3 class="card__titulo">' + esc(e.titulo) + '</h3>' +
+          '<div class="camp-card__infos mb-3">' +
+            '<span class="camp-card__info">' + ICO_LOCAL + esc(e.local) + '</span>' +
+            '<span class="camp-card__info">' + ICO_FOTO + esc(e.fotos) + ' fotos no acervo</span>' +
+          '</div>' +
+          '<p class="txt-peq txt-suave">Etapa realizada e apurada. A classificação final desta edição já está somada ao ranking nacional acima.</p>' +
+          '<a class="link-seta mt-3" href="eventos.html">Ver na galeria de eventos</a>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  renderProximos();
+  renderRanking();
+  renderEdicoes();
+
+  /* Reobserva os elementos criados dinamicamente */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quem Somos — Phygital Brasil</title>
+<meta name="description" content="A Phygital Brasil organiza campeonatos em que a metade digital e a metade física formam um só placar. Conheça o formato, o manifesto, a trajetória desde 2023 e os pilares da federação.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes específicos desta página — compostos sobre o design system */
+  .passo__num {
+    display: block;
+    font-family: var(--fonte-display);
+    font-size: 2.25rem; font-weight: 700; line-height: 1;
+    color: var(--verde);
+    margin-bottom: var(--e-2);
+  }
+  .sobre-grade { display: grid; grid-template-columns: 1.15fr .85fr; gap: var(--e-7); align-items: start; }
+  @media (max-width: 900px) { .sobre-grade { grid-template-columns: 1fr; gap: var(--e-5); } }
+  .sobre-figura { margin: 0; }
+  .sobre-figura img { width: 100%; border-radius: var(--r-3); }
+  .sobre-figura figcaption { font-size: var(--t-micro); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .1em; margin-top: var(--e-2); }
+  .lista-marcada { list-style: none; padding: 0; margin: var(--e-4) 0 0; }
+  .lista-marcada li { position: relative; padding-left: var(--e-4); margin-bottom: var(--e-2); font-size: var(--t-peq); }
+  .lista-marcada li::before { content: ""; position: absolute; left: 0; top: .55em; width: 10px; height: 3px; background: var(--fita-tripla); }
+  .timeline__item h3 { margin: var(--e-2) 0 var(--e-2); }
+  .timeline__tags { display: flex; flex-wrap: wrap; gap: var(--e-2); margin-top: var(--e-3); }
+  .pilar__icone { display: grid; place-items: center; width: 48px; height: 48px; border-radius: var(--r-2); background: var(--claro); color: var(--verde); margin-bottom: var(--e-3); }
+  .pilar__icone svg { width: 24px; height: 24px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="quem-somos.html" aria-current="page">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html" aria-current="page">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container pagina-topo__conteudo">
+      <nav class="trilha" aria-label="Trilha de navegação">
+        <a href="index.html">Home</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Quem Somos</span>
+      </nav>
+      <h1>Quem Somos</h1>
+      <p>
+        A Phygital Brasil organiza campeonatos em que o resultado do jogo digital e o resultado
+        do jogo físico formam um único placar. Nascemos em 2023, em São Paulo, e hoje levamos
+        quatro modalidades a etapas em 17 estados.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== O QUE É ESPORTE PHYGITAL ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="sobre-grade">
+        <div>
+          <p class="eyebrow">O formato</p>
+          <h2>Uma partida, duas metades, um só placar</h2>
+          <p>
+            Esporte phygital é a disputa que acontece <strong>duas vezes</strong>: uma metade no jogo
+            digital, outra metade na arena. Nenhuma das duas é aquecimento da outra. As duas valem
+            pontos, as duas têm arbitragem, as duas entram no resultado oficial.
+          </p>
+          <p>
+            Na Copa Phygital de Futebol, por exemplo, os times se enfrentam primeiro no jogo digital.
+            Os gols marcados ali não ficam na tela: eles entram no placar da partida física, disputada
+            em seguida em quadra de society, com 6 a 8 jogadores por lado. Quem venceu no console entra
+            em campo na frente — mas ninguém vence só com uma das metades.
+          </p>
+          <p>
+            O mesmo princípio vale para o basquete 3x3, para o shooter e para o dance, cada um com o
+            seu regulamento de conversão. É por isso que, na Phygital Brasil, o time que treina só a
+            quadra perde tanto quanto o time que treina só o jogo.
+          </p>
+
+          <ul class="lista-marcada">
+            <li><strong>Placar combinado:</strong> resultado oficial = metade digital + metade física.</li>
+            <li><strong>Nada é zerado:</strong> a vantagem conquistada na tela vai inteira para a arena.</li>
+            <li><strong>Um elenco só:</strong> quem joga no console é quem entra em quadra, dentro da mesma lista inscrita.</li>
+            <li><strong>Registro de tudo:</strong> log da partida digital, súmula da partida física e apuração publicada.</li>
+          </ul>
+        </div>
+
+        <figure class="sobre-figura revelar">
+          <img src="assets/img/mock/sobre.svg" alt="Atletas da Phygital Brasil disputando a metade digital no console e a metade física em quadra">
+          <figcaption>Etapa nacional 2025 · São Paulo, SP</figcaption>
+        </figure>
+      </div>
+
+      <h3 class="mt-6 mb-4">Anatomia de um confronto</h3>
+      <div class="grade grade--3">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <span class="passo__num num">01</span>
+            <h4>Metade digital</h4>
+            <p class="txt-peq txt-suave">
+              Partida no jogo digital oficial da modalidade, com tempo cronometrado, arbitragem e
+              transmissão. Placar e log ficam registrados antes de qualquer bola rolar.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <span class="passo__num num">02</span>
+            <h4>Metade física</h4>
+            <p class="txt-peq txt-suave">
+              A mesma disputa migra para a arena. O resultado da metade digital entra como vantagem
+              inicial no placar — nunca é descartado nem convertido em critério de desempate.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <span class="passo__num num">03</span>
+            <h4>Placar somado</h4>
+            <p class="txt-peq txt-suave">
+              O oficial é a soma das duas metades. Empate na soma vai para o desempate previsto no
+              regulamento da modalidade, e o resultado só vale depois de apurado pela organização.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MANIFESTO ==================== -->
+  <section class="secao secao--escura">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Manifesto</p>
+        <h2>Movimento contínuo, origem brasileira</h2>
+        <p>
+          As três fitas que constroem o nosso símbolo não são enfeite: elas descrevem o que a
+          federação faz. Verde, amarelo e azul atravessam o campeonato do começo ao fim, sem parar
+          entre a tela e a quadra.
+        </p>
+      </div>
+
+      <div class="grade grade--3">
+        <article class="card card--escuro revelar">
+          <span class="fita" style="background:var(--fita-verde)"></span>
+          <div class="card__corpo">
+            <h3>Físico</h3>
+            <p class="txt-peq" style="color:rgba(255,255,255,.75)">
+              A arena, a quadra, o campo. É onde a disputa se decide: marcação, fôlego, chute na
+              trave e a torcida a um metro da linha lateral. Nenhuma tecnologia substitui isso —
+              e nós não queremos que substitua.
+            </p>
+          </div>
+        </article>
+        <article class="card card--escuro revelar" data-atraso="80">
+          <span class="fita" style="background:var(--fita-amarela)"></span>
+          <div class="card__corpo">
+            <h3>Digital</h3>
+            <p class="txt-peq" style="color:rgba(255,255,255,.75)">
+              Jogos digitais e eSports com peso de competição: regulamento próprio, arbitragem,
+              transmissão e placar que conta. A metade digital abre o confronto e determina como
+              o time entra na arena.
+            </p>
+          </div>
+        </article>
+        <article class="card card--escuro revelar" data-atraso="160">
+          <span class="fita" style="background:var(--fita-azul)"></span>
+          <div class="card__corpo">
+            <h3>Brasil</h3>
+            <p class="txt-peq" style="color:rgba(255,255,255,.75)">
+              Origem e orgulho. Federação brasileira, regulamento em português, calendário nacional
+              e atletas que vieram da várzea, do ginásio de bairro e da lan house da esquina.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <p class="mt-6" style="color:rgba(255,255,255,.8);max-width:70ch;font-size:1.0625rem">
+        <strong style="font-family:var(--fonte-display)">Movimento contínuo</strong> é a regra da casa:
+        a partida não para quando o controle é largado. Ela troca de superfície e continua.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== LINHA DO TEMPO ==================== -->
+  <section class="secao secao--clara">
+    <div class="container container--estreito">
+      <div class="secao-titulo">
+        <p class="eyebrow">Trajetória</p>
+        <h2>De uma quadra em São Paulo à temporada nacional</h2>
+        <p>Quatro temporadas, quatro modalidades e um regulamento que foi sendo escrito em campo.</p>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline__item revelar">
+          <span class="timeline__ano num">2023</span>
+          <h3>Fundação e a 1ª Copa Phygital de Futebol</h3>
+          <p class="txt-suave">
+            A Phygital Brasil nasce em São Paulo reunindo organizadores de campeonatos de várzea e de
+            eSports em torno de um mesmo regulamento. Em novembro sai a primeira Copa Phygital de
+            Futebol, com 12 times, dois dias de disputa e o formato que definiu a casa: metade no jogo
+            digital, metade em quadra, um único placar.
+          </p>
+          <div class="timeline__tags">
+            <span class="tag tag--verde">Futebol</span>
+            <span class="tag tag--cinza">12 times</span>
+            <span class="tag tag--cinza">São Paulo · SP</span>
+          </div>
+        </div>
+
+        <div class="timeline__item revelar" data-atraso="80">
+          <span class="timeline__ano num">2024</span>
+          <h3>Seletiva do Games of the Future e a Phygital Experience</h3>
+          <p class="txt-suave">
+            A federação organiza em Brasília a seletiva brasileira para o Games of the Future e leva ao
+            público a Phygital Experience: arenas itinerantes com console, quadra e telão montados em
+            shoppings, escolas e eventos esportivos. Foi o ano em que a palavra “phygital” deixou de
+            precisar de explicação antes de cada jogo.
+          </p>
+          <div class="timeline__tags">
+            <span class="tag tag--azul">Games of the Future</span>
+            <span class="tag tag--cinza">Brasília · DF</span>
+            <span class="tag tag--cinza">Arena itinerante</span>
+          </div>
+        </div>
+
+        <div class="timeline__item revelar" data-atraso="160">
+          <span class="timeline__ano num">2025</span>
+          <h3>Dance Championship no Recife e o Circuito 3x3</h3>
+          <p class="txt-suave">
+            O Phygital Dance Championship estreia no Recife com atletas individuais de nove estados,
+            enquanto o Circuito Phygital de Basquete 3x3 roda quatro etapas regionais. No mesmo ano, o
+            ranking nacional passa a ser alimentado exclusivamente pela apuração oficial de cada
+            campeonato encerrado.
+          </p>
+          <div class="timeline__tags">
+            <span class="tag tag--amarela">Dance</span>
+            <span class="tag tag--cinza">Recife · PE</span>
+            <span class="tag tag--cinza">Basquete 3x3 · 4 etapas</span>
+          </div>
+        </div>
+
+        <div class="timeline__item revelar" data-atraso="240">
+          <span class="timeline__ano num">2026</span>
+          <h3>Quatro modalidades e etapa nacional</h3>
+          <p class="txt-suave">
+            A temporada abre com futebol, basquete, dance e shooter no mesmo calendário, inscrição pelo
+            Painel do Competidor e etapa nacional para os classificados de cada circuito. É a primeira
+            temporada em que as quatro modalidades disputam sob o mesmo regulamento de pontuação
+            combinada.
+          </p>
+          <div class="timeline__tags">
+            <span class="tag tag--verde">Inscrições abertas</span>
+            <span class="tag tag--cinza">4 modalidades</span>
+            <span class="tag tag--cinza">Etapa nacional</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-6"><a class="link-seta" href="eventos.html">Ver a galeria de eventos realizados</a></p>
+    </div>
+  </section>
+
+  <!-- ==================== PILARES ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo secao-titulo--centro">
+        <p class="eyebrow">Nossos pilares</p>
+        <h2>Três compromissos que não são negociáveis</h2>
+        <p>Valem para o campeonato de estreia e para a final da etapa nacional, sem exceção.</p>
+      </div>
+
+      <div class="grade grade--3">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <span class="pilar__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v18M7 21h10M3 8l4-3 4 3M13 8l4-3 4 3"/><path d="M3 8l-1 4a3 3 0 0 0 6 0z"/><path d="M17 8l-1 4a3 3 0 0 0 6 0z"/></svg>
+            </span>
+            <h3>Formato justo</h3>
+            <p class="txt-peq txt-suave">
+              Regulamento publicado antes de a inscrição abrir, arbitragem nas duas metades e apuração
+              registrada campeonato a campeonato. Nenhum resultado entra no ranking nacional antes de
+              ser apurado e assinado pela organização.
+            </p>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <span class="pilar__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <h3>Acesso</h3>
+            <p class="txt-peq txt-suave">
+              Elenco mínimo enxuto — 6 no futebol, 3 no basquete, 5 no shooter e 1 atleta no dance — e
+              equipamento da metade digital fornecido na arena. Ninguém fica de fora da competição por
+              não ter console em casa.
+            </p>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <span class="pilar__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+            </span>
+            <h3>Tecnologia a serviço do jogo</h3>
+            <p class="txt-peq txt-suave">
+              A tecnologia entra para registrar, transmitir e organizar — nunca para complicar.
+              Inscrição, elenco, chaveamento e comunicação com os times passam por um painel único,
+              com histórico de cada mudança e e-mail a cada etapa do processo.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== NÚMEROS ==================== -->
+  <section class="faixa-stats" aria-label="Números da Phygital Brasil">
+    <div class="container">
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="4">0</span></div>
+        <div class="faixa-stats__rotulo">Temporadas disputadas</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="26">0</span></div>
+        <div class="faixa-stats__rotulo">Etapas realizadas</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="1240">0</span></div>
+        <div class="faixa-stats__rotulo">Atletas</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="17">0</span></div>
+        <div class="faixa-stats__rotulo">Estados</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="cta-faixa secao">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Temporada 2026</p>
+          <h2 style="color:#fff">Seu time cabe nessa temporada</h2>
+          <p style="color:rgba(255,255,255,.75);margin-bottom:0">
+            As inscrições são feitas pelo Painel do Competidor: você cadastra o time, monta o elenco
+            dentro das regras da modalidade e recebe por e-mail o número de protocolo. A confirmação
+            de inscrição não é garantia de vaga — a organização faz a triagem e avisa a cada mudança.
+          </p>
+        </div>
+        <div class="flex envolve" style="gap:var(--e-2)">
+          <a class="btn btn--destaque btn--grande" href="inscricoes.html">Ver inscrições abertas</a>
+          <a class="btn btn--contorno-claro btn--grande" href="contato.html">Falar com a federação</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+
+</body>
+</html>

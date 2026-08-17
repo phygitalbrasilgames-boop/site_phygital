@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800" role="img" aria-label="DANCE">
+  <defs>
+    <linearGradient id="gm2v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#009B4A"/><stop offset="1" stop-color="#004A1B"/></linearGradient>
+    <linearGradient id="gm2a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FCE001"/><stop offset="1" stop-color="#DF9911"/></linearGradient>
+    <linearGradient id="gm2z" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D93D6"/><stop offset="1" stop-color="#0A66B1"/></linearGradient>
+    <linearGradient id="gm2f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1113" stop-opacity=".15"/><stop offset="1" stop-color="#0E1113" stop-opacity=".85"/></linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="#0E1113"/>
+  <clipPath id="cm2"><rect width="600" height="800"/></clipPath>
+  <g clip-path="url(#cm2)" opacity=".7"><rect x="180" y="-240" width="90" height="1280" fill="url(#gm2v)" opacity="0.75" transform="skewX(-14)"/>
+  <rect x="302" y="-240" width="90" height="1280" fill="url(#gm2a)" opacity="0.6375" transform="skewX(-14)"/>
+  <rect x="423" y="-240" width="90" height="1280" fill="url(#gm2z)" opacity="0.75" transform="skewX(-14)"/></g>
+  <circle cx="300.0" cy="336.0" r="120.0" fill="none" stroke="#FCE001" stroke-width="3" opacity=".7"/>
+  <circle cx="300.0" cy="336.0" r="78.0" fill="none" stroke="#fff" stroke-width="2" opacity=".35"/>
+  <rect width="600" height="800" fill="url(#gm2f)" opacity=".5"/>
+  <text x="300.0" y="624.0" font-family="Saira, Arial Narrow, Arial, sans-serif" font-size="54" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="-1" opacity="1">DANCE</text>
+</svg>

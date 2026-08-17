@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ranking por Modalidade — Painel do Competidor · Phygital Brasil</title>
+<meta name="description" content="Ranking nacional Phygital Brasil por modalidade: vitórias, derrotas, campeonatos disputados, títulos e presença no Games of the Future, com a classificação de cada edição apurada.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes locais desta tela — compostos sobre o design system */
+  /* .vazio e .stats declaram display, que vence o atributo hidden do HTML */
+  [hidden] { display: none !important; }
+
+  .escolha-mod__card { padding: var(--e-3); gap: 10px; align-content: start; }
+  .escolha-mod__card img.mod-logo {
+    height: 180px; width: auto; max-width: 100%; object-fit: contain;
+    border-radius: var(--r-2); background: var(--grafite);
+  }
+  .escolha-mod__card:has(input:focus-visible) { outline: 3px solid var(--azul-claro); outline-offset: 2px; }
+  .escolha-mod__card.mod--sel { border-color: var(--verde); background: rgba(0,155,74,.05); }
+  .escolha-mod__card .fita { height: 3px; width: 44px; }
+  .escolha-mod__meu { font-size: var(--t-micro); color: var(--verde-mata); font-weight: 600; }
+
+  /* Linha do time do usuário dentro do ranking */
+  .tabela--ranking tbody tr.linha-eu td { background: rgba(0,155,74,.13); }
+  .tabela--ranking tbody tr.linha-eu td:first-child { box-shadow: inset 3px 0 0 var(--verde); }
+  .selo-eu { margin-left: 8px; }
+
+  /* Edições apuradas */
+  .edicao { border: 1px solid var(--linha-clara); border-radius: var(--r-3); overflow: hidden; margin-bottom: var(--e-2); background: var(--branco); }
+  .edicao__h { margin: 0; font-size: 1rem; letter-spacing: 0; }
+  .edicao__info { display: grid; gap: 2px; min-width: 0; }
+  .edicao__cab {
+    display: grid; grid-template-columns: 78px minmax(0, 1fr) auto auto; gap: var(--e-3);
+    align-items: center; width: 100%; min-height: 64px;
+    padding: 10px var(--e-3); background: none; border: 0; cursor: pointer; text-align: left;
+    font-family: var(--fonte-texto);
+  }
+  .edicao__cab:hover { background: var(--claro); }
+  .edicao__cab img { width: 78px; height: 44px; object-fit: cover; border-radius: var(--r-2); background: var(--claro); }
+  .edicao__nome { font-family: var(--fonte-display); font-weight: 700; font-size: 1rem; line-height: 1.2; }
+  .edicao__meta { font-size: var(--t-micro); color: var(--texto-suave); }
+  .edicao__seta { width: 18px; height: 18px; color: var(--texto-suave); transition: transform var(--medio) var(--curva); }
+  .edicao__cab[aria-expanded="true"] .edicao__seta { transform: rotate(180deg); }
+  .edicao__corpo { padding: var(--e-4); border-top: 1px solid var(--linha-clara); background: var(--claro); }
+
+  .podio { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--e-2); margin-bottom: var(--e-4); }
+  .podio__item { display: flex; align-items: center; gap: var(--e-3); background: var(--branco); border: 1px solid var(--linha-clara); border-radius: var(--r-3); padding: var(--e-3); }
+  .podio__nome { font-family: var(--fonte-display); font-weight: 700; line-height: 1.2; }
+  .podio__uf { font-size: var(--t-micro); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .08em; }
+
+  .confronto {
+    display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: var(--e-3); align-items: center;
+    padding: 10px 0; border-top: 1px solid var(--linha-clara); font-size: var(--t-peq);
+  }
+  .confronto:first-of-type { border-top: 0; }
+  .confronto__fase { font-family: var(--fonte-display); font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .08em; color: var(--texto-suave); }
+  .confronto__placar { font-family: var(--fonte-display); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .confronto__parciais { font-size: var(--t-micro); color: var(--texto-suave); white-space: nowrap; }
+  .venceu { color: var(--verde-mata); font-weight: 700; }
+
+  .lista-evento { display: grid; gap: 8px; }
+  .lista-evento__item { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); flex-wrap: wrap; padding: 10px var(--e-3); border: 1px solid var(--linha-clara); border-radius: var(--r-3); background: var(--branco); font-size: var(--t-peq); }
+
+  @media (max-width: 720px) {
+    /* Em telas estreitas os botões do topo passam para a linha de baixo */
+    .painel__topo { flex-wrap: wrap; row-gap: var(--e-2); }
+    .painel__topo .flex-fim { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+    .edicao__cab { grid-template-columns: 56px minmax(0, 1fr) auto; }
+    .edicao__cab img { width: 56px; height: 40px; }
+    .edicao__cab .tag { display: none; }
+    .confronto { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="ranking.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Ranking por modalidade</h1>
+        <p class="sub">Classificação nacional consolidada pela apuração de cada campeonato</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="chamados.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Contestar um resultado
+        </a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- ==================== 1. ESCOLHA DA MODALIDADE ==================== -->
+      <div class="bloco">
+        <div class="bloco__topo">
+          <div>
+            <h2>Escolha a modalidade</h2>
+            <p class="txt-micro txt-suave" style="margin:0">Cada modalidade tem um ranking próprio. A soma do desempenho digital com o físico é o que define as vitórias.</p>
+          </div>
+          <span class="txt-micro txt-suave" id="rotulo-sel" aria-live="polite">Nenhuma modalidade selecionada</span>
+        </div>
+        <div class="bloco__corpo">
+          <fieldset style="border:0;padding:0;margin:0;background:none">
+            <legend class="sr-only">Escolha a modalidade do ranking</legend>
+            <div class="escolha-mod" id="escolha-mod">
+
+              <label class="escolha-mod__card" data-mod="futebol">
+                <input type="radio" name="modalidade" value="futebol">
+                <img class="mod-logo" src="../assets/img/mock/mod-futebol.svg" alt="">
+                <span class="fita" aria-hidden="true"></span>
+                <span class="escolha-mod__nome">Futebol</span>
+                <span class="escolha-mod__regra">6 a 8 jogadores · até 3 reservas</span>
+                <span class="escolha-mod__regra" data-conta="futebol">—</span>
+                <span class="escolha-mod__meu" data-meu="futebol"></span>
+              </label>
+
+              <label class="escolha-mod__card" data-mod="basquete">
+                <input type="radio" name="modalidade" value="basquete">
+                <img class="mod-logo" src="../assets/img/mock/mod-basquete.svg" alt="">
+                <span class="fita" aria-hidden="true"></span>
+                <span class="escolha-mod__nome">Basquete</span>
+                <span class="escolha-mod__regra">3 a 4 jogadores · até 2 reservas</span>
+                <span class="escolha-mod__regra" data-conta="basquete">—</span>
+                <span class="escolha-mod__meu" data-meu="basquete"></span>
+              </label>
+
+              <label class="escolha-mod__card" data-mod="shooter">
+                <input type="radio" name="modalidade" value="shooter">
+                <img class="mod-logo" src="../assets/img/mock/mod-shooter.svg" alt="">
+                <span class="fita" aria-hidden="true"></span>
+                <span class="escolha-mod__nome">Shooter</span>
+                <span class="escolha-mod__regra">5 jogadores · até 3 reservas</span>
+                <span class="escolha-mod__regra" data-conta="shooter">—</span>
+                <span class="escolha-mod__meu" data-meu="shooter"></span>
+              </label>
+
+              <label class="escolha-mod__card" data-mod="dance">
+                <input type="radio" name="modalidade" value="dance">
+                <img class="mod-logo" src="../assets/img/mock/mod-dance.svg" alt="">
+                <span class="fita" aria-hidden="true"></span>
+                <span class="escolha-mod__nome">Dance</span>
+                <span class="escolha-mod__regra">Atleta individual · staff opcional</span>
+                <span class="escolha-mod__regra" data-conta="dance">—</span>
+                <span class="escolha-mod__meu" data-meu="dance"></span>
+              </label>
+
+            </div>
+          </fieldset>
+        </div>
+      </div>
+
+      <!-- ==================== 2. DICA (sem modalidade escolhida) ==================== -->
+      <div class="vazio" id="dica">
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+        <h2>Selecione uma modalidade para ver o ranking</h2>
+        <p>O ranking global mostra vitórias, derrotas, campeonatos disputados, títulos e presença no Games of the Future de cada time ou atleta.</p>
+        <button class="btn btn--primario" type="button" data-ir-mod="futebol">Ver o ranking de Futebol</button>
+      </div>
+
+      <!-- ==================== 3. RANKING DA MODALIDADE ==================== -->
+      <div id="ranking-area" hidden>
+
+        <div class="stats" id="stats-mod"></div>
+
+        <div id="destaque-meu"></div>
+
+        <div class="bloco">
+          <div class="bloco__topo">
+            <div>
+              <h2 id="rk-titulo">Ranking global</h2>
+              <p class="txt-micro txt-suave" style="margin:0" id="rk-sub">—</p>
+            </div>
+            <span class="txt-micro txt-suave">V = vitórias · D = derrotas · Camp. = campeonatos Phygital disputados · GOTF = Games of the Future</span>
+          </div>
+          <div class="bloco__corpo bloco__corpo--flat" id="rk-tabela"></div>
+        </div>
+
+        <div class="aviso mb-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div>
+            <strong>Como este ranking é montado.</strong> Cada confronto phygital soma o resultado da disputa digital ao da disputa física.
+            Ao encerrar um campeonato, a organização faz a <em>apuração</em> e ordena a classificação final — é essa apuração que
+            alimenta o ranking nacional. Empates são desfeitos por saldo combinado e, persistindo, pelo confronto direto.
+          </div>
+        </div>
+
+        <div class="bloco">
+          <div class="bloco__topo">
+            <h2>Últimos campeonatos realizados</h2>
+            <span class="txt-micro txt-suave" id="ed-sub">—</span>
+          </div>
+          <div class="bloco__corpo" id="edicoes"></div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL — RANKING POR MODALIDADE
+   Escolha da modalidade sem recarregar a página; o estado vai para ?mod= na URL.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  var MODS = ['futebol', 'basquete', 'shooter', 'dance'];
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function img(p) {
+    if (!p) return '';
+    return /^(https?:|\.\.\/)/.test(p) ? p : '../' + p;
+  }
+
+  /* Escudos coerentes com os confrontos apurados em PB.dados.resultados() */
+  var ESCUDOS = {
+    'Tigres Phygital': 1, 'Fúria Digital': 2, 'Leões do Cerrado': 3, 'Vendaval FC': 4,
+    'Cangaço 3x3': 5, 'Bulls Phygital': 6, 'Alpha Squad BR': 9, 'Onça Preta e-Sports': 10
+  };
+  function escudoDe(nome, i) { return ESCUDOS[nome] || ((i % 12) + 1); }
+
+  var MEUS = D.meusTimes();
+  function meuTimeNa(mod) {
+    return MEUS.filter(function (t) { return t.modalidade === mod; })[0] || null;
+  }
+  function ehMeu(nome) {
+    return MEUS.some(function (t) { return t.nome === nome; });
+  }
+
+  /* ---- Cartões de escolha ------------------------------------------------ */
+  MODS.forEach(function (mod) {
+    var linhas = D.ranking(mod);
+    var m = D.modalidade(mod);
+    var alvo = document.querySelector('[data-conta="' + mod + '"]');
+    if (alvo) alvo.textContent = linhas.length + (m.individual ? ' atletas no ranking' : ' times no ranking');
+    var meu = meuTimeNa(mod);
+    var alvoMeu = document.querySelector('[data-meu="' + mod + '"]');
+    if (alvoMeu) alvoMeu.textContent = meu ? 'Seu time: ' + meu.nome : '';
+  });
+
+  /* ---- Tabela ------------------------------------------------------------ */
+  function tabela(mod) {
+    var linhas = D.ranking(mod);
+    var m = D.modalidade(mod);
+    if (!linhas.length) {
+      return '<div class="bloco__corpo"><div class="aviso aviso--alerta"><div>Ainda não há resultados apurados para ' +
+             esc(m.curto) + '. O ranking aparece assim que a primeira edição for encerrada e apurada.</div></div></div>';
+    }
+    var individual = !!m.individual;
+
+    return '' +
+    '<div class="tabela-wrap">' +
+      '<table class="tabela--ranking">' +
+        '<caption class="sr-only">Ranking nacional de ' + esc(m.curto) + '</caption>' +
+        '<thead><tr>' +
+          '<th scope="col">Pos</th>' +
+          '<th scope="col">' + (individual ? 'Atleta' : 'Time') + '</th>' +
+          '<th scope="col">UF</th>' +
+          '<th scope="col">V</th>' +
+          '<th scope="col">D</th>' +
+          '<th scope="col">Aprov.</th>' +
+          '<th scope="col">Camp.</th>' +
+          '<th scope="col">Títulos</th>' +
+          '<th scope="col">GOTF</th>' +
+        '</tr></thead>' +
+        '<tbody>' + linhas.map(function (t, i) {
+          var pos = i + 1;
+          var meu = ehMeu(t.nome);
+          var jogos = t.v + t.d;
+          var aprov = jogos ? Math.round((t.v / jogos) * 100) : 0;
+          var foto = individual
+            ? '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg'
+            : '../assets/img/mock/escudo-' + escudoDe(t.nome, i) + '.svg';
+          return '<tr' + (meu ? ' class="linha-eu"' : '') + '>' +
+            '<td><span class="pos' + (pos <= 3 ? ' pos--' + pos : '') + '">' + pos + '</span></td>' +
+            '<td><div class="celula-time"><img src="' + foto + '" alt=""><strong>' + esc(t.nome) + '</strong>' +
+              (meu ? '<span class="tag tag--solida selo-eu">Seu time</span>' : '') + '</div></td>' +
+            '<td>' + esc(t.uf) + '</td>' +
+            '<td>' + t.v + '</td>' +
+            '<td>' + t.d + '</td>' +
+            '<td>' + aprov + '%</td>' +
+            '<td>' + t.camp + '</td>' +
+            '<td>' + (t.titulos ? '<strong>' + t.titulos + '</strong>' : '<span class="txt-suave">0</span>') + '</td>' +
+            '<td>' + (t.gotf ? '<span class="tag tag--verde">Sim</span>' : '<span class="txt-suave">—</span>') + '</td>' +
+          '</tr>';
+        }).join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
+  /* ---- Estatísticas da modalidade ---------------------------------------- */
+  function stats(mod) {
+    var linhas = D.ranking(mod);
+    var m = D.modalidade(mod);
+    var soma = function (campo) { return linhas.reduce(function (t, l) { return t + (l[campo] || 0); }, 0); };
+    var gotf = linhas.filter(function (l) { return l.gotf; });
+    var lider = linhas[0];
+
+    return '' +
+    '<div class="stat stat--verde">' +
+      '<div class="stat__rotulo">' + (m.individual ? 'Atletas no ranking' : 'Times no ranking') + '</div>' +
+      '<div class="stat__valor">' + linhas.length + '</div>' +
+      '<div class="stat__nota">' + (lider ? 'Líder: ' + esc(lider.nome) + ' (' + esc(lider.uf) + ')' : '—') + '</div>' +
+    '</div>' +
+    '<div class="stat stat--amarela">' +
+      '<div class="stat__rotulo">Títulos distribuídos</div>' +
+      '<div class="stat__valor">' + soma('titulos') + '</div>' +
+      '<div class="stat__nota">em edições nacionais já apuradas</div>' +
+    '</div>' +
+    '<div class="stat stat--azul">' +
+      '<div class="stat__rotulo">Vitórias registradas</div>' +
+      '<div class="stat__valor">' + soma('v') + '</div>' +
+      '<div class="stat__nota">' + soma('d') + ' derrotas no mesmo período</div>' +
+    '</div>' +
+    '<div class="stat stat--cinza">' +
+      '<div class="stat__rotulo">No Games of the Future</div>' +
+      '<div class="stat__valor">' + gotf.length + '</div>' +
+      '<div class="stat__nota">' + (gotf.length ? esc(gotf.map(function (g) { return g.nome; }).join(' · ')) : 'nenhum representante ainda') + '</div>' +
+    '</div>';
+  }
+
+  /* ---- Destaque do time do usuário --------------------------------------- */
+  function destaque(mod) {
+    var m = D.modalidade(mod);
+    var linhas = D.ranking(mod);
+    var meu = meuTimeNa(mod);
+
+    if (!meu) {
+      return '<div class="aviso mb-4"><div><strong>Você ainda não tem time nesta modalidade.</strong> ' +
+        'Cadastre um time de ' + esc(m.curto) + ' em Meus Times e inscreva-o na próxima edição para entrar neste ranking. ' +
+        '<a href="meus-times.html" style="color:var(--verde);font-weight:600;text-decoration:underline">Cadastrar time</a></div></div>';
+    }
+
+    var pos = -1;
+    linhas.forEach(function (l, i) { if (l.nome === meu.nome) pos = i + 1; });
+    if (pos < 0) {
+      return '<div class="aviso aviso--alerta mb-4"><div><strong>' + esc(meu.nome) + '</strong> ainda não pontuou no ranking de ' +
+        esc(m.curto) + '. A primeira colocação aparece depois da apuração do primeiro campeonato disputado. ' +
+        '<a href="inscricoes.html" style="color:var(--verde);font-weight:600;text-decoration:underline">Ver minhas inscrições</a></div></div>';
+    }
+
+    var l = linhas[pos - 1];
+    return '<div class="aviso aviso--sucesso mb-4">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none;margin-top:2px"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/></svg>' +
+      '<div><strong>' + esc(meu.nome) + ' está em ' + pos + 'º lugar no ranking de ' + esc(m.curto) + '.</strong> ' +
+      l.v + ' vitórias, ' + l.d + ' derrotas, ' + l.camp + ' campeonatos disputados e ' + l.titulos + ' título' + (l.titulos === 1 ? '' : 's') + '. ' +
+      (l.gotf ? 'O time já representou o Brasil no Games of the Future. ' : 'Ainda sem participação no Games of the Future. ') +
+      '<a href="meus-times.html" style="color:var(--verde-mata);font-weight:600;text-decoration:underline">Ver o time</a></div></div>';
+  }
+
+  /* ---- Últimos campeonatos realizados ------------------------------------ */
+  function confrontos(filtro, nivel) {
+    var h = nivel || 'h4';
+    var lista = D.resultados().filter(filtro);
+    if (!lista.length) return '';
+    return '<' + h + ' class="mt-4" style="font-size:1.0625rem">Confrontos apurados</' + h + '>' + lista.map(function (r) {
+      var tc = r.casa.digital + r.casa.fisico;
+      var tf = r.fora.digital + r.fora.fisico;
+      return '<div class="confronto">' +
+        '<span class="confronto__fase">' + esc(r.fase) + ' · ' + esc(F.dataCurta(r.data)) + '</span>' +
+        '<span><span class="' + (tc > tf ? 'venceu' : '') + '">' + esc(r.casa.nome) + '</span> ' +
+          '<span class="confronto__placar">' + tc + ' – ' + tf + '</span> ' +
+          '<span class="' + (tf > tc ? 'venceu' : '') + '">' + esc(r.fora.nome) + '</span></span>' +
+        '<span class="confronto__parciais">digital ' + r.casa.digital + '–' + r.fora.digital +
+          ' · arena ' + r.casa.fisico + '–' + r.fora.fisico + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function edicoes(mod) {
+    var m = D.modalidade(mod);
+    var lista = D.campeonatos({ status: 'encerrado', modalidade: mod })
+                 .sort(function (a, b) { return a.data < b.data ? 1 : -1; });
+
+    document.getElementById('ed-sub').textContent = lista.length
+      ? (lista.length === 1 ? '1 edição apurada de ' : lista.length + ' edições apuradas de ') + m.curto
+      : 'nenhuma edição de ' + m.curto + ' apurada no sistema';
+
+    if (!lista.length) {
+      var eventos = D.eventos(mod);
+      return '<div class="aviso aviso--alerta">' +
+          '<div><strong>Nenhuma edição de ' + esc(m.curto) + ' foi apurada por aqui ainda.</strong> ' +
+          'O ranking acima consolida temporadas anteriores registradas pela organização. ' +
+          'As próximas edições aparecem nesta lista logo após a apuração.</div></div>' +
+        (eventos.length
+          ? '<h3 class="mt-4" style="font-size:1.0625rem">Edições registradas na galeria</h3>' +
+            '<div class="lista-evento">' + eventos.map(function (e) {
+              return '<div class="lista-evento__item"><div><strong>' + esc(e.titulo) + '</strong>' +
+                '<div class="txt-micro txt-suave">' + esc(e.local) + ' · ' + e.ano + ' · ' + e.fotos + ' fotos</div></div>' +
+                '<a class="link-seta" href="../eventos.html">Ver galeria</a></div>';
+            }).join('') + '</div>'
+          : '') +
+        confrontos(function (r) { return r.mod === mod; }, 'h3');
+    }
+
+    return lista.map(function (c, k) {
+      var idc = 'ed-' + c.id;
+      var podio = (c.classificacao || []).map(function (p, i) {
+        return '<div class="podio__item">' +
+          '<span class="pos pos--' + p.pos + '">' + p.pos + '</span>' +
+          '<div><div class="podio__nome">' + esc(p.nome) + '</div>' +
+          '<div class="podio__uf">' + esc(p.uf) + ' · ' + (p.pos === 1 ? 'Campeão' : p.pos === 2 ? 'Vice' : '3º lugar') + '</div></div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="edicao">' +
+        '<h3 class="edicao__h">' +
+        '<button class="edicao__cab" type="button" aria-expanded="' + (k === 0 ? 'true' : 'false') + '" aria-controls="' + idc + '" data-edicao>' +
+          '<img src="' + esc(img(c.banner)) + '" alt="">' +
+          '<span class="edicao__info">' +
+            '<span class="edicao__nome">' + esc(c.nome) + '</span>' +
+            '<span class="edicao__meta">' + esc(F.periodo(c.data, c.dataFim)) + ' · ' + esc(c.local) + ' · ' + c.inscritos + ' inscritos</span>' +
+          '</span>' +
+          '<span class="tag tag--cinza">Apurado</span>' +
+          '<svg class="edicao__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</button>' +
+        '</h3>' +
+        '<div class="edicao__corpo" id="' + idc + '"' + (k === 0 ? '' : ' hidden') + '>' +
+          '<h4>Classificação final</h4>' +
+          (podio ? '<div class="podio">' + podio + '</div>' : '<p class="txt-peq txt-suave">Classificação não publicada.</p>') +
+          '<p class="txt-peq txt-suave">' + esc(c.descricao) + '</p>' +
+          confrontos(function (r) { return r.camp === c.nome; }) +
+          '<p class="mt-4" style="margin-bottom:0"><a class="link-seta" href="../eventos.html">Ver a galeria desta edição</a></p>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---- Seleção / URL ------------------------------------------------------ */
+  var area = document.getElementById('ranking-area');
+  var dica = document.getElementById('dica');
+
+  function param(nome) {
+    var m = new RegExp('[?&]' + nome + '=([^&]*)').exec(window.location.search);
+    return m ? decodeURIComponent(m[1]) : '';
+  }
+
+  function selecionar(mod, empurrar) {
+    if (MODS.indexOf(mod) < 0) {
+      area.hidden = true;
+      dica.hidden = false;
+      document.getElementById('rotulo-sel').textContent = 'Nenhuma modalidade selecionada';
+      PB.$$('#escolha-mod .escolha-mod__card').forEach(function (c) { c.classList.remove('mod--sel'); });
+      PB.$$('#escolha-mod input').forEach(function (r) { r.checked = false; });
+      return;
+    }
+
+    var m = D.modalidade(mod);
+
+    PB.$$('#escolha-mod .escolha-mod__card').forEach(function (c) {
+      var ativo = c.getAttribute('data-mod') === mod;
+      c.classList.toggle('mod--sel', ativo);
+      var r = c.querySelector('input');
+      if (r) r.checked = ativo;
+    });
+
+    document.getElementById('rotulo-sel').textContent = 'Exibindo: ' + m.nome;
+    document.getElementById('rk-titulo').textContent = 'Ranking global — ' + m.curto;
+    document.getElementById('rk-sub').textContent = m.descricao;
+    document.getElementById('stats-mod').innerHTML = stats(mod);
+    document.getElementById('destaque-meu').innerHTML = destaque(mod);
+    document.getElementById('rk-tabela').innerHTML = tabela(mod);
+    document.getElementById('edicoes').innerHTML = edicoes(mod);
+
+    dica.hidden = true;
+    area.hidden = false;
+
+    try {
+      var url = window.location.pathname + '?mod=' + mod;
+      history[empurrar ? 'pushState' : 'replaceState']({ mod: mod }, '', url);
+    } catch (e) { /* file:// em alguns navegadores não permite — a tela continua funcionando */ }
+  }
+
+  /* Escolha por clique/teclado nos cartões */
+  PB.$$('#escolha-mod input').forEach(function (r) {
+    r.addEventListener('change', function () { selecionar(r.value, true); });
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest) return;
+
+    var atalho = e.target.closest('[data-ir-mod]');
+    if (atalho) { selecionar(atalho.getAttribute('data-ir-mod'), true); return; }
+
+    var cab = e.target.closest('[data-edicao]');
+    if (cab) {
+      var alvo = document.getElementById(cab.getAttribute('aria-controls'));
+      if (!alvo) return;
+      var aberto = cab.getAttribute('aria-expanded') === 'true';
+      cab.setAttribute('aria-expanded', String(!aberto));
+      alvo.hidden = aberto;
+    }
+  });
+
+  window.addEventListener('popstate', function () { selecionar(param('mod'), false); });
+
+  selecionar(param('mod'), false);
+})();
+</script>
+
+</body>
+</html>

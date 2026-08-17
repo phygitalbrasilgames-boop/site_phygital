@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chamados — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Central de chamados do Painel do Competidor da Phygital Brasil: abra um protocolo, acompanhe as respostas da organização e solicite alterações bloqueadas após o encerramento das inscrições.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes locais desta tela — compõem os componentes já existentes */
+
+  /* .campo__erro é display:flex no phygital.css e vence o atributo [hidden]:
+     sem esta linha a mensagem de erro aparece antes de qualquer validação. */
+  .campo__erro[hidden] { display: none; }
+
+  .chamado-item__fim { display: flex; align-items: center; justify-content: flex-end; gap: var(--e-3); }
+  .chamado-item__seta { width: 18px; height: 18px; color: var(--cinza-40); flex: none; }
+  .chamado-item__quando { text-align: right; }
+  .chamado-item--novo { cursor: default; background: rgba(0,155,74,.06); }
+  .lista-vazia { padding: var(--e-4); }
+  /* Em telas estreitas a ação principal desce para a segunda linha do topo */
+  @media (max-width: 640px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; }
+    .painel__topo .flex-fim .btn { flex: 1; }
+  }
+  @media (max-width: 640px) {
+    .chamado-item { grid-template-columns: 1fr; }
+    .chamado-item__fim, .chamado-item__quando { justify-content: flex-start; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Chamados</h1>
+        <p class="sub">Canal oficial de atendimento das suas inscrições</p>
+      </div>
+      <div class="flex-fim">
+        <button class="btn btn--primario" type="button" data-abrir-modal="modal-chamado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Abrir chamado
+        </button>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- Explicação do canal -->
+      <div class="aviso mb-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none;color:var(--info)"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        <div>
+          <strong>Para que serve o chamado.</strong>
+          Enquanto as inscrições estão abertas você altera elenco, fotos, número de camisa e staff sozinho,
+          direto no painel. <strong>Depois da data de encerramento, todos esses campos ficam bloqueados</strong> —
+          e o chamado passa a ser o único caminho para pedir substituição de atleta, correção de dado,
+          cancelamento ou qualquer exceção. A organização analisa caso a caso e pode solicitar comprovação
+          (atestado médico, documento com foto, print do erro). Cada abertura, resposta, mudança de status e
+          encerramento é <strong>notificado por e-mail</strong> para <span class="display" data-email-usuario>diego@digitalsolvers.com</span>,
+          sempre com o número de protocolo no assunto.
+        </div>
+      </div>
+
+      <!-- Números -->
+      <div class="stats" id="stats-chamados"></div>
+
+      <!-- Lista -->
+      <div class="bloco" data-abas>
+        <div class="bloco__topo">
+          <h2>Meus chamados</h2>
+          <span class="txt-micro txt-suave">Do mais recente para o mais antigo</span>
+        </div>
+        <div class="abas" role="tablist" aria-label="Situação dos chamados">
+          <button class="aba" role="tab" id="aba-abertos" aria-controls="p-abertos" aria-selected="true">
+            Em aberto <span class="conta" id="conta-abertos">0</span>
+          </button>
+          <button class="aba" role="tab" id="aba-encerrados" aria-controls="p-encerrados" aria-selected="false">
+            Encerrados <span class="conta" id="conta-encerrados">0</span>
+          </button>
+        </div>
+
+        <div id="p-abertos" role="tabpanel" aria-labelledby="aba-abertos" tabindex="0">
+          <div id="lista-abertos"></div>
+        </div>
+        <div id="p-encerrados" role="tabpanel" aria-labelledby="aba-encerrados" tabindex="0" hidden>
+          <div id="lista-encerrados"></div>
+        </div>
+      </div>
+
+      <!-- Guia rápido -->
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2>Qual categoria escolher</h2>
+          <span class="txt-micro txt-suave">Prazo de primeira resposta: até 2 dias úteis</span>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat">
+          <div class="tabela-wrap" style="border:0;border-radius:0">
+            <table>
+              <caption class="sr-only">Categorias de chamado, quando usar cada uma e o que anexar</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoria</th>
+                  <th scope="col">Quando usar</th>
+                  <th scope="col">O que anexar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Alteração de elenco</strong></td>
+                  <td>Substituir atleta lesionado, trocar reserva por titular ou corrigir número de camisa depois do encerramento das inscrições.</td>
+                  <td>Atestado médico ou justificativa por escrito, mais os dados completos do atleta que entra.</td>
+                </tr>
+                <tr>
+                  <td><strong>Dúvida sobre regulamento</strong></td>
+                  <td>Interpretação de regra, critério de desempate, pontuação combinada digital + arena e uso de equipamento.</td>
+                  <td>Cite o artigo do regulamento e a fase da disputa. Anexo é opcional.</td>
+                </tr>
+                <tr>
+                  <td><strong>Problema técnico</strong></td>
+                  <td>Erro ao subir foto ou escudo, campo travado no formulário, e-mail de confirmação que não chegou.</td>
+                  <td>Print da tela inteira com a mensagem de erro e o navegador que você está usando.</td>
+                </tr>
+                <tr>
+                  <td><strong>Cancelamento</strong></td>
+                  <td>Desistência do time ou do atleta na competição. A vaga é repassada ao primeiro da lista de espera.</td>
+                  <td>Confirmação assinada pelo responsável do time. O cancelamento é irreversível.</td>
+                </tr>
+                <tr>
+                  <td><strong>Outro</strong></td>
+                  <td>Qualquer assunto fora das opções acima: patrocínio, credenciamento de mídia, acessibilidade na arena.</td>
+                  <td>O que ajudar a organização a entender o pedido.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <p class="txt-micro txt-suave mt-3">
+        Protótipo de interface. Os chamados exibidos são dados de demonstração e nenhum e-mail é realmente disparado.
+      </p>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== MODAL — ABRIR CHAMADO ==================== -->
+<div class="modal" id="modal-chamado" role="dialog" aria-modal="true" aria-labelledby="modal-chamado-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <p class="eyebrow">Novo protocolo</p>
+      <h2 id="modal-chamado-titulo" style="font-size:1.5rem">Abrir chamado</h2>
+      <p class="txt-peq txt-suave">
+        Um chamado por assunto. Quanto mais específico o pedido, mais rápido o retorno da central de inscrições.
+      </p>
+
+      <form id="form-chamado" data-validar>
+
+        <div class="campo">
+          <label for="ch-camp">Campeonato relacionado <span class="obrigatorio">*</span></label>
+          <select id="ch-camp" name="campeonato" required>
+            <option value="">Selecione uma das suas inscrições</option>
+          </select>
+          <p class="campo__erro" hidden>Escolha o campeonato a que este chamado se refere.</p>
+          <p class="campo__ajuda">Só aparecem aqui os campeonatos em que você tem inscrição registrada.</p>
+        </div>
+
+        <div class="campo">
+          <label for="ch-assunto">Assunto <span class="obrigatorio">*</span></label>
+          <input type="text" id="ch-assunto" name="assunto" maxlength="90" required
+                 placeholder="Ex.: Substituição do atleta Caio Ferreira por lesão">
+          <p class="campo__erro" hidden>Escreva um assunto que resuma o pedido.</p>
+        </div>
+
+        <div class="campo">
+          <label for="ch-categoria">Categoria <span class="obrigatorio">*</span></label>
+          <select id="ch-categoria" name="categoria" required>
+            <option value="">Selecione a categoria</option>
+            <option value="elenco">Alteração de elenco</option>
+            <option value="regulamento">Dúvida sobre regulamento</option>
+            <option value="tecnico">Problema técnico</option>
+            <option value="cancelamento">Cancelamento</option>
+            <option value="outro">Outro</option>
+          </select>
+          <p class="campo__erro" hidden>Selecione a categoria do chamado.</p>
+        </div>
+
+        <div class="campo">
+          <label for="ch-msg">Mensagem <span class="obrigatorio">*</span></label>
+          <textarea id="ch-msg" name="mensagem" required
+                    placeholder="Descreva o que precisa. Inclua nome completo dos atletas envolvidos, número de camisa e a data em que o problema aconteceu."></textarea>
+          <p class="campo__erro" hidden>Descreva o pedido com pelo menos uma frase.</p>
+          <p class="campo__ajuda">Não envie dados bancários nem documentos de terceiros sem autorização.</p>
+        </div>
+
+        <div class="campo">
+          <span class="rotulo" id="rot-anexo">Anexo (opcional)</span>
+          <div class="upload" data-upload aria-describedby="rot-anexo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--cinza)"><path d="M21 12.5V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h6"/><path d="M16 3h5v5M21 3l-9 9"/></svg>
+            <span class="upload__titulo">Arraste um arquivo ou clique para escolher</span>
+            <span class="upload__specs">PDF, JPG ou PNG até 5 MB — atestado, comprovante ou print do erro</span>
+            <button class="btn btn--contorno btn--pequeno" type="button">Escolher arquivo</button>
+            <span class="txt-micro txt-suave" data-upload-nome>Nenhum arquivo selecionado</span>
+            <input type="file" id="ch-anexo" name="anexo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+          </div>
+        </div>
+
+        <div class="aviso aviso--alerta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          <div>
+            Ao enviar, o sistema gera um <strong>número de protocolo</strong> e envia a confirmação por e-mail.
+            Guarde esse número: ele identifica o pedido em qualquer conversa com a organização.
+          </div>
+        </div>
+
+        <div class="modal__acoes">
+          <button class="btn btn--fantasma" type="button" data-fechar-modal>Cancelar</button>
+          <button class="btn btn--primario" type="submit">Enviar chamado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL — CHAMADOS
+   Lista os chamados do competidor (PB.dados.chamados()) separados por
+   situação e abre um novo protocolo pelo modal.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var chamados = D.chamados();
+  var usuario = D.usuario();
+
+  document.querySelectorAll('[data-email-usuario]').forEach(function (el) {
+    el.textContent = usuario.email;
+  });
+
+  function nomeCampeonato(id) {
+    var c = D.campeonato(id);
+    return c ? c.nome : 'Sem campeonato vinculado';
+  }
+
+  function tagStatus(id) {
+    var s = D.STATUS_CHAMADO[id] || D.STATUS_CHAMADO.aberto;
+    return '<span class="tag ' + s.classe + '">' + esc(s.rotulo) + '</span>';
+  }
+
+  /* ---- Um item da lista ---- */
+  function item(c, novo) {
+    var conteudo =
+      '<span class="chamado__protocolo">' + esc(c.protocolo) + '</span>' +
+      '<div>' +
+        '<div class="chamado__assunto">' + esc(c.assunto) + '</div>' +
+        '<div class="chamado__meta">' + esc(nomeCampeonato(c.campeonato)) + '</div>' +
+        '<div class="chamado__meta">Aberto em ' + esc(F.data(c.abertoEm)) +
+          ' · Última atualização em ' + esc(F.data(c.atualizadoEm)) + '</div>' +
+      '</div>' +
+      '<div class="chamado-item__fim">' +
+        '<div class="chamado-item__quando">' +
+          tagStatus(c.status) +
+          '<div class="chamado__meta mt-2">' + esc(c.mensagens ? c.mensagens.length + ' mensagem' + (c.mensagens.length === 1 ? '' : 's') : 'Aguardando triagem') + '</div>' +
+        '</div>' +
+        (novo ? '' : '<svg class="chamado-item__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>') +
+      '</div>';
+
+    if (novo) {
+      return '<div class="chamado-item chamado-item--novo">' + conteudo + '</div>';
+    }
+    return '<a class="chamado-item" href="chamado.html?id=' + esc(c.id) + '">' + conteudo + '</a>';
+  }
+
+  function vazio(titulo, texto, rotuloBotao, acao) {
+    return '<div class="lista-vazia"><div class="vazio">' +
+      '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+      '<h3>' + esc(titulo) + '</h3>' +
+      '<p>' + esc(texto) + '</p>' +
+      acao +
+      '</div></div>';
+  }
+
+  /* ---- Render das duas abas ---- */
+  function abertos() { return chamados.filter(function (c) { return c.status !== 'encerrado'; }); }
+  function encerrados() { return chamados.filter(function (c) { return c.status === 'encerrado'; }); }
+
+  function render() {
+    var a = abertos(), e = encerrados();
+
+    document.getElementById('lista-abertos').innerHTML = a.length
+      ? a.map(function (c) { return item(c, false); }).join('')
+      : vazio('Nenhum chamado em aberto',
+              'Todos os seus pedidos foram respondidos e encerrados. Precisa de alguma alteração depois do encerramento das inscrições? Abra um novo protocolo.',
+              '<button class="btn btn--primario" type="button" data-abrir-modal="modal-chamado">Abrir chamado</button>');
+
+    document.getElementById('lista-encerrados').innerHTML = e.length
+      ? e.map(function (c) { return item(c, false); }).join('')
+      : vazio('Nenhum chamado encerrado',
+              'Quando um atendimento é concluído pela organização, ele sai da aba "Em aberto" e fica guardado aqui com todo o histórico da conversa.',
+              '<a class="btn btn--contorno" href="inscricoes.html">Ver minhas inscrições</a>');
+
+    document.getElementById('conta-abertos').textContent = a.length;
+    document.getElementById('conta-encerrados').textContent = e.length;
+
+    var ultimo = chamados.slice().sort(function (x, y) { return x.abertoEm < y.abertoEm ? 1 : -1; })[0];
+
+    document.getElementById('stats-chamados').innerHTML =
+      '<div class="stat stat--amarela">' +
+        '<div class="stat__rotulo">Em aberto</div>' +
+        '<div class="stat__valor num">' + a.length + '</div>' +
+        '<div class="stat__nota">Aguardando você ou a organização</div>' +
+      '</div>' +
+      '<div class="stat stat--cinza">' +
+        '<div class="stat__rotulo">Encerrados</div>' +
+        '<div class="stat__valor num">' + e.length + '</div>' +
+        '<div class="stat__nota">Histórico completo preservado</div>' +
+      '</div>' +
+      '<div class="stat stat--azul">' +
+        '<div class="stat__rotulo">Prazo de resposta</div>' +
+        '<div class="stat__valor num">2</div>' +
+        '<div class="stat__nota">Dias úteis para a primeira resposta</div>' +
+      '</div>' +
+      '<div class="stat stat--verde">' +
+        '<div class="stat__rotulo">Último protocolo</div>' +
+        '<div class="stat__valor num" style="font-size:1.5rem">' + esc(ultimo ? ultimo.protocolo : '—') + '</div>' +
+        '<div class="stat__nota">' + esc(ultimo ? 'Aberto em ' + F.data(ultimo.abertoEm) : 'Nenhum chamado registrado') + '</div>' +
+      '</div>';
+  }
+
+  render();
+
+  /* ---- Opções do select: as inscrições do usuário ---- */
+  (function preencherCampeonatos() {
+    var sel = document.getElementById('ch-camp');
+    var inscricoes = D.minhasInscricoes();
+
+    sel.innerHTML = '<option value="">Selecione uma das suas inscrições</option>' +
+      inscricoes.map(function (i) {
+        var c = D.campeonato(i.campeonato);
+        var t = D.time(i.time);
+        var rotulo = (c ? c.nome : i.campeonato) +
+                     (t ? ' — ' + t.nome : '') +
+                     ' · protocolo ' + i.protocolo;
+        return '<option value="' + esc(i.campeonato) + '">' + esc(rotulo) + '</option>';
+      }).join('') +
+      '<option value="geral">Não se refere a um campeonato específico</option>';
+  })();
+
+  /* ---- Protocolo do protótipo: mesmo formato dos dados reais ---- */
+  function novoProtocolo() {
+    var n = 600 + Math.floor(Math.random() * 380);
+    return new Date().getFullYear() + '-' + String(n).padStart(6, '0');
+  }
+
+  function hojeISO() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  /* Registrado depois que phygital.js já ligou a validação:
+     se a validação barrou o envio, e.defaultPrevented já vem verdadeiro. */
+  PB.aoIniciar = function () {
+    var form = document.getElementById('form-chamado');
+
+    form.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+
+      var protocolo = novoProtocolo();
+      var campo = document.getElementById('ch-camp');
+      var novo = {
+        id: 'novo',
+        protocolo: protocolo,
+        assunto: document.getElementById('ch-assunto').value,
+        campeonato: campo.value === 'geral' ? '' : campo.value,
+        status: 'aberto',
+        abertoEm: hojeISO(),
+        atualizadoEm: hojeISO(),
+        mensagens: [{ de: 'usuario' }]
+      };
+
+      var lista = document.getElementById('lista-abertos');
+      var vazioAtual = lista.querySelector('.vazio');
+      if (vazioAtual) lista.innerHTML = '';
+      lista.insertAdjacentHTML('afterbegin', item(novo, true));
+
+      var conta = document.getElementById('conta-abertos');
+      conta.textContent = String(parseInt(conta.textContent, 10) + 1);
+
+      document.getElementById('aba-abertos').click();
+
+      PB.fecharModal('modal-chamado');
+      form.reset();
+      var nomeArquivo = form.querySelector('[data-upload-nome]');
+      if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
+
+      PB.toast('Chamado registrado',
+        'Protocolo ' + protocolo + '. A confirmação foi enviada para ' + usuario.email +
+        ' e a organização responde em até 2 dias úteis.', 'info');
+    });
+  };
+})();
+</script>
+
+</body>
+</html>

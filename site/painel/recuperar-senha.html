@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recuperar senha — Phygital Brasil</title>
+<meta name="description" content="Recupere o acesso ao painel da Phygital Brasil em duas etapas: receba um código de 6 dígitos por e-mail e cadastre uma nova senha.">
+<meta name="theme-color" content="#0E1113">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes desta página — compostos sobre o design system */
+  .auth__caixa { width: min(480px, 100%); }
+
+  /* .campo__erro { display:flex } vence o atributo [hidden]: mantém o erro oculto até a validação */
+  .campo__erro[hidden] { display: none; }
+  .campo--otp .campo__erro { justify-content: center; }
+  .campo--otp .rotulo { text-align: center; }
+
+  /* Campo de senha com botão de exibição */
+  .campo-senha { position: relative; }
+  .campo-senha input { padding-right: 56px; }
+  .ver-senha {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 46px; height: 46px; display: grid; place-items: center;
+    background: none; border: 0; border-radius: var(--r-2);
+    color: var(--cinza); cursor: pointer;
+  }
+  .ver-senha:hover { color: var(--texto); background: rgba(14,17,19,.05); }
+  .ver-senha svg { width: 20px; height: 20px; }
+  .ver-senha .olho-off { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-on { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-off { display: block; }
+
+  /* Botão em forma de link */
+  .link-botao {
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: 0 4px; border: 0; background: none; cursor: pointer;
+    font-family: var(--fonte-texto); font-size: var(--t-peq); font-weight: 600;
+    color: var(--verde); text-decoration: underline;
+  }
+  .link-botao:hover { color: var(--verde-mata); }
+  .link-botao:disabled { color: var(--cinza-40); cursor: not-allowed; text-decoration: none; }
+
+  .auth__aviso svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--info); }
+  .validade { display: flex; align-items: center; justify-content: center; gap: var(--e-2); margin-bottom: var(--e-4); }
+  .validade svg { width: 14px; height: 14px; }
+  .reenvio { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: var(--e-3); text-align: center; }
+  .destino { font-weight: 600; word-break: break-word; }
+
+  .auth__lateral .auth__rodape-lateral { font-size: var(--t-micro); color: rgba(255,255,255,.6); line-height: 1.7; }
+  .auth__lateral .auth__rodape-lateral a { color: var(--amarelo); font-weight: 600; }
+  .auth__lateral .auth__rodape-lateral a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<main class="auth" id="conteudo">
+
+  <!-- ==================== LATERAL DE MARCA ==================== -->
+  <aside class="auth__lateral">
+    <a href="../index.html" aria-label="Phygital Brasil — página inicial">
+      <img class="logo" src="../assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+    </a>
+
+    <p class="auth__frase">Perdeu a senha? <span>Recupere</span> em duas etapas</p>
+
+    <div class="auth__rodape-lateral">
+      <p>
+        A recuperação é feita pelo e-mail cadastrado. Se você não tem mais acesso a ele,
+        escreva para a organização em
+        <a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a>.
+      </p>
+      <p><a href="../index.html">Voltar ao site</a> · <a href="login.html">Ir para o acesso</a></p>
+    </div>
+  </aside>
+
+  <!-- ==================== PAINEL DO FORMULÁRIO ==================== -->
+  <div class="auth__painel">
+    <div class="auth__caixa">
+
+      <div class="passos" role="list" aria-label="Etapas da recuperação de senha">
+        <span class="passo passo--ativo" id="passo-1" role="listitem" aria-current="step">
+          <span class="passo__num"><span>1</span></span> Identificação
+        </span>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <span class="passo" id="passo-2" role="listitem">
+          <span class="passo__num"><span>2</span></span> Nova senha
+        </span>
+      </div>
+
+      <h1>Recuperar senha</h1>
+
+      <!-- ---------- ETAPA 1: informar o e-mail ---------- -->
+      <section id="etapa-1" aria-labelledby="titulo-etapa-1">
+        <h2 class="sr-only" id="titulo-etapa-1">Etapa 1 — informar o e-mail da conta</h2>
+
+        <p class="txt-suave mb-5">
+          Informe o e-mail usado no cadastro. Enviamos um código de 6 dígitos para ele —
+          é com esse código que você cria a nova senha.
+        </p>
+
+        <form id="form-email" data-validar>
+          <div class="campo">
+            <label for="email">E-mail da conta<span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" placeholder="voce@email.com.br" required>
+            <p class="campo__ajuda">O mesmo endereço que recebe os avisos de inscrição da federação.</p>
+            <p class="campo__erro" hidden>Informe um e-mail válido.</p>
+          </div>
+
+          <button class="btn btn--primario btn--bloco" type="submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>
+            Enviar código
+          </button>
+        </form>
+
+        <div class="aviso auth__aviso mt-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div>
+            <strong>O código chega por e-mail e vale por 15 minutos.</strong>
+            Ele sai de <a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a>,
+            o mesmo remetente das confirmações de inscrição. Passado o prazo, o código perde a validade
+            e você pode pedir outro nesta mesma tela. Por segurança, a senha antiga continua valendo
+            até que a nova seja gravada.
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- ETAPA 2: código + nova senha ---------- -->
+      <section id="etapa-2" aria-labelledby="titulo-etapa-2" hidden>
+        <h2 class="sr-only" id="titulo-etapa-2">Etapa 2 — código e nova senha</h2>
+
+        <p class="txt-suave mb-3">
+          Código enviado para <span class="destino" id="destino">seu e-mail</span>.
+          Digite os 6 dígitos e escolha a nova senha.
+        </p>
+
+        <p class="validade">
+          <span class="tag tag--verde" id="validade">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span id="validade-txt">Código válido por 15:00</span>
+          </span>
+        </p>
+
+        <form id="form-senha" data-validar>
+
+          <div class="campo campo--otp" id="campo-codigo">
+            <span class="rotulo" id="rotulo-codigo">Código recebido por e-mail</span>
+            <div class="otp" role="group" aria-labelledby="rotulo-codigo">
+              <label class="sr-only" for="cod-1">Dígito 1</label>
+              <input type="text" id="cod-1" name="cod1">
+              <label class="sr-only" for="cod-2">Dígito 2</label>
+              <input type="text" id="cod-2" name="cod2">
+              <label class="sr-only" for="cod-3">Dígito 3</label>
+              <input type="text" id="cod-3" name="cod3">
+              <label class="sr-only" for="cod-4">Dígito 4</label>
+              <input type="text" id="cod-4" name="cod4">
+              <label class="sr-only" for="cod-5">Dígito 5</label>
+              <input type="text" id="cod-5" name="cod5">
+              <label class="sr-only" for="cod-6">Dígito 6</label>
+              <input type="text" id="cod-6" name="cod6">
+            </div>
+            <p class="campo__erro" hidden>Digite os 6 dígitos do código enviado por e-mail.</p>
+          </div>
+
+          <div class="campo mt-4">
+            <label for="nova">Nova senha<span class="obrigatorio" aria-hidden="true">*</span></label>
+            <div class="campo-senha">
+              <input type="password" id="nova" name="nova" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres" data-senha required>
+              <button type="button" class="ver-senha" data-ver-senha="nova" aria-pressed="false" aria-label="Mostrar nova senha">
+                <svg class="olho-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="olho-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M1 1l22 22"/></svg>
+              </button>
+            </div>
+            <p class="campo__ajuda">Pelo menos 8 caracteres. Ao gravar, você sai das sessões abertas em outros aparelhos.</p>
+            <p class="campo__erro" hidden>Crie uma senha com pelo menos 8 caracteres.</p>
+          </div>
+
+          <div class="campo">
+            <label for="nova2">Repetir nova senha<span class="obrigatorio" aria-hidden="true">*</span></label>
+            <div class="campo-senha">
+              <input type="password" id="nova2" name="nova2" autocomplete="new-password" placeholder="Digite a senha novamente" data-senha-confirma required>
+              <button type="button" class="ver-senha" data-ver-senha="nova2" aria-pressed="false" aria-label="Mostrar senha repetida">
+                <svg class="olho-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="olho-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M1 1l22 22"/></svg>
+              </button>
+            </div>
+            <p class="campo__erro" hidden>As senhas não conferem.</p>
+          </div>
+
+          <button class="btn btn--primario btn--bloco" type="submit">Alterar senha</button>
+
+        </form>
+
+        <div class="reenvio">
+          <p class="txt-peq txt-suave mb-0">
+            Não recebeu?
+            <button type="button" class="link-botao" id="reenviar" disabled>Reenviar código</button>
+          </p>
+          <p class="txt-micro txt-suave mb-0" id="reenviar-status" aria-live="polite">Novo envio disponível em 60s.</p>
+        </div>
+
+        <p class="txt-peq txt-centro mt-3">
+          <button type="button" class="link-botao" id="voltar-etapa">Usar outro e-mail</button>
+        </p>
+      </section>
+
+      <p class="auth__rodape">
+        Lembrou a senha? <a href="login.html">Voltar para o acesso</a> ·
+        <a href="cadastro.html">Criar cadastro</a>
+      </p>
+
+      <p class="txt-micro txt-suave txt-centro mt-3">
+        Protótipo: nenhum e-mail é realmente disparado e qualquer código de 6 dígitos é aceito.
+      </p>
+
+    </div>
+  </div>
+
+</main>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   RECUPERAR SENHA — duas etapas na mesma página
+   Os ouvintes são registrados depois dos do phygital.js (via PB.aoIniciar),
+   para que a validação padrão já tenha marcado os campos com erro.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var doc = document;
+
+  var etapa1 = doc.getElementById('etapa-1');
+  var etapa2 = doc.getElementById('etapa-2');
+  var passo1 = doc.getElementById('passo-1');
+  var passo2 = doc.getElementById('passo-2');
+
+  var formEmail = doc.getElementById('form-email');
+  var formSenha = doc.getElementById('form-senha');
+  var campoEmail = doc.getElementById('email');
+  var destino = doc.getElementById('destino');
+
+  var wrapCodigo = doc.getElementById('campo-codigo');
+  var erroCodigo = wrapCodigo.querySelector('.campo__erro');
+  var digitos = Array.prototype.slice.call(wrapCodigo.querySelectorAll('.otp input'));
+
+  var validade = doc.getElementById('validade');
+  var validadeTxt = doc.getElementById('validade-txt');
+  var botaoReenviar = doc.getElementById('reenviar');
+  var statusReenvio = doc.getElementById('reenviar-status');
+  var voltar = doc.getElementById('voltar-etapa');
+
+  var VALIDADE = 15 * 60;   /* 15 minutos, conforme o texto da tela */
+  var ESPERA = 60;          /* intervalo mínimo entre dois envios */
+
+  var restaValidade = VALIDADE, timerValidade = null;
+  var restaEspera = ESPERA, timerEspera = null;
+
+  /* ---- Contador de validade do código (15:00) ---- */
+  function mostrarValidade() {
+    var m = Math.floor(restaValidade / 60);
+    var s = restaValidade % 60;
+    validadeTxt.textContent = 'Código válido por ' + m + ':' + (s < 10 ? '0' + s : s);
+  }
+
+  function contarValidade() {
+    restaValidade = VALIDADE;
+    validade.className = 'tag tag--verde';
+    mostrarValidade();
+    if (timerValidade) clearInterval(timerValidade);
+    timerValidade = setInterval(function () {
+      restaValidade -= 1;
+      if (restaValidade <= 0) {
+        clearInterval(timerValidade);
+        timerValidade = null;
+        validade.className = 'tag tag--erro';
+        validadeTxt.textContent = 'Código expirado — peça um novo';
+        return;
+      }
+      if (restaValidade <= 120) validade.className = 'tag tag--amarela';
+      mostrarValidade();
+    }, 1000);
+  }
+
+  /* ---- Espera de 60s entre reenvios ---- */
+  function mostrarEspera() {
+    statusReenvio.textContent = 'Novo envio disponível em ' + restaEspera + 's.';
+  }
+
+  function contarEspera() {
+    restaEspera = ESPERA;
+    botaoReenviar.disabled = true;
+    mostrarEspera();
+    if (timerEspera) clearInterval(timerEspera);
+    timerEspera = setInterval(function () {
+      restaEspera -= 1;
+      if (restaEspera <= 0) {
+        clearInterval(timerEspera);
+        timerEspera = null;
+        botaoReenviar.disabled = false;
+        statusReenvio.textContent = 'Você já pode pedir um novo código.';
+        return;
+      }
+      mostrarEspera();
+    }, 1000);
+  }
+
+  /* ---- Troca de etapa ---- */
+  function irParaEtapa2() {
+    destino.textContent = campoEmail.value.trim();
+    etapa1.hidden = true;
+    etapa2.hidden = false;
+    passo1.className = 'passo passo--feito';
+    passo1.removeAttribute('aria-current');
+    passo2.className = 'passo passo--ativo';
+    passo2.setAttribute('aria-current', 'step');
+    limparCodigo();
+    contarValidade();
+    contarEspera();
+    digitos[0].focus();
+  }
+
+  function irParaEtapa1() {
+    etapa2.hidden = true;
+    etapa1.hidden = false;
+    passo2.className = 'passo';
+    passo2.removeAttribute('aria-current');
+    passo1.className = 'passo passo--ativo';
+    passo1.setAttribute('aria-current', 'step');
+    if (timerValidade) { clearInterval(timerValidade); timerValidade = null; }
+    if (timerEspera) { clearInterval(timerEspera); timerEspera = null; }
+    campoEmail.focus();
+  }
+
+  function limparCodigo() {
+    digitos.forEach(function (d) { d.value = ''; });
+    wrapCodigo.classList.remove('campo--erro');
+    erroCodigo.hidden = true;
+  }
+
+  function codigoCompleto() {
+    var faltando = -1;
+    digitos.forEach(function (d, i) {
+      if (faltando === -1 && d.value.trim() === '') faltando = i;
+    });
+    var ok = faltando === -1;
+    wrapCodigo.classList.toggle('campo--erro', !ok);
+    erroCodigo.hidden = ok;
+    if (!ok) digitos[faltando].focus();
+    return ok;
+  }
+
+  /* ---- Ligações de evento ---- */
+  function ligar() {
+    formEmail.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (formEmail.querySelector('.campo--erro')) return;
+      PB.toast('Código enviado', 'Confira a caixa de entrada de ' + campoEmail.value.trim() + '.', 'info');
+      irParaEtapa2();
+    });
+
+    formSenha.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var codigoOk = codigoCompleto();
+      if (!codigoOk || formSenha.querySelector('.campo--erro')) return;
+      PB.toast('Senha alterada', 'Sua nova senha já está valendo. Entre no painel com ela.');
+      setTimeout(function () { window.location.href = 'login.html'; }, 1400);
+    });
+
+    botaoReenviar.addEventListener('click', function () {
+      if (botaoReenviar.disabled) return;
+      limparCodigo();
+      digitos[0].focus();
+      PB.toast('Código reenviado', 'Um novo código de 6 dígitos foi enviado para ' + destino.textContent + '.', 'info');
+      contarValidade();
+      contarEspera();
+    });
+
+    voltar.addEventListener('click', irParaEtapa1);
+  }
+
+  if (doc.readyState === 'loading') {
+    PB.aoIniciar = ligar;   /* chamado ao fim do boot do phygital.js */
+  } else {
+    ligar();
+  }
+})();
+</script>
+
+</body>
+</html>
