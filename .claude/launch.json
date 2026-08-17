@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "site-phygital",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["servidor.py", "8080"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["servidor.js", "8080"],
       "port": 8080
     }
   ]
