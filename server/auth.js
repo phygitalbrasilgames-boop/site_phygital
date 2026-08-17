@@ -123,8 +123,8 @@ function falhasRecentes(chave) {
   ) || 0;
 }
 
-function bloqueado(chave) {
-  return falhasRecentes(chave) >= LOGIN_MAX_FALHAS;
+function bloqueado(chave, max = LOGIN_MAX_FALHAS) {
+  return falhasRecentes(chave) >= max;
 }
 
 function limparTentativas(chave) {

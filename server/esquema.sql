@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS contas (
   nome              TEXT NOT NULL,
   email             TEXT NOT NULL,
   telefone          TEXT,
+  -- painel/conta.html tem campo de data de nascimento no formulário do perfil
+  nasc              TEXT,
   -- scrypt: o hash e o sal ficam separados, nunca a senha
   senha_hash        TEXT NOT NULL,
   senha_salt        TEXT NOT NULL,
