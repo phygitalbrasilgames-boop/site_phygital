@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastrar Time — Escolha a modalidade — Phygital Brasil</title>
+<meta name="description" content="Primeiro passo do cadastro de time na Phygital Brasil: escolha entre futebol, basquete, shooter e dance. Cada modalidade tem regras de elenco e formulário próprios.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Fieldset sem moldura: a moldura visual são os cards de modalidade */
+  .fieldset-limpo { border: 0; padding: 0; margin: 0 0 var(--e-4); background: none; }
+
+  /* Foco visível mesmo com o radio escondido dentro do card */
+  .escolha-mod__card:has(input:focus-visible) { outline: 3px solid var(--azul-claro); outline-offset: 2px; }
+  .escolha-mod__card:has(input:checked) .escolha-mod__icone { color: var(--verde); }
+  .escolha-mod__marca {
+    position: absolute; top: var(--e-2); right: var(--e-2);
+    width: 22px; height: 22px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--verde); color: #fff; opacity: 0;
+    transition: opacity var(--rapido) var(--curva);
+  }
+  .escolha-mod__marca svg { width: 14px; height: 14px; }
+  .escolha-mod__card:has(input:checked) .escolha-mod__marca { opacity: 1; }
+
+  /* Resumo dinâmico da modalidade escolhida */
+  .lista-info { display: grid; gap: 0; margin: var(--e-3) 0 0; }
+  .lista-info > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--e-3); font-size: var(--t-peq); padding: 8px 0; border-bottom: 1px dashed var(--linha-clara); }
+  .lista-info > div:last-child { border-bottom: 0; }
+  .lista-info dt { color: var(--texto-suave); }
+  .lista-info dd { margin: 0; font-weight: 600; text-align: right; }
+
+  .rotulo-col { font-family: var(--fonte-display); font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); margin-bottom: var(--e-2); }
+  .campos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--t-peq); }
+  .campos li { display: flex; align-items: flex-start; gap: 8px; }
+  .campos li::before { content: ""; width: 6px; height: 6px; margin-top: 9px; flex: none; border-radius: 50%; background: var(--verde); }
+  .campos li.opcional { color: var(--texto-suave); }
+  .campos li.opcional::before { background: var(--cinza-20); }
+
+  .tabela-mod tbody th { padding: 14px var(--e-3); border-top: 1px solid var(--linha-clara); text-align: left; font-family: var(--fonte-display); font-weight: 700; white-space: nowrap; }
+  .tabela-mod tr.ativa td, .tabela-mod tr.ativa th { background: rgba(0,155,74,.09); }
+  .acoes-passo { display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap; margin-top: var(--e-5); }
+
+  .painel__topo { flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Cadastrar Time</h1>
+        <p class="sub">Passo 1 de 4 · escolha a modalidade do time</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--fantasma btn--pequeno" href="meus-times.html">Voltar para Meus Times</a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- ---------- PASSOS ---------- -->
+      <div class="passos" role="group" aria-label="Etapas do cadastro de time — você está na etapa 1 de 4">
+        <div class="passo passo--ativo" aria-current="step"><span class="passo__num"><span>1</span></span> Modalidade</div>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <div class="passo"><span class="passo__num"><span>2</span></span> Dados do time</div>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <div class="passo"><span class="passo__num"><span>3</span></span> Elenco e staff</div>
+        <span class="passo__linha" aria-hidden="true"></span>
+        <div class="passo"><span class="passo__num"><span>4</span></span> Revisão e envio</div>
+      </div>
+
+      <div class="aviso aviso--alerta mb-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+        <span>
+          <strong>Cada modalidade tem um formulário diferente.</strong>
+          O tamanho do elenco, o número de reservas, o tamanho da comissão técnica e os campos pedidos
+          para cada atleta mudam conforme a modalidade — futebol pede categoria, número de camisa e função;
+          shooter pede Steam64 e link do Faceit; dance é individual. Por isso a escolha vem antes do cadastro
+          e <strong>não pode ser alterada depois</strong>: para trocar de modalidade é preciso criar outro time.
+        </span>
+      </div>
+
+      <form action="time-cadastro.html" method="get" id="form-modalidade">
+
+        <!-- ---------- ESCOLHA DA MODALIDADE ---------- -->
+        <section aria-labelledby="titulo-modalidade">
+          <h2 id="titulo-modalidade" class="mb-3" style="font-size:1.125rem">Escolha a modalidade</h2>
+
+          <fieldset class="fieldset-limpo">
+            <legend class="sr-only">Modalidade do time</legend>
+
+            <div class="escolha-mod">
+              <label class="escolha-mod__card">
+                <input type="radio" name="mod" value="futebol" checked>
+                <span class="escolha-mod__marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <svg class="escolha-mod__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 7.2l4.6 3.4-1.8 5.4H9.2L7.4 10.6z"/>
+                  <path d="M12 2v5.2M2.4 9.3l5 1.3M21.6 9.3l-5 1.3M6.6 20.7L9.2 16M17.4 20.7L14.8 16"/>
+                </svg>
+                <span class="escolha-mod__nome">Futebol</span>
+                <span class="escolha-mod__regra">6 a 8 jogadores · até 3 reservas</span>
+              </label>
+
+              <label class="escolha-mod__card">
+                <input type="radio" name="mod" value="basquete">
+                <span class="escolha-mod__marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <svg class="escolha-mod__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 2v20M2 12h20"/>
+                  <path d="M5 5c4 3.6 4 10.4 0 14M19 5c-4 3.6-4 10.4 0 14"/>
+                </svg>
+                <span class="escolha-mod__nome">Basquete</span>
+                <span class="escolha-mod__regra">3 a 4 jogadores · até 2 reservas</span>
+              </label>
+
+              <label class="escolha-mod__card">
+                <input type="radio" name="mod" value="shooter">
+                <span class="escolha-mod__marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <svg class="escolha-mod__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 1.5v4.5M12 18v4.5M1.5 12H6M18 12h4.5"/>
+                </svg>
+                <span class="escolha-mod__nome">Shooter</span>
+                <span class="escolha-mod__regra">Exatamente 5 jogadores · até 3 reservas</span>
+              </label>
+
+              <label class="escolha-mod__card">
+                <input type="radio" name="mod" value="dance">
+                <span class="escolha-mod__marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <svg class="escolha-mod__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M9 17V4.5l12-2.5V14"/>
+                  <circle cx="6" cy="17.5" r="3"/>
+                  <circle cx="18" cy="15.5" r="3"/>
+                </svg>
+                <span class="escolha-mod__nome">Dance</span>
+                <span class="escolha-mod__regra">Atleta individual · sem reservas</span>
+              </label>
+            </div>
+          </fieldset>
+        </section>
+
+        <!-- ---------- RESUMO DA MODALIDADE ESCOLHIDA ---------- -->
+        <section class="bloco" aria-labelledby="resumo-titulo">
+          <div class="bloco__topo">
+            <h2 id="resumo-titulo">Phygital Futebol</h2>
+            <span class="tag tag--verde" id="resumo-tag">Time coletivo</span>
+          </div>
+          <div class="bloco__corpo">
+            <p class="txt-peq txt-suave" id="resumo-desc">
+              Partidas que começam no digital e terminam no gramado. Duas metades, um só placar.
+            </p>
+
+            <dl class="lista-info" id="resumo-regras"></dl>
+
+            <div class="grade grade--3 mt-4">
+              <div>
+                <h3 class="rotulo-col">Dados do time</h3>
+                <ul class="campos" id="campos-time"></ul>
+              </div>
+              <div>
+                <h3 class="rotulo-col" id="rotulo-atleta">Cada jogador</h3>
+                <ul class="campos" id="campos-jogador"></ul>
+              </div>
+              <div>
+                <h3 class="rotulo-col" id="rotulo-staff">Comissão técnica</h3>
+                <ul class="campos" id="campos-staff"></ul>
+              </div>
+            </div>
+
+            <p class="txt-micro txt-suave mt-4" style="margin-bottom:0">
+              Campos marcados em cinza são opcionais. Você pode salvar o time e completar o elenco depois —
+              a inscrição em um campeonato só é aceita quando o elenco atende ao mínimo da modalidade.
+            </p>
+          </div>
+        </section>
+
+        <!-- ---------- AÇÕES ---------- -->
+        <div class="acoes-passo">
+          <button class="btn btn--primario btn--grande" type="submit">
+            Continuar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <a class="btn btn--fantasma" href="meus-times.html">Cancelar</a>
+          <p class="txt-micro txt-suave" style="margin:0" id="resumo-destino" role="status">
+            Próximo passo: dados do time no formulário de Phygital Futebol.
+          </p>
+        </div>
+      </form>
+
+      <!-- ---------- COMPARATIVO ---------- -->
+      <section class="bloco mt-5" aria-labelledby="titulo-comparativo">
+        <div class="bloco__topo">
+          <h2 id="titulo-comparativo">O que muda em cada modalidade</h2>
+          <a class="link-seta" href="../modalidades.html">Ver regulamentos</a>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat">
+          <div class="tabela-wrap" style="border:0;border-radius:0">
+            <table class="tabela-mod">
+              <caption class="sr-only">Regras de elenco e campos exigidos por modalidade</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Modalidade</th>
+                  <th scope="col">Jogadores</th>
+                  <th scope="col">Reservas</th>
+                  <th scope="col">Staff</th>
+                  <th scope="col">Campos extras do atleta</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-modalidades"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL DO COMPETIDOR — NOVO TIME (passo 1: modalidade)
+   Todo o resumo sai de PB.dados.MODALIDADES: a regra do briefing é a mesma
+   que valida o elenco depois, então nunca há divergência entre tela e regra.
+   ========================================================================== */
+(function () {
+  var D = PB.dados;
+  var MOD = D.MODALIDADES;
+  var ORDEM = ['futebol', 'basquete', 'shooter', 'dance'];
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function faixaJogadores(m) {
+    if (m.jogadoresMin === m.jogadoresMax) {
+      return m.jogadoresMax === 1 ? '1 atleta (individual)' : 'exatamente ' + m.jogadoresMax;
+    }
+    return m.jogadoresMin + ' a ' + m.jogadoresMax + ' (mínimo ' + m.jogadoresMin + ' obrigatórios)';
+  }
+
+  function extras(m) {
+    var lista = [];
+    if (m.temCategoria) lista.push('categoria');
+    if (m.temNumeroCamisa) lista.push('nº da camisa');
+    if (m.temFuncao) lista.push('função em campo');
+    if (m.temSteam) lista.push('Steam64', 'link do Faceit');
+    return lista;
+  }
+
+  /* ---- Resumo dinâmico ---- */
+  function atualizar(id) {
+    var m = MOD[id] || MOD.futebol;
+
+    document.getElementById('resumo-titulo').textContent = m.nome;
+    document.getElementById('resumo-desc').textContent = m.descricao;
+
+    var tag = document.getElementById('resumo-tag');
+    tag.textContent = m.individual ? 'Atleta individual' : 'Time coletivo';
+    tag.className = 'tag ' + (m.individual ? 'tag--amarela' : 'tag--verde');
+
+    document.getElementById('resumo-regras').innerHTML = '' +
+      '<div><dt>Jogadores</dt><dd>' + esc(faixaJogadores(m)) + '</dd></div>' +
+      '<div><dt>Reservas</dt><dd>' + (m.reservasMax > 0 ? 'até ' + m.reservasMax : 'não se aplica') + '</dd></div>' +
+      '<div><dt>Staff</dt><dd>' + esc(m.staffRotulo) + ' (até ' + m.staffMax + ')</dd></div>' +
+      '<div><dt>Categoria</dt><dd>' + (m.temCategoria ? esc(m.categorias.join(' · ')) : 'não se aplica') + '</dd></div>';
+
+    /* Dados do time */
+    var camposTime = [
+      { t: 'Nome do time', op: false },
+      { t: 'Escudo do time (PNG ou SVG, até 2 MB)', op: true },
+      { t: 'Descrição do time', op: true },
+      { t: 'Histórico e conquistas', op: true }
+    ];
+    if (m.temCategoria) camposTime.splice(1, 0, { t: 'Categoria (' + m.categorias.join(', ') + ')', op: false });
+
+    /* Cada atleta */
+    var camposJogador = [
+      { t: 'Nome completo', op: false },
+      { t: 'Apelido / nome de jogo', op: false },
+      { t: 'E-mail', op: false },
+      { t: 'Telefone', op: false },
+      { t: 'Data de nascimento', op: false },
+      { t: 'Foto 3:4 (mín. 600 × 800 px)', op: false },
+      { t: '@Instagram', op: true }
+    ];
+    if (m.temNumeroCamisa) camposJogador.push({ t: 'Número da camisa', op: false });
+    if (m.temFuncao) camposJogador.push({ t: 'Função em campo (goleiro, zagueiro, meia…)', op: false });
+    if (m.temSteam) {
+      camposJogador.push({ t: 'Steam64 do atleta', op: false });
+      camposJogador.push({ t: 'Link do perfil Faceit', op: false });
+    }
+
+    /* Staff */
+    var camposStaff = [
+      { t: 'Nome completo', op: false },
+      { t: 'Papel na comissão', op: false },
+      { t: 'E-mail', op: false },
+      { t: 'Telefone', op: false },
+      { t: 'Data de nascimento', op: false },
+      { t: 'Foto', op: true },
+      { t: '@Instagram', op: true }
+    ];
+
+    function ul(lista) {
+      return lista.map(function (c) {
+        return '<li' + (c.op ? ' class="opcional"' : '') + '>' + esc(c.t) + (c.op ? ' (opcional)' : '') + '</li>';
+      }).join('');
+    }
+
+    document.getElementById('campos-time').innerHTML = ul(camposTime);
+    document.getElementById('campos-jogador').innerHTML = ul(camposJogador);
+    document.getElementById('campos-staff').innerHTML = ul(camposStaff);
+
+    document.getElementById('rotulo-atleta').textContent = m.individual ? 'Atleta' : 'Cada jogador';
+    document.getElementById('rotulo-staff').textContent = m.staffOpcional ? 'Staff (opcional)' : 'Comissão técnica';
+
+    document.getElementById('resumo-destino').textContent =
+      'Próximo passo: dados do time no formulário de ' + m.nome + '.';
+
+    /* Destaca a linha do comparativo */
+    Array.prototype.forEach.call(document.querySelectorAll('#tabela-modalidades tr'), function (tr) {
+      tr.classList.toggle('ativa', tr.getAttribute('data-mod') === m.id);
+    });
+  }
+
+  /* ---- Tabela comparativa (gerada das mesmas regras) ---- */
+  document.getElementById('tabela-modalidades').innerHTML = ORDEM.map(function (id) {
+    var m = MOD[id];
+    var ex = extras(m);
+    return '' +
+    '<tr data-mod="' + esc(id) + '">' +
+      '<th scope="row">' + esc(m.curto) + '</th>' +
+      '<td>' + esc(faixaJogadores(m)) + '</td>' +
+      '<td>' + (m.reservasMax > 0 ? 'até ' + m.reservasMax : '—') + '</td>' +
+      '<td>' + esc(m.staffRotulo) + (m.staffOpcional ? ' — opcional' : '') + '</td>' +
+      '<td>' + (ex.length ? esc(ex.join(', ')) : 'nenhum além dos campos comuns') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  /* ---- Ligação com os radios ---- */
+  var radios = Array.prototype.slice.call(document.querySelectorAll('input[name="mod"]'));
+  radios.forEach(function (r) {
+    r.addEventListener('change', function () { if (r.checked) atualizar(r.value); });
+  });
+
+  var marcado = radios.filter(function (r) { return r.checked; })[0] || radios[0];
+  if (marcado) { marcado.checked = true; atualizar(marcado.value); }
+})();
+</script>
+
+</body>
+</html>

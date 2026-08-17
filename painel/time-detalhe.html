@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha do time — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Ficha completa do time no Painel do Competidor da Phygital Brasil: elenco, comissão técnica, dados cadastrais e inscrições vinculadas.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Documentação do elenco */
+  .doc-jogador { border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-3); background: var(--branco); overflow: hidden; }
+  .doc-jogador__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); padding: var(--e-3) var(--e-4); background: var(--claro); flex-wrap: wrap; }
+  .doc-jogador__nome { font-family: var(--fonte-display); font-weight: 700; }
+  .doc-linha { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--e-3); align-items: center; padding: var(--e-3) var(--e-4); border-top: 1px solid var(--linha-clara); }
+  .doc-linha__nome { font-weight: 600; font-size: var(--t-peq); }
+  .doc-linha__meta { font-size: var(--t-micro); color: var(--texto-suave); }
+  .doc-barra { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; min-width: 140px; }
+  .doc-barra i { display: block; height: 100%; background: var(--fita-verde); }
+  .doc-barra i.parcial { background: var(--fita-amarela); }
+  @media (max-width: 720px) { .doc-linha { grid-template-columns: minmax(0,1fr); } }
+  /* Ajustes exclusivos da ficha do time */
+
+  [hidden] { display: none !important; }
+
+  .migalha { margin: 0 0 2px; }
+  .migalha a { text-decoration: underline; text-underline-offset: 2px; }
+
+  .ficha-topo { display: flex; align-items: center; gap: var(--e-4); flex-wrap: wrap; }
+  .ficha-topo__escudo {
+    width: 96px; height: 96px; flex: none;
+    object-fit: contain; padding: 8px;
+    background: var(--claro); border-radius: var(--r-3);
+  }
+  .ficha-topo__nome {
+    font-family: var(--fonte-display); font-weight: 700;
+    font-size: var(--t-h3); line-height: 1.05; letter-spacing: -.02em;
+    margin: 0 0 4px;
+  }
+
+  /* Grade de dados cadastrais */
+  .ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--e-4); }
+  .ficha__rotulo {
+    font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave);
+  }
+  .ficha__valor { font-weight: 600; margin-top: 2px; }
+
+  /* Cartões de pessoa da comissão — o componente .time-item sem intenção de clique */
+  .time-item--estatico { cursor: default; align-items: flex-start; }
+  .time-item--estatico:hover { border-color: var(--linha-clara); box-shadow: none; }
+
+  .jogador__apelido { font-size: var(--t-micro); color: var(--texto-suave); margin-top: 2px; }
+  .jogador__extra { font-size: 11px; color: var(--texto-suave); margin-top: 4px; word-break: break-all; }
+  .jogador__extra a { color: var(--azul); text-decoration: underline; }
+
+  .painel__topo .flex-fim { flex-wrap: wrap; }
+  .painel__titulo { flex: 1 1 auto; min-width: 0; }
+
+  /* Em telas estreitas as ações do topo ganham a própria linha */
+  @media (max-width: 860px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="meus-times.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="painel__titulo">
+        <p class="txt-micro txt-suave migalha"><a href="meus-times.html">Meus Times</a> <span aria-hidden="true">/</span> <span data-migalha>Ficha do time</span></p>
+        <h1 data-nome-topo>Ficha do time</h1>
+        <p class="sub" data-sub-topo>Carregando os dados do time…</p>
+      </div>
+      <div class="flex-fim gap-2" data-acoes hidden>
+        <a class="btn btn--contorno btn--pequeno" href="#" data-editar>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          Editar
+        </a>
+        <button type="button" class="btn btn--fantasma btn--pequeno" data-exportar>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Exportar informações
+        </button>
+        <button type="button" class="btn btn--perigo btn--pequeno" id="btn-excluir-time">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Remover time
+        </button>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- Time inexistente -->
+      <div class="vazio" data-sem-time hidden>
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <h2>Não encontramos esse time</h2>
+        <p>O endereço aponta para um time que não está na sua conta. Ele pode ter sido excluído ou pertencer a outro responsável.</p>
+        <a class="btn btn--primario" href="meus-times.html">Voltar para Meus Times</a>
+      </div>
+
+      <div data-ficha hidden>
+
+        <!-- ============ CABEÇALHO DO TIME ============ -->
+        <div class="bloco">
+          <span class="fita" aria-hidden="true"></span>
+          <div class="bloco__corpo">
+            <div class="ficha-topo">
+              <img class="ficha-topo__escudo" data-escudo src="../assets/img/mock/escudo-1.svg" alt="">
+              <div style="min-width:220px;flex:1">
+                <div class="flex gap-2 envolve mb-2" data-etiquetas></div>
+                <p class="ficha-topo__nome" data-nome>—</p>
+                <p class="txt-peq txt-suave mb-0" data-linha-meta></p>
+              </div>
+            </div>
+
+            <div class="vagas mt-4">
+              <span class="txt-micro txt-suave" style="min-width:74px">Elenco</span>
+              <span class="vagas__barra"><i data-vagas-barra style="width:0%"></i></span>
+              <strong class="num" data-vagas-num>0 / 0</strong>
+            </div>
+            <p class="txt-micro txt-suave mt-2 mb-0" data-vagas-detalhe></p>
+          </div>
+        </div>
+
+        <!-- ============ AVISO DE EDIÇÃO ============ -->
+        <div data-aviso-edicao></div>
+
+        <!-- ============ ABAS ============ -->
+        <div class="bloco" data-abas>
+          <div class="abas" role="tablist" aria-label="Seções da ficha do time">
+            <button class="aba" role="tab" id="aba-elenco" aria-controls="p-elenco" aria-selected="true">Elenco <span class="conta" data-conta-elenco>0</span></button>
+            <button class="aba" role="tab" id="aba-comissao" aria-controls="p-comissao" aria-selected="false">Comissão técnica <span class="conta" data-conta-staff>0</span></button>
+            <button class="aba" role="tab" id="aba-documentos" aria-controls="p-documentos" aria-selected="false">Documentos <span class="conta" data-conta-docs>0</span></button>
+            <button class="aba" role="tab" id="aba-dados" aria-controls="p-dados" aria-selected="false">Dados do time</button>
+            <button class="aba" role="tab" id="aba-inscricoes" aria-controls="p-inscricoes" aria-selected="false">Inscrições deste time <span class="conta" data-conta-inscricoes>0</span></button>
+          </div>
+
+          <div class="bloco__corpo">
+            <div id="p-elenco" role="tabpanel" aria-labelledby="aba-elenco" tabindex="0"></div>
+            <div id="p-comissao" role="tabpanel" aria-labelledby="aba-comissao" tabindex="0" hidden></div>
+            <div id="p-documentos" role="tabpanel" aria-labelledby="aba-documentos" tabindex="0" hidden></div>
+            <div id="p-dados" role="tabpanel" aria-labelledby="aba-dados" tabindex="0" hidden></div>
+            <div id="p-inscricoes" role="tabpanel" aria-labelledby="aba-inscricoes" tabindex="0" hidden></div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="modal-doc" role="dialog" aria-modal="true" aria-labelledby="doc-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <h2 id="doc-titulo" style="font-size:1.375rem">Enviar documento</h2>
+      <p class="txt-peq txt-suave" id="doc-sub">—</p>
+
+      <form id="form-doc" data-validar>
+        <input type="hidden" id="d-jogador"><input type="hidden" id="d-tipo">
+
+        <div class="campo">
+          <label for="d-arquivo">Arquivo <span class="obrigatorio">*</span></label>
+          <div class="upload" data-upload>
+            <span class="upload__titulo">Arraste o arquivo ou clique para escolher</span>
+            <span class="upload__specs">PDF, PNG ou JPG · até 5 MB</span>
+            <span class="upload__specs" data-upload-nome></span>
+            <input type="file" id="d-arquivo" accept="application/pdf,image/png,image/jpeg" class="sr-only" required>
+          </div>
+          <p class="campo__erro" hidden>Escolha o arquivo do documento.</p>
+        </div>
+
+        <div class="campo" id="bloco-validade">
+          <label for="d-validade">Válido até <span class="obrigatorio">*</span></label>
+          <input type="date" id="d-validade">
+          <p class="campo__ajuda">A organização é avisada quando o documento vence antes do campeonato.</p>
+          <p class="campo__erro" hidden>Informe a data de validade.</p>
+        </div>
+
+        <div class="aviso">
+          <div>Ao enviar, o documento entra em <strong>conferência</strong>. A organização aprova ou recusa e você é avisado por e-mail.</div>
+        </div>
+
+        <div class="modal__acoes">
+          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+          <button type="submit" class="btn btn--primario">Enviar documento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   FICHA DO TIME — lê ?id=t1 e monta elenco, comissão, dados e inscrições.
+   ?estado=bloqueado força a pré-visualização do time com inscrições encerradas.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var D = PB.dados, F = PB.fmt;
+  var $ = PB.$, $$ = PB.$$;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function param(nome) {
+    var m = new RegExp('[?&]' + nome + '=([^&]*)').exec(window.location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+
+  function plural(n, singular, pluralForma) {
+    return n + ' ' + (n === 1 ? singular : pluralForma);
+  }
+
+  var ESCUDOS = { t1: 1, t2: 9 };
+  function escudoDe(time, i) {
+    if (time.escudo) return time.escudo;
+    return '../assets/img/mock/escudo-' + (ESCUDOS[time.id] || ((i % 12) + 1)) + '.svg';
+  }
+  function fotoDe(i) { return '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg'; }
+
+  /* ---------------------------------------------------------------------
+     ELENCO
+     --------------------------------------------------------------------- */
+  function cartaoJogador(j, i, M) {
+    var reserva = !!j.reserva;
+    var linhas = '';
+
+    if (j.funcao) linhas += '<div class="jogador__funcao">' + esc(j.funcao) + '</div>';
+    else if (M.temSteam) linhas += '<div class="jogador__funcao">Atleta de shooter</div>';
+    else linhas += '<div class="jogador__funcao">' + (M.individual ? 'Atleta' : 'Atleta de linha') + '</div>';
+
+    if (j.apelido) linhas += '<div class="jogador__apelido">“' + esc(j.apelido) + '”</div>';
+
+    if (j.steam) {
+      linhas += '<div class="jogador__extra">Steam64 ' + esc(j.steam);
+      if (j.faceit) linhas += ' · <a href="' + esc(j.faceit) + '" target="_blank" rel="noopener">Faceit</a>';
+      linhas += '</div>';
+    }
+
+    return '' +
+      '<article class="jogador' + (reserva ? ' jogador--reserva' : '') + '">' +
+        '<div class="jogador__foto">' +
+          '<img src="' + fotoDe(i) + '" alt="Foto de ' + esc(j.nome) + '">' +
+          (j.numero ? '<span class="jogador__numero">' + esc(j.numero) + '</span>' : '') +
+        '</div>' +
+        '<div class="jogador__corpo">' +
+          '<div class="jogador__nome">' + esc(j.nome) + '</div>' +
+          linhas +
+        '</div>' +
+      '</article>';
+  }
+
+  function tabelaContatos(jogadores, M) {
+    return '' +
+    '<div class="tabela-wrap mt-5">' +
+      '<table>' +
+        '<caption class="sr-only">Dados de contato do elenco</caption>' +
+        '<thead><tr>' +
+          (M.temNumeroCamisa ? '<th scope="col">Nº</th>' : '') +
+          '<th scope="col">Atleta</th>' +
+          '<th scope="col">Apelido</th>' +
+          (M.temFuncao ? '<th scope="col">Função</th>' : '') +
+          (M.temSteam ? '<th scope="col">Steam64</th>' : '') +
+          '<th scope="col">Nascimento</th>' +
+          '<th scope="col">E-mail</th>' +
+          '<th scope="col">Telefone</th>' +
+          '<th scope="col">Instagram</th>' +
+          '<th scope="col">Situação</th>' +
+        '</tr></thead>' +
+        '<tbody>' + jogadores.map(function (j) {
+          return '<tr>' +
+            (M.temNumeroCamisa ? '<td>' + esc(j.numero || '—') + '</td>' : '') +
+            '<td><strong>' + esc(j.nome) + '</strong></td>' +
+            '<td>' + esc(j.apelido || '—') + '</td>' +
+            (M.temFuncao ? '<td>' + esc(j.funcao || '—') + '</td>' : '') +
+            (M.temSteam ? '<td>' + esc(j.steam || '—') + '</td>' : '') +
+            '<td>' + esc(F.data(j.nasc)) + '</td>' +
+            '<td>' + esc(j.email || '—') + '</td>' +
+            '<td>' + esc(j.tel || '—') + '</td>' +
+            '<td>' + esc(j.insta || '—') + '</td>' +
+            '<td>' + (j.reserva ? '<span class="tag tag--cinza">Reserva</span>' : '<span class="tag tag--verde">Titular</span>') + '</td>' +
+          '</tr>';
+        }).join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
+  function painelElenco(time, M, bloqueado) {
+    var js = time.jogadores || [];
+    if (!js.length) {
+      return '' +
+      '<div class="vazio">' +
+        '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
+        '<h3>Nenhum atleta cadastrado</h3>' +
+        '<p>Este time ainda não tem elenco. Sem o mínimo de ' + M.jogadoresMin + ' atletas o time não pode ser inscrito em campeonatos.</p>' +
+        '<a class="btn btn--primario" href="time-cadastro.html?mod=' + esc(time.modalidade) + '&amp;id=' + esc(time.id) + '&amp;etapa=2">Cadastrar elenco</a>' +
+      '</div>';
+    }
+
+    var titulares = js.filter(function (j) { return !j.reserva; });
+    var reservas = js.filter(function (j) { return !!j.reserva; });
+
+    var h = '<p class="txt-peq txt-suave">' +
+      plural(titulares.length, 'titular', 'titulares') + ' e ' +
+      plural(reservas.length, 'reserva', 'reservas') + ' na súmula. ' +
+      'A ordem abaixo é a que aparece no boletim técnico do campeonato.' +
+      '</p>';
+
+    h += '<div class="jogadores mt-3">' + js.map(function (j, i) { return cartaoJogador(j, i, M); }).join('') + '</div>';
+    h += tabelaContatos(js, M);
+
+    h += '<div class="flex gap-3 envolve mt-4">';
+    if (bloqueado) {
+      h += '<a class="btn btn--contorno btn--pequeno" href="chamados.html">Solicitar alteração por chamado</a>';
+    } else {
+      h += '<a class="btn btn--contorno btn--pequeno" href="time-cadastro.html?mod=' + esc(time.modalidade) + '&amp;id=' + esc(time.id) + '&amp;etapa=2">Editar elenco</a>';
+    }
+    h += '</div>';
+
+    return h;
+  }
+
+  /* ---------------------------------------------------------------------
+     COMISSÃO TÉCNICA
+     --------------------------------------------------------------------- */
+  function painelComissao(time, M, bloqueado) {
+    var staff = time.staff || [];
+    if (!staff.length) {
+      return '' +
+      '<div class="vazio">' +
+        '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/><circle cx="12" cy="7" r="4"/></svg>' +
+        '<h3>Comissão técnica não cadastrada</h3>' +
+        '<p>Regra da modalidade: ' + esc(M.staffRotulo) + '. A comissão recebe credencial nominal e acesso à área técnica no dia do evento.</p>' +
+        '<a class="btn btn--primario" href="time-cadastro.html?mod=' + esc(time.modalidade) + '&amp;id=' + esc(time.id) + '&amp;etapa=3">Cadastrar comissão</a>' +
+      '</div>';
+    }
+
+    var h = '<p class="txt-peq txt-suave">Limite da modalidade: ' + esc(M.staffRotulo) +
+      '. Hoje o time tem ' + staff.length + ' de ' + M.staffMax + ' ' +
+      (M.staffMax === 1 ? 'vaga preenchida' : 'vagas preenchidas') + '.</p>';
+
+    h += '<div class="time-lista mt-3">' + staff.map(function (s) {
+      return '' +
+      '<div class="time-item time-item--estatico">' +
+        '<span class="time-item__escudo">' + esc(F.iniciais(s.nome)) + '</span>' +
+        '<div style="min-width:0">' +
+          '<div class="time-item__nome">' + esc(s.nome) + '</div>' +
+          '<div class="time-item__meta">' + esc(s.papel || 'Comissão') + '</div>' +
+          '<div class="txt-micro txt-suave mt-2" style="word-break:break-word">' +
+            esc(s.email || '') + (s.tel ? '<br>' + esc(s.tel) : '') +
+            (s.nasc ? '<br>Nascimento: ' + esc(F.data(s.nasc)) : '') +
+            (s.insta ? '<br>' + esc(s.insta) : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+
+    if (!bloqueado && staff.length < M.staffMax) {
+      h += '<p class="campo__ajuda mt-4">Ainda há ' + plural(M.staffMax - staff.length, 'vaga', 'vagas') +
+        ' na comissão. Você pode incluir novos integrantes pela edição do time.</p>';
+    }
+
+    h += '<div class="flex gap-3 envolve mt-4">' +
+      (bloqueado
+        ? '<a class="btn btn--contorno btn--pequeno" href="chamados.html">Solicitar alteração por chamado</a>'
+        : '<a class="btn btn--contorno btn--pequeno" href="time-cadastro.html?mod=' + esc(time.modalidade) + '&amp;id=' + esc(time.id) + '&amp;etapa=3">Editar comissão</a>') +
+      '</div>';
+
+    return h;
+  }
+
+  /* ---------------------------------------------------------------------
+     DADOS DO TIME
+     --------------------------------------------------------------------- */
+  function painelDados(time, M) {
+    var u = D.usuario();
+    var js = time.jogadores || [];
+
+    var ficha = [
+      { r: 'Nome do time', v: time.nome },
+      { r: 'Modalidade', v: M.nome },
+      { r: 'Categoria', v: time.categoria || 'Não se aplica a esta modalidade' },
+      { r: 'Data de criação', v: F.dataExtenso(time.criadoEm) },
+      { r: 'Responsável', v: u.nome },
+      { r: 'E-mail do responsável', v: u.email },
+      { r: 'Atletas cadastrados', v: js.length + ' (' + js.filter(function (j) { return !j.reserva; }).length + ' titulares)' },
+      { r: 'Identificador interno', v: time.id.toUpperCase() }
+    ];
+
+    var h = '<div class="ficha">' + ficha.map(function (f) {
+      return '<div><div class="ficha__rotulo">' + esc(f.r) + '</div><div class="ficha__valor">' + esc(f.v) + '</div></div>';
+    }).join('') + '</div>';
+
+    h += '<h3 class="mt-6">Descrição</h3>';
+    h += '<p class="txt-suave" style="max-width:var(--largura-texto)">' + esc(time.descricao || 'Sem descrição cadastrada.') + '</p>';
+
+    h += '<h3 class="mt-5">Histórico do time</h3>';
+    h += '<p class="txt-suave" style="max-width:var(--largura-texto)">' + esc(time.historico || 'Sem histórico cadastrado. Títulos e participações ajudam a organização na curadoria de convites.') + '</p>';
+
+    h += '<div class="aviso mt-5"><div><strong>Como esses dados são usados</strong>' +
+      '<p class="mb-0">Nome, escudo e categoria aparecem nas tabelas públicas, na súmula e no ranking nacional. ' +
+      'Descrição e histórico entram na ficha pública do time e podem ser citados na cobertura do campeonato.</p></div></div>';
+
+    return h;
+  }
+
+  /* ---------------------------------------------------------------------
+     INSCRIÇÕES DESTE TIME
+     --------------------------------------------------------------------- */
+  function painelInscricoes(inscricoes) {
+    if (!inscricoes.length) {
+      return '' +
+      '<div class="vazio">' +
+        '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>' +
+        '<h3>Este time ainda não foi inscrito</h3>' +
+        '<p>Quando você inscrever o time em um campeonato, o protocolo e a situação da vaga aparecem aqui.</p>' +
+        '<a class="btn btn--primario" href="inscricoes.html">Ver campeonatos com inscrições abertas</a>' +
+      '</div>';
+    }
+
+    return '' +
+    '<div class="tabela-wrap">' +
+      '<table>' +
+        '<caption class="sr-only">Inscrições vinculadas a este time</caption>' +
+        '<thead><tr>' +
+          '<th scope="col">Campeonato</th>' +
+          '<th scope="col">Protocolo</th>' +
+          '<th scope="col">Enviada em</th>' +
+          '<th scope="col">Situação</th>' +
+          '<th scope="col">Inscrições até</th>' +
+          '<th scope="col">Ação</th>' +
+        '</tr></thead>' +
+        '<tbody>' + inscricoes.map(function (i) {
+          var c = D.campeonato(i.campeonato);
+          var st = D.STATUS_INSCRICAO[i.status] || D.STATUS_INSCRICAO.triagem;
+          var dias = c ? F.diasAte(c.encerramentoInscricoes) : -1;
+          return '<tr>' +
+            '<td><strong>' + esc(c ? c.nome : i.campeonato) + '</strong><br><span class="txt-micro txt-suave">' + esc(c ? c.local : '') + '</span></td>' +
+            '<td class="num">' + esc(i.protocolo) + '</td>' +
+            '<td>' + esc(F.data(i.data)) + '</td>' +
+            '<td><span class="tag ' + esc(st.classe) + '">' + esc(st.rotulo) + '</span></td>' +
+            '<td>' + (c ? esc(F.data(c.encerramentoInscricoes)) + '<br><span class="txt-micro txt-suave">' +
+              (dias >= 0 ? 'faltam ' + dias + ' dia' + (dias === 1 ? '' : 's') : 'encerradas') + '</span>' : '—') + '</td>' +
+            '<td><a class="link-seta" href="inscricoes.html">Ver inscrição</a></td>' +
+          '</tr>';
+        }).join('') + '</tbody>' +
+      '</table>' +
+    '</div>' +
+    '<p class="campo__ajuda mt-3">A inscrição entra em <strong>triagem</strong>. A organização move o time para a <strong>lista oficial</strong> ou para a <strong>lista de espera</strong>, e cada mudança dispara um e-mail para o responsável.</p>';
+  }
+
+  /* ---------------------------------------------------------------------
+     MONTAGEM DA PÁGINA
+     --------------------------------------------------------------------- */
+  function iniciarPagina() {
+    var id = param('id') || 't1';
+    var time = D.time(id);
+
+    if (!time) {
+      $('[data-sem-time]').hidden = false;
+      $('[data-nome-topo]').textContent = 'Time não encontrado';
+      $('[data-sub-topo]').textContent = 'Verifique o endereço ou volte para a lista de times.';
+      $('[data-migalha]').textContent = 'Time não encontrado';
+      document.title = 'Time não encontrado — Painel do Competidor — Phygital Brasil';
+      return;
+    }
+
+    var M = D.modalidade(time.modalidade);
+    var indice = D.meusTimes().map(function (t) { return t.id; }).indexOf(time.id);
+    var js = time.jogadores || [];
+    var titulares = js.filter(function (j) { return !j.reserva; }).length;
+    var reservas = js.filter(function (j) { return !!j.reserva; }).length;
+    var elenco = D.validarElenco(time.modalidade, titulares, reservas);
+
+    var inscricoes = D.minhasInscricoes().filter(function (i) { return i.time === time.id; });
+    var forcado = param('estado') === 'bloqueado';
+    var travas = inscricoes.filter(function (i) {
+      var c = D.campeonato(i.campeonato);
+      if (!c) return false;
+      return forcado || c.status !== 'inscricoes' || F.diasAte(c.encerramentoInscricoes) < 0;
+    });
+    var bloqueado = travas.length > 0;
+    var campBloqueio = bloqueado ? D.campeonato(travas[0].campeonato) : null;
+
+    /* ---- Topo ---- */
+    document.title = time.nome + ' — Painel do Competidor — Phygital Brasil';
+    $('[data-migalha]').textContent = time.nome;
+    $('[data-nome-topo]').textContent = time.nome;
+    $('[data-sub-topo]').textContent = M.nome + (time.categoria ? ' · ' + time.categoria : '') +
+      ' · ' + plural(js.length, 'atleta', 'atletas') +
+      ' · ' + plural(inscricoes.length, 'inscrição', 'inscrições');
+    $('[data-acoes]').hidden = false;
+    $('[data-ficha]').hidden = false;
+
+    /* ---- Cabeçalho do time ---- */
+    var img = $('[data-escudo]');
+    img.src = escudoDe(time, indice < 0 ? 0 : indice);
+    img.alt = 'Escudo do time ' + time.nome;
+
+    $('[data-nome]').textContent = time.nome;
+
+    var etiquetas = '<span class="tag tag--verde">' + esc(M.curto) + '</span>';
+    if (time.categoria) etiquetas += '<span class="tag tag--cinza">' + esc(time.categoria) + '</span>';
+    etiquetas += elenco.valido
+      ? '<span class="status status--aberto">Elenco dentro da regra</span>'
+      : '<span class="status status--espera">Elenco incompleto</span>';
+    if (bloqueado) etiquetas += '<span class="tag tag--amarela">Edição bloqueada</span>';
+    $('[data-etiquetas]').innerHTML = etiquetas;
+
+    $('[data-linha-meta]').textContent = 'Criado em ' + F.dataExtenso(time.criadoEm) +
+      ' · Responsável: ' + D.usuario().nome + ' · Identificador ' + time.id.toUpperCase();
+
+    var pct = Math.min(100, Math.round((titulares / M.jogadoresMin) * 100));
+    var barra = $('[data-vagas-barra]');
+    barra.style.width = pct + '%';
+    barra.classList.toggle('incompleto', !elenco.valido);
+    $('[data-vagas-num]').textContent = titulares + ' / ' + M.jogadoresMin;
+    $('[data-vagas-detalhe]').textContent = elenco.valido
+      ? 'Elenco dentro do regulamento do ' + M.nome + ': ' +
+        plural(titulares, 'titular', 'titulares') +
+        (M.jogadoresMin === M.jogadoresMax
+          ? ' — a regra pede exatamente ' + M.jogadoresMin + ' — '
+          : ' — a regra pede de ' + M.jogadoresMin + ' a ' + M.jogadoresMax + ' — ') +
+        'e ' + plural(reservas, 'reserva', 'reservas') +
+        (M.reservasMax > 0 ? ' das ' + M.reservasMax + ' permitidas.' : '.')
+      : elenco.erros.join(' ');
+
+    /* ---- Aviso de edição ---- */
+    var avisos;
+    if (bloqueado) {
+      var nomeCamp = campBloqueio ? campBloqueio.nome : 'do campeonato';
+      var dataCamp = campBloqueio ? F.data(campBloqueio.encerramentoInscricoes) : '';
+      avisos = '' +
+      '<div class="aviso aviso--alerta mb-4">' +
+        '<div>' +
+          '<strong>' + (forcado ? 'Pré-visualização — edição bloqueada' : 'Edição bloqueada — inscrições encerradas') + '</strong>' +
+          '<p>' +
+            (forcado
+              ? 'É assim que a ficha fica a partir de ' + esc(dataCamp) + ', encerramento das inscrições do campeonato <strong>' + esc(nomeCamp) + '</strong>. '
+              : 'As inscrições do campeonato <strong>' + esc(nomeCamp) + '</strong> encerraram em ' + esc(dataCamp) + '. ') +
+            'A partir dessa data o elenco, a comissão e os dados do time ficam congelados para garantir a igualdade da chave. ' +
+            'Substituição por lesão, correção de nome e troca de número de camisa passam a ser feitas apenas por chamado, ' +
+            'com análise da organização.' +
+          '</p>' +
+          '<a class="btn btn--contorno btn--pequeno" href="chamados.html">Abrir chamado</a>' +
+          (forcado
+            ? '<p class="txt-micro txt-suave mb-0 mt-2"><a href="time-detalhe.html?id=' + esc(time.id) + '" style="text-decoration:underline">Voltar ao estado real da ficha</a></p>'
+            : '') +
+        '</div>' +
+      '</div>';
+    } else {
+      var prazo = inscricoes.map(function (i) { return D.campeonato(i.campeonato); })
+        .filter(function (c) { return !!c; })[0];
+      avisos = '' +
+      '<div class="aviso aviso--sucesso mb-4">' +
+        '<div>' +
+          '<strong>Edição liberada</strong>' +
+          '<p class="mb-0">' +
+            (prazo
+              ? 'Você pode alterar elenco, comissão e dados do time até ' + esc(F.dataExtenso(prazo.encerramentoInscricoes)) +
+                ', data de encerramento das inscrições do campeonato ' + esc(prazo.nome) + '. Depois disso, só por chamado.'
+              : 'Este time não tem inscrição vinculada a um prazo, então elenco e dados podem ser alterados a qualquer momento.') +
+          '</p>' +
+          '<p class="txt-micro txt-suave mb-0 mt-2"><a href="time-detalhe.html?id=' + esc(time.id) + '&amp;estado=bloqueado" style="text-decoration:underline">Pré-visualizar como fica a ficha depois do encerramento</a></p>' +
+        '</div>' +
+      '</div>';
+    }
+    $('[data-aviso-edicao]').innerHTML = avisos;
+
+    /* ---- Abas ---- */
+    $('[data-conta-elenco]').textContent = js.length;
+    $('[data-conta-staff]').textContent = (time.staff || []).length;
+    $('[data-conta-inscricoes]').textContent = inscricoes.length;
+
+    document.getElementById('p-elenco').innerHTML = painelElenco(time, M, bloqueado);
+    document.getElementById('p-comissao').innerHTML = painelComissao(time, M, bloqueado);
+    document.getElementById('p-dados').innerHTML = painelDados(time, M);
+    document.getElementById('p-inscricoes').innerHTML = painelInscricoes(inscricoes);
+
+    /* ---- Ações do topo ---- */
+    var btEditar = $('[data-editar]');
+    if (bloqueado) {
+      btEditar.setAttribute('href', '#');
+      btEditar.setAttribute('aria-disabled', 'true');
+      btEditar.addEventListener('click', function (e) {
+        e.preventDefault();
+        PB.toast('Edição bloqueada', 'As inscrições já encerraram. Abra um chamado para solicitar a alteração.', 'alerta');
+      });
+    } else {
+      btEditar.setAttribute('href', 'time-cadastro.html?mod=' + encodeURIComponent(time.modalidade) + '&id=' + encodeURIComponent(time.id));
+    }
+
+    $('[data-exportar]').addEventListener('click', function () {
+      PB.toast('Exportação gerada', 'Ficha de ' + time.nome + ' com elenco, comissão e inscrições (protótipo — o arquivo não é baixado).', 'info');
+    });
+
+    /* O botão de excluir não existe em toda variação desta tela — segue a
+       convenção do projeto de não fazer nada quando a marcação está ausente. */
+    var btExcluir = $('[data-excluir]');
+    if (btExcluir) {
+      btExcluir.setAttribute('data-confirmar',
+        'O time ' + time.nome + ' tem ' + plural(js.length, 'atleta', 'atletas') + ' e ' +
+        plural(inscricoes.length, 'inscrição vinculada', 'inscrições vinculadas') +
+        '. Excluir apaga o elenco, a comissão e cancela as inscrições em triagem. Esta ação não pode ser desfeita.');
+    }
+  }
+
+  if (document.readyState === 'loading') PB.aoIniciar = iniciarPagina;
+  else iniciarPagina();
+})();
+</script>
+
+<script>
+(function () {
+  var D = PB.dados;
+  var bt = document.getElementById('btn-excluir-time');
+  if (!bt) return;
+  var id = new URLSearchParams(location.search).get('id') || (D.meusTimes()[0] || {}).id;
+
+  bt.addEventListener('click', function () {
+    var t = D.time(id);
+    if (!t) return;
+    PB.confirmar('Remover time',
+      'O time “' + t.nome + '” sai da sua lista e das inscrições ativas. Ele vai para o Histórico e a ' +
+      'organização pode restaurá-lo. Deseja remover?',
+      function () {
+        D.arquivar('meusTimes', id, 'id', 'removido pelo responsável');
+        /* As inscrições do time saem junto: não faz sentido inscrição sem time */
+        (D.tudo().minhasInscricoes || []).forEach(function (i) {
+          if (i.time === id) D.arquivar('minhasInscricoes', i.id, 'id', 'time removido');
+        });
+        PB.toast('Time removido', 'Ele está no Histórico e pode ser restaurado pela organização.', 'info');
+        setTimeout(function () { location.href = 'meus-times.html'; }, 1000);
+      });
+  });
+})();
+</script>
+
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var timeId = new URLSearchParams(location.search).get('id') || (D.meusTimes()[0] || {}).id;
+
+  function render() {
+    var t = D.time(timeId);
+    var alvo = $('#p-documentos');
+    if (!t || !alvo) return;
+
+    var resumo = D.documentacaoDoTime(t);
+    var badge = document.querySelector('[data-conta-docs]');
+    if (badge) badge.textContent = resumo.pendencias.length || '✓';
+
+    var pct = resumo.total ? Math.round(resumo.ok / resumo.total * 100) : 100;
+
+    var html =
+      '<div class="aviso' + (resumo.completo ? ' aviso--sucesso' : ' aviso--alerta') + ' mb-4"><div>' +
+        (resumo.completo
+          ? '<strong>Documentação completa.</strong> Todos os documentos obrigatórios do elenco foram aprovados pela organização.'
+          : '<strong>' + resumo.pendencias.length + ' pendência(s) de documentação.</strong> ' +
+            'Documento faltando, vencido ou recusado pode impedir o atleta de entrar em quadra no dia do campeonato.') +
+      '</div></div>' +
+      '<div class="flex-centro gap-3 mb-4">' +
+        '<div class="doc-barra" style="flex:1"><i class="' + (pct < 100 ? 'parcial' : '') + '" style="width:' + pct + '%"></i></div>' +
+        '<span class="txt-peq"><strong>' + resumo.ok + '</strong> de ' + resumo.total + ' aprovados</span>' +
+      '</div>';
+
+    html += (t.jogadores || []).map(function (j, i) {
+      var docs = D.documentosDoJogador(j);
+      var faltam = docs.filter(function (d) { return d.obrigatorio && d.status !== 'aprovado'; }).length;
+
+      return '' +
+      '<div class="doc-jogador">' +
+        '<div class="doc-jogador__topo">' +
+          '<div>' +
+            '<div class="doc-jogador__nome">' + esc(j.nome) + (j.reserva ? ' <span class="tag tag--cinza">Reserva</span>' : '') + '</div>' +
+            '<div class="doc-linha__meta">' + (j.nasc ? 'Nascimento ' + esc(PB.fmt.data(j.nasc)) : 'Sem data de nascimento') + '</div>' +
+          '</div>' +
+          (faltam
+            ? '<span class="tag tag--amarela">' + faltam + ' pendente(s)</span>'
+            : '<span class="tag tag--verde">Completo</span>') +
+        '</div>' +
+        docs.map(function (d) {
+          var st = D.STATUS_DOCUMENTO[d.status];
+          return '<div class="doc-linha">' +
+            '<div>' +
+              '<div class="doc-linha__nome">' + esc(d.nome) +
+                (d.obrigatorio ? '' : ' <span class="txt-micro txt-suave">(opcional)</span>') + '</div>' +
+              '<div class="doc-linha__meta">' +
+                (d.arquivo ? esc(d.arquivo) : esc(d.descricao)) +
+                (d.validade ? ' · válido até ' + esc(PB.fmt.data(d.validade)) : '') +
+              '</div>' +
+              (d.observacao ? '<div class="doc-linha__meta" style="color:var(--erro)">' + esc(d.observacao) + '</div>' : '') +
+            '</div>' +
+            '<span class="tag ' + st.classe + '">' + st.rotulo + '</span>' +
+            '<button class="btn btn--contorno btn--pequeno" data-enviar-doc="' + i + ':' + d.tipo + '">' +
+              (d.arquivo ? 'Substituir' : 'Enviar') + '</button>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }).join('');
+
+    alvo.innerHTML = html;
+  }
+
+  document.addEventListener('click', function (e) {
+    var bt = e.target.closest('[data-enviar-doc]');
+    if (!bt) return;
+    var p = bt.getAttribute('data-enviar-doc').split(':');
+    var t = D.time(timeId);
+    var j = t.jogadores[parseInt(p[0], 10)];
+    var tipo = D.TIPOS_DOCUMENTO[p[1]];
+
+    $('#d-jogador').value = p[0];
+    $('#d-tipo').value = p[1];
+    $('#doc-titulo').textContent = tipo.nome;
+    $('#doc-sub').textContent = j.nome + ' · ' + tipo.descricao;
+    $('#bloco-validade').hidden = !tipo.temValidade;
+    $('#d-validade').required = !!tipo.temValidade;
+    $('#d-validade').value = '';
+    PB.abrirModal('modal-doc');
+  });
+
+  $('#form-doc').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var arq = $('#d-arquivo').files[0];
+    if (!arq) { PB.toast('Falta o arquivo', 'Escolha o documento antes de enviar.', 'alerta'); return; }
+    var tipo = D.TIPOS_DOCUMENTO[$('#d-tipo').value];
+    if (tipo.temValidade && !$('#d-validade').value) {
+      PB.toast('Falta a validade', 'Informe até quando o documento é válido.', 'alerta');
+      $('#d-validade').focus();
+      return;
+    }
+
+    D.gravarDocumento(timeId, parseInt($('#d-jogador').value, 10), {
+      tipo: $('#d-tipo').value,
+      arquivo: arq.name,
+      validade: tipo.temValidade ? $('#d-validade').value : null,
+      status: 'enviado',
+      observacao: null
+    });
+
+    PB.fecharModal('modal-doc');
+    PB.toast('Documento enviado', 'Entrou em conferência pela organização.', 'info');
+    PB.recarregar();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

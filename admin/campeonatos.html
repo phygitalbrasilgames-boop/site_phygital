@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerenciar Campeonatos — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Visualize os campeonatos em aberto e os já encerrados, acompanhe inscritos, lista oficial e lista de espera, e exporte as informações.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
+  .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
+  .barra-ocupacao i.cheia { background: var(--fita-amarela); }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .camp-lista { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--e-4); padding: var(--e-4); border-bottom: 1px solid var(--linha-clara); }
+  .camp-lista:last-child { border-bottom: 0; }
+  .camp-lista__midia { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--r-2); background: var(--grafite-80); }
+  .numeros-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: var(--e-2); }
+  .numeros-lista > div { background: var(--claro); border-radius: var(--r-2); padding: 8px var(--e-2); }
+  .numeros-lista strong { display: block; font-family: var(--fonte-display); font-size: 1.25rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .numeros-lista span { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); }
+  @media (max-width: 780px) { .camp-lista { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="campeonatos.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Gerenciar Campeonatos</h1>
+        <p class="sub">Campeonatos em aberto e histórico de edições encerradas</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><a class="btn btn--primario btn--pequeno" href="campeonato-novo.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Criar Novo Campeonato</a></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="bloco">
+        <div class="bloco__corpo" style="padding-bottom:0">
+          <div class="form-grade" style="gap:var(--e-3)">
+            <div class="campo">
+              <label for="filtro-busca">Buscar campeonato</label>
+              <input type="search" id="filtro-busca" placeholder="Nome do campeonato ou cidade">
+            </div>
+            <div class="campo">
+              <label for="filtro-mod">Modalidade</label>
+              <select id="filtro-mod">
+                <option value="todas">Todas as modalidades</option>
+                <option value="futebol">Futebol</option>
+                <option value="basquete">Basquete</option>
+                <option value="shooter">Shooter</option>
+                <option value="dance">Dance</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div data-abas>
+          <div class="abas" role="tablist" aria-label="Situação dos campeonatos">
+            <button class="aba" role="tab" id="aba-abertos" aria-controls="p-abertos" aria-selected="true">
+              Em aberto <span class="conta" id="c-abertos">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-encerrados" aria-controls="p-encerrados" aria-selected="false">
+              Encerrados <span class="conta" id="c-encerrados">0</span>
+            </button>
+          </div>
+          <div id="p-abertos" role="tabpanel" aria-labelledby="aba-abertos" tabindex="0"></div>
+          <div id="p-encerrados" role="tabpanel" aria-labelledby="aba-encerrados" tabindex="0" hidden></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<div class="modal" id="modal-duplicar" role="dialog" aria-modal="true" aria-labelledby="dup-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document" style="width:min(640px,100%)">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <h2 id="dup-titulo" style="font-size:1.375rem">Duplicar campeonato</h2>
+      <p class="txt-peq txt-suave" id="dup-origem">—</p>
+
+      <div class="aviso mt-3">
+        <div>
+          <strong>O que vem junto:</strong> modalidade, limites de elenco, staff, premiação,
+          termos de aceite e regulamento.<br>
+          <strong>O que começa do zero:</strong> datas, listas de inscritos, resultados e situação —
+          a cópia nasce como <strong>rascunho</strong>.
+        </div>
+      </div>
+
+      <form id="form-duplicar" data-validar class="mt-4">
+        <input type="hidden" id="dup-id">
+
+        <div class="campo">
+          <label for="dup-nome">Nome da nova edição <span class="obrigatorio">*</span></label>
+          <input type="text" id="dup-nome" required>
+          <p class="campo__erro" hidden>Informe o nome da nova edição.</p>
+        </div>
+
+        <div class="form-grade">
+          <div class="campo">
+            <label for="dup-data">Data de início</label>
+            <input type="date" id="dup-data">
+          </div>
+          <div class="campo">
+            <label for="dup-data-fim">Data de encerramento</label>
+            <input type="date" id="dup-data-fim">
+          </div>
+          <div class="campo">
+            <label for="dup-insc-ini">Abertura das inscrições</label>
+            <input type="date" id="dup-insc-ini">
+          </div>
+          <div class="campo">
+            <label for="dup-insc-fim">Encerramento das inscrições</label>
+            <input type="date" id="dup-insc-fim">
+          </div>
+          <div class="campo col-2">
+            <label for="dup-local">Local</label>
+            <input type="text" id="dup-local">
+          </div>
+        </div>
+
+        <div class="modal__acoes">
+          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+          <button type="submit" class="btn btn--primario">Criar cópia</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/exportar.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var todos = D.campeonatos();
+
+  function cartao(c) {
+    var m = D.modalidade(c.modalidade);
+    var st = D.STATUS_CAMPEONATO[c.status] || D.STATUS_CAMPEONATO.rascunho;
+    var encerrado = c.status === 'encerrado';
+    var ocupacao = c.vagas ? Math.min(100, Math.round((c.oficial || 0) / c.vagas * 100)) : 0;
+
+    var podio = '';
+    if (encerrado && c.classificacao && c.classificacao.length) {
+      podio = '<div class="txt-peq mt-3"><strong>Pódio:</strong> ' +
+        c.classificacao.slice(0, 3).map(function (p) {
+          return p.pos + 'º ' + esc(p.nome) + ' (' + esc(p.uf) + ')';
+        }).join(' · ') + '</div>';
+    }
+
+    return '' +
+    '<article class="camp-lista" data-nome="' + esc((c.nome + ' ' + c.local).toLowerCase()) + '" data-mod="' + esc(c.modalidade) + '">' +
+      '<img class="camp-lista__midia" src="../' + esc(c.banner || 'assets/img/mock/camp-futebol.svg') + '" alt="">' +
+      '<div>' +
+        '<div class="flex-entre envolve" style="align-items:flex-start">' +
+          '<h3 style="font-size:1.125rem;margin:0 0 4px">' + esc(c.nome) + '</h3>' +
+          '<span class="tag ' + st.classe + '">' + esc(st.rotulo) + '</span>' +
+        '</div>' +
+        '<div class="txt-micro txt-suave mb-3">' +
+          esc(m.curto) + ' · ' + esc(F.periodo(c.data, c.dataFim)) + ' · ' + esc(c.local) +
+        '</div>' +
+        '<div class="numeros-lista">' +
+          '<div><strong>' + (c.inscritos || 0) + '</strong><span>inscritos</span></div>' +
+          '<div><strong>' + (c.oficial || 0) + '</strong><span>lista oficial</span></div>' +
+          '<div><strong>' + (c.espera || 0) + '</strong><span>lista de espera</span></div>' +
+          '<div><strong>' + (c.vagas || '—') + '</strong><span>vagas</span></div>' +
+        '</div>' +
+        (encerrado ? '' :
+          '<div class="mt-3"><div class="barra-ocupacao"><i class="' + (ocupacao >= 100 ? 'cheia' : '') + '" style="width:' + ocupacao + '%"></i></div>' +
+          '<div class="txt-micro txt-suave mt-2">' + (c.oficial || 0) + ' de ' + (c.vagas || 0) + ' vagas oficiais preenchidas · ' + ocupacao + '%</div></div>') +
+        podio +
+        '<div class="linha-acoes mt-3">' +
+          '<a class="btn btn--primario btn--pequeno" href="campeonato-gerenciar.html?id=' + esc(c.id) + '">Gerenciar</a>' +
+          '<a class="btn btn--contorno btn--pequeno" href="campeonato-novo.html?id=' + esc(c.id) + '">Editar informações</a>' +
+          '<button class="btn btn--fantasma btn--pequeno" data-exportar="' + esc(c.id) + '">Exportar informações</button>' +
+          '<button class="btn btn--fantasma btn--pequeno" data-duplicar="' + esc(c.id) + '">Duplicar</button>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function render() {
+    var abertos = todos.filter(function (c) { return c.status !== 'encerrado'; });
+    var encerrados = todos.filter(function (c) { return c.status === 'encerrado'; });
+    document.getElementById('c-abertos').textContent = abertos.length;
+    document.getElementById('c-encerrados').textContent = encerrados.length;
+    document.getElementById('p-abertos').innerHTML = abertos.length
+      ? abertos.map(cartao).join('')
+      : '<div class="vazio"><h3>Nenhum campeonato em aberto</h3><p>Crie um novo campeonato para abrir inscrições.</p><a class="btn btn--primario" href="campeonato-novo.html">Criar Novo Campeonato</a></div>';
+    document.getElementById('p-encerrados').innerHTML = encerrados.length
+      ? encerrados.map(cartao).join('')
+      : '<div class="vazio"><h3>Nenhum campeonato encerrado</h3><p>Campeonatos apurados aparecem aqui com o pódio.</p></div>';
+  }
+
+  function filtrar() {
+    var termo = document.getElementById('filtro-busca').value.trim().toLowerCase();
+    var mod = document.getElementById('filtro-mod').value;
+    var visiveis = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.camp-lista'), function (el) {
+      var ok = (!termo || el.getAttribute('data-nome').indexOf(termo) !== -1) &&
+               (mod === 'todas' || el.getAttribute('data-mod') === mod);
+      el.classList.toggle('esconder', !ok);
+      if (ok) visiveis++;
+    });
+  }
+
+  document.getElementById('filtro-busca').addEventListener('input', filtrar);
+  document.getElementById('filtro-mod').addEventListener('change', filtrar);
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-exportar]');
+    if (!b) return;
+    var camp = D.campeonato(b.getAttribute('data-exportar'));
+    if (!camp) return;
+    b.disabled = true;
+    var rotulo = b.textContent;
+    b.textContent = 'Gerando…';
+    var times = D.meusTimes().filter(function (t) { return t.modalidade === camp.modalidade; });
+    if (!times.length) times = D.meusTimes().slice(0, 1);
+    PB.exportar.campeonato(camp, times)
+      .then(function () { PB.toast('Download iniciado', 'Arquivo .zip de ' + camp.nome + '.', 'info'); })
+      .catch(function (err) { PB.toast('Falha na exportação', String(err), 'erro'); })
+      .then(function () { b.disabled = false; b.textContent = rotulo; });
+  });
+
+  /* ---- Duplicar: herda as regras, pede só as datas ---- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-duplicar]');
+    if (!b) return;
+    var c = D.campeonato(b.getAttribute('data-duplicar'));
+    if (!c) return;
+
+    var ano = new Date().getFullYear() + 1;
+    document.getElementById('dup-id').value = c.id;
+    document.getElementById('dup-origem').textContent = 'Cópia de: ' + c.nome;
+    document.getElementById('dup-nome').value = c.nome.replace(/\b20\d{2}\b/, ano) === c.nome
+      ? c.nome + ' — ' + ano
+      : c.nome.replace(/\b20\d{2}\b/, ano);
+    document.getElementById('dup-local').value = c.local || '';
+    ['dup-data', 'dup-data-fim', 'dup-insc-ini', 'dup-insc-fim'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    PB.abrirModal('modal-duplicar');
+  });
+
+  document.getElementById('form-duplicar').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nome = document.getElementById('dup-nome').value.trim();
+    if (!nome) { document.getElementById('dup-nome').focus(); return; }
+
+    var r = D.duplicarCampeonato(document.getElementById('dup-id').value, {
+      nome: nome,
+      data: document.getElementById('dup-data').value,
+      dataFim: document.getElementById('dup-data-fim').value,
+      aberturaInscricoes: document.getElementById('dup-insc-ini').value,
+      encerramentoInscricoes: document.getElementById('dup-insc-fim').value,
+      local: document.getElementById('dup-local').value.trim()
+    });
+
+    if (!r.ok) { PB.toast('Não foi possível duplicar', r.erro, 'erro'); return; }
+
+    PB.fecharModal('modal-duplicar');
+    PB.toast('Cópia criada', '“' + nome + '” nasceu como rascunho. Revise e publique quando quiser.', 'info');
+    setTimeout(function () {
+      location.href = 'campeonato-novo.html?id=' + r.campeonato.id;
+    }, 1100);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

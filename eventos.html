@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eventos realizados — Phygital Brasil</title>
+<meta name="description" content="Galeria de fotos dos eventos já realizados pela Phygital Brasil, separada por modalidade: futebol, basquete, dance, shooter e outras experiências phygital em todo o país.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes exclusivos desta página — o restante vem do design system */
+
+  /* Cabeçalho de grupo por modalidade */
+  .grupo-mod { display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap; margin: var(--e-7) 0 var(--e-4); }
+  #galeria > .grupo-mod:first-child { margin-top: 0; }
+  .grupo-mod h3 { margin: 0; font-size: var(--t-h3); text-transform: uppercase; }
+  .grupo-mod__cor { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+  .grupo-mod__conta { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); white-space: nowrap; }
+  .grupo-mod__linha { flex: 1 1 48px; min-width: 32px; height: 3px; opacity: .35; }
+
+  /* Bloco de um evento */
+  .evento { margin-bottom: var(--e-6); }
+  .evento__topo { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--e-3); flex-wrap: wrap; margin-bottom: var(--e-3); }
+  .evento__titulo { font-size: var(--t-h3); margin: 0 0 var(--e-2); }
+
+  /* Miniatura clicável dentro da galeria */
+  .galeria__abrir { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+  .galeria__abrir:focus-visible { outline-offset: -5px; }
+  .galeria__item figcaption { pointer-events: none; }
+
+  /* Modal de foto ampliada */
+  .modal__caixa--foto { width: min(940px, 100%); max-width: calc(100vw - 2 * var(--e-4)); }
+  .visor { position: relative; background: var(--grafite); }
+  .visor img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+  .visor__nav, .visor__fechar {
+    position: absolute; display: grid; place-items: center;
+    width: 44px; height: 44px; border: 0; border-radius: 50%;
+    background: rgba(14, 17, 19, .62); color: #fff; cursor: pointer;
+    transition: background var(--rapido) var(--curva);
+  }
+  .visor__nav:hover, .visor__fechar:hover { background: var(--verde); }
+  .visor__nav[hidden] { display: none; }
+  .visor__nav svg, .visor__fechar svg { width: 22px; height: 22px; }
+  .visor__nav { top: 50%; transform: translateY(-50%); }
+  .visor__nav--ant { left: var(--e-3); }
+  .visor__nav--prox { right: var(--e-3); }
+  .visor__fechar { top: var(--e-3); right: var(--e-3); }
+  .visor__contagem {
+    position: absolute; left: var(--e-3); bottom: var(--e-3);
+    background: rgba(14, 17, 19, .72); color: #fff;
+    padding: 4px 12px; border-radius: var(--r-pill);
+    font-family: var(--fonte-display); font-size: var(--t-micro);
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  @media (max-width: 560px) {
+    .visor__nav { width: 40px; height: 40px; }
+    .visor__nav--ant { left: 6px; }
+    .visor__nav--prox { right: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="eventos.html" aria-current="page">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container pagina-topo__conteudo">
+      <nav class="trilha" aria-label="Trilha de navegação">
+        <a href="index.html">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Eventos</span>
+      </nav>
+      <p class="eyebrow">Arquivo Phygital</p>
+      <h1>Eventos realizados</h1>
+      <p>
+        Todo campeonato encerrado vira álbum. Aqui estão as fotos oficiais das etapas
+        que já aconteceram — da rodada no console à decisão na quadra —, organizadas
+        por modalidade. Clique em qualquer miniatura para ver a imagem ampliada.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== CONTADORES ==================== -->
+  <section class="faixa-stats" aria-label="Números da galeria de eventos">
+    <div class="container">
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="6" id="cont-eventos">0</span></div>
+        <div class="faixa-stats__rotulo">Eventos realizados</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="212" id="cont-fotos">0</span></div>
+        <div class="faixa-stats__rotulo">Fotos no arquivo</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="5" id="cont-cidades">0</span></div>
+        <div class="faixa-stats__rotulo">Cidades-sede</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="5" id="cont-modalidades">0</span></div>
+        <div class="faixa-stats__rotulo">Modalidades em quadra</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== GALERIA ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Galeria</p>
+          <h2>Álbuns por modalidade</h2>
+          <p>
+            Seis álbuns publicados desde 2024. Cada evento mostra uma seleção de destaques;
+            o álbum completo em alta resolução fica disponível para os times inscritos.
+          </p>
+        </div>
+        <a class="link-seta" href="inscricoes.html">Ver próximas etapas</a>
+      </div>
+
+      <div class="flex-entre envolve mb-4" style="gap:var(--e-3)">
+        <div class="filtros mb-0" data-filtros="#galeria" role="group" aria-label="Filtrar álbuns por modalidade">
+          <button class="filtro" type="button" data-valor="todos" aria-pressed="true">Todos</button>
+          <button class="filtro" type="button" data-valor="futebol" aria-pressed="false">Futebol</button>
+          <button class="filtro" type="button" data-valor="basquete" aria-pressed="false">Basquete</button>
+          <button class="filtro" type="button" data-valor="dance" aria-pressed="false">Dance</button>
+          <button class="filtro" type="button" data-valor="shooter" aria-pressed="false">Shooter</button>
+          <button class="filtro" type="button" data-valor="outros" aria-pressed="false">Outros</button>
+        </div>
+        <p class="txt-peq txt-suave mb-0" id="galeria-resumo" role="status">Mostrando todos os álbuns.</p>
+      </div>
+
+      <!-- Conteúdo renderizado a partir de PB.dados.eventos() -->
+      <div id="galeria"></div>
+
+      <!-- Estado vazio do filtro (o comportamento .filtro liga/desliga por id) -->
+      <div class="vazio esconder" id="galeria-vazio">
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><path d="M8 5l1.5-2h5L16 5"/>
+        </svg>
+        <h3>Nenhum álbum nesta modalidade</h3>
+        <p>
+          Ainda não realizamos uma etapa dessa modalidade — ou as fotos ainda estão em edição.
+          Assim que a próxima etapa acontecer, o álbum aparece aqui.
+        </p>
+        <button class="btn btn--contorno" type="button" id="btn-ver-todos">Ver todos os álbuns</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SOBRE A COBERTURA ==================== -->
+  <section class="secao secao--clara secao--compacta">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Como funciona a cobertura</p>
+        <h2>Da arena para a galeria</h2>
+      </div>
+
+      <div class="grade grade--3">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/>
+            </svg>
+            <h3 class="card__titulo mt-3">Fotógrafo credenciado em toda etapa</h3>
+            <p class="txt-peq txt-suave">
+              Cada evento tem captação de foto e vídeo desde a passagem de som até a premiação.
+              O álbum entra no site em até 10 dias úteis depois da final.
+            </p>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <path d="M12 3l8 4v5c0 4.4-3.2 8.2-8 9-4.8-.8-8-4.6-8-9V7z"/><path d="M9 12l2 2 4-4"/>
+            </svg>
+            <h3 class="card__titulo mt-3">Uso das imagens</h3>
+            <p class="txt-peq txt-suave">
+              As fotos são da Phygital Brasil. Times, atletas e imprensa podem publicar nas redes
+              com crédito à federação. Uso comercial ou publicitário depende de autorização por escrito.
+            </p>
+          </div>
+        </article>
+
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--verde)">
+              <path d="M21 15V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14l4-4h6"/><path d="M17 14v6M14 17h6"/>
+            </svg>
+            <h3 class="card__titulo mt-3">Quer o álbum completo do seu time?</h3>
+            <p class="txt-peq txt-suave">
+              O responsável cadastrado pede os arquivos em alta resolução abrindo um chamado
+              no Painel do Competidor. A entrega é por link, em até 5 dias úteis.
+            </p>
+            <p class="mt-3"><a class="link-seta" href="painel/chamados.html">Abrir chamado</a></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="cta-faixa secao">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Próxima etapa</p>
+          <h2 style="color:#fff">A próxima arena pode ser na sua cidade</h2>
+          <p style="color:rgba(255,255,255,.75);margin-bottom:0">
+            Times, atletas e prefeituras podem trazer uma etapa phygital para o município.
+            Montamos a arena, a estrutura digital e a transmissão — você entra com o público.
+          </p>
+        </div>
+        <div class="hero__acoes">
+          <a class="btn btn--destaque btn--grande" href="inscricoes.html">Ver inscrições abertas</a>
+          <a class="btn btn--contorno-claro btn--grande" href="contato.html">Levar uma etapa</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== MODAL DE FOTO ==================== -->
+<div class="modal" id="modal-foto" role="dialog" aria-modal="true" aria-labelledby="foto-titulo" aria-hidden="true">
+  <div class="modal__caixa modal__caixa--foto" role="document">
+    <span class="fita"></span>
+    <div class="visor">
+      <img id="foto-img" src="assets/img/mock/evento-1.svg" alt="">
+      <button class="visor__nav visor__nav--ant" type="button" id="foto-ant" aria-label="Foto anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button class="visor__nav visor__nav--prox" type="button" id="foto-prox" aria-label="Próxima foto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button class="visor__fechar" type="button" data-fechar-modal aria-label="Fechar galeria">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <span class="visor__contagem" id="foto-contagem">1 / 6</span>
+    </div>
+    <div class="modal__corpo">
+      <p class="eyebrow" id="foto-mod">Futebol</p>
+      <h2 id="foto-titulo" style="font-size:var(--t-h3)">Álbum do evento</h2>
+      <p class="txt-peq txt-suave" id="foto-legenda">Legenda da foto</p>
+      <p class="txt-micro txt-suave" id="foto-meta" style="text-transform:uppercase;letter-spacing:.1em">Local · ano</p>
+      <div class="modal__acoes">
+        <button class="btn btn--fantasma" type="button" data-fechar-modal>Fechar</button>
+        <a class="btn btn--contorno btn--pequeno" href="painel/chamados.html">Pedir alta resolução</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   EVENTOS — galeria por modalidade + visor de fotos
+   ========================================================================== */
+(function () {
+  var D = PB.dados;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Ordem de exibição dos grupos — a mesma do menu de modalidades */
+  var ORDEM = ['futebol', 'basquete', 'dance', 'shooter', 'outros'];
+
+  /* Legendas reais por modalidade: cada miniatura conta um momento da etapa */
+  var LEGENDAS = {
+    futebol: ['Aquecimento no gramado', 'Primeira metade no console', 'Entrada em campo',
+              'Disputa na metade física', 'Gol que decidiu a soma', 'Pódio e premiação'],
+    basquete: ['Arena 3x3 montada', 'Rodada digital do confronto', 'Contra-ataque na quadra',
+               'Tempo técnico da comissão', 'Cesta da virada', 'Entrega das medalhas'],
+    dance: ['Passagem de som', 'Rodada digital de dance', 'Coreografia autoral',
+            'Batalha da final', 'Nota dos jurados', 'Pódio individual'],
+    shooter: ['Setup das estações', 'Rodada no mapa oficial', 'Comunicação da equipe',
+              'Prova física de precisão', 'Placar combinado no telão', 'Time campeão da etapa'],
+    outros: ['Abertura da feira', 'Estação aberta ao público', 'Oficina para escolas',
+             'Arena de demonstração', 'Painel de novas modalidades', 'Encerramento do fim de semana']
+  };
+
+  var MINIATURAS = 6;              /* destaques exibidos por álbum */
+  var eventos = D.eventos();
+
+  function albuns(n) { return n + (n === 1 ? ' álbum' : ' álbuns'); }
+
+  /* ---- Contadores do topo ---------------------------------------------- */
+  function definirContador(id, valor) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('data-contar', String(valor));
+    el.textContent = String(valor);
+  }
+
+  function unicos(campo) {
+    var vistos = {};
+    eventos.forEach(function (e) { vistos[e[campo]] = true; });
+    return Object.keys(vistos).length;
+  }
+
+  var totalFotos = eventos.reduce(function (t, e) { return t + (e.fotos || 0); }, 0);
+  definirContador('cont-eventos', eventos.length);
+  definirContador('cont-fotos', totalFotos);
+  definirContador('cont-cidades', unicos('local'));
+  definirContador('cont-modalidades', unicos('mod'));
+
+  /* ---- Renderização dos álbuns ----------------------------------------- */
+  function miniaturas(ev, indice) {
+    var m = D.modalidade(ev.mod);
+    var legendas = LEGENDAS[ev.mod] || LEGENDAS.outros;
+    var qtd = Math.min(MINIATURAS, ev.fotos || MINIATURAS);
+    var base = (indice * 5) % 12;                       /* varia as imagens entre álbuns */
+    var html = '';
+
+    for (var k = 0; k < qtd; k++) {
+      var arquivo = 'assets/img/mock/evento-' + (((base + k) % 12) + 1) + '.svg';
+      var legenda = legendas[k % legendas.length];
+      var alt = ev.titulo + ': ' + legenda.toLowerCase();
+      html +=
+        '<figure class="galeria__item revelar' + (k === 0 ? ' galeria__item--alto' : '') + '"' +
+                ' data-cat="' + esc(ev.mod) + '" data-atraso="' + (k * 50) + '">' +
+          '<button type="button" class="galeria__abrir"' +
+            ' data-src="' + esc(arquivo) + '"' +
+            ' data-alt="' + esc(alt) + '"' +
+            ' data-titulo="' + esc(ev.titulo) + '"' +
+            ' data-mod="' + esc(m.curto) + '"' +
+            ' data-local="' + esc(ev.local) + '"' +
+            ' data-ano="' + esc(ev.ano) + '"' +
+            ' data-album="' + esc(ev.fotos) + '"' +
+            ' data-legenda="' + esc(legenda) + '"' +
+            ' aria-label="Ampliar foto: ' + esc(legenda) + ' — ' + esc(ev.titulo) + '">' +
+            '<img src="' + esc(arquivo) + '" alt="' + esc(alt) + '">' +
+          '</button>' +
+          '<figcaption>' + esc(legenda) + '</figcaption>' +
+        '</figure>';
+    }
+    return '<div class="galeria">' + html + '</div>';
+  }
+
+  function bloco(ev, indice) {
+    var m = D.modalidade(ev.mod);
+    var qtd = Math.min(MINIATURAS, ev.fotos || MINIATURAS);
+    return '' +
+    '<article class="evento" data-cat="' + esc(ev.mod) + '">' +
+      '<div class="evento__topo">' +
+        '<div>' +
+          '<p class="eyebrow">' + esc(m.curto) + ' · ' + esc(ev.ano) + '</p>' +
+          '<h4 class="evento__titulo">' + esc(ev.titulo) + '</h4>' +
+          '<div class="camp-card__infos">' +
+            '<span class="camp-card__info">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+              esc(ev.local) +
+            '</span>' +
+            '<span class="camp-card__info">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>' +
+              esc(ev.fotos) + ' fotos no álbum' +
+            '</span>' +
+            '<span class="camp-card__info">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
+              'Edição ' + esc(ev.ano) +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="tag tag--cinza">' + qtd + ' destaques</span>' +
+      '</div>' +
+      miniaturas(ev, indice) +
+    '</article>';
+  }
+
+  function render() {
+    var html = '';
+    var indice = 0;
+
+    ORDEM.forEach(function (mod) {
+      var lista = eventos.filter(function (e) { return e.mod === mod; })
+                         .sort(function (a, b) { return b.ano - a.ano; });
+      if (!lista.length) return;
+
+      var m = D.modalidade(mod);
+      var fotos = lista.reduce(function (t, e) { return t + (e.fotos || 0); }, 0);
+
+      html +=
+        '<div class="grupo-mod" data-cat="' + esc(mod) + '">' +
+          '<span class="grupo-mod__cor" style="background:' + esc(m.cor) + '"></span>' +
+          '<h3>' + esc(m.nome) + '</h3>' +
+          '<span class="grupo-mod__conta">' + albuns(lista.length) + ' · ' + fotos + ' fotos</span>' +
+          '<span class="grupo-mod__linha fita"></span>' +
+        '</div>';
+
+      lista.forEach(function (ev) { html += bloco(ev, indice++); });
+    });
+
+    document.getElementById('galeria').innerHTML = html;
+  }
+
+  render();
+
+  /* ---- Resumo que acompanha o filtro ----------------------------------- */
+  var resumo = document.getElementById('galeria-resumo');
+
+  function atualizarResumo(valor) {
+    var lista = valor === 'todos' ? eventos : eventos.filter(function (e) { return e.mod === valor; });
+    var fotos = lista.reduce(function (t, e) { return t + (e.fotos || 0); }, 0);
+    if (!lista.length) { resumo.textContent = 'Nenhum álbum nesta modalidade.'; return; }
+    resumo.textContent = 'Mostrando ' + albuns(lista.length) + ' · ' + fotos + ' fotos · ' +
+      (valor === 'todos' ? 'todas as modalidades' : D.modalidade(valor).nome);
+  }
+  atualizarResumo('todos');
+
+  PB.$$('.filtros .filtro').forEach(function (b) {
+    b.addEventListener('click', function () { atualizarResumo(b.getAttribute('data-valor')); });
+  });
+
+  /* Botão do estado vazio: volta para "Todos" */
+  var btnTodos = document.getElementById('btn-ver-todos');
+  if (btnTodos) {
+    btnTodos.addEventListener('click', function () {
+      var todos = PB.$('.filtros .filtro[data-valor="todos"]');
+      if (todos) todos.click();
+    });
+  }
+
+  /* ---- Visor de fotos (modal) ------------------------------------------ */
+  var galeria = document.getElementById('galeria');
+  var modal = document.getElementById('modal-foto');
+  var elImg = document.getElementById('foto-img');
+  var elMod = document.getElementById('foto-mod');
+  var elTitulo = document.getElementById('foto-titulo');
+  var elLegenda = document.getElementById('foto-legenda');
+  var elMeta = document.getElementById('foto-meta');
+  var elContagem = document.getElementById('foto-contagem');
+  var btnAnt = document.getElementById('foto-ant');
+  var btnProx = document.getElementById('foto-prox');
+
+  var itens = [];
+  var pos = 0;
+
+  function mostrar() {
+    var b = itens[pos];
+    if (!b) return;
+    elImg.src = b.getAttribute('data-src');
+    elImg.alt = b.getAttribute('data-alt');
+    elMod.textContent = b.getAttribute('data-mod');
+    elTitulo.textContent = b.getAttribute('data-titulo');
+    elLegenda.textContent = b.getAttribute('data-legenda');
+    elMeta.textContent = b.getAttribute('data-local') + ' · ' + b.getAttribute('data-ano') +
+      ' · álbum com ' + b.getAttribute('data-album') + ' fotos';
+    elContagem.textContent = (pos + 1) + ' / ' + itens.length;
+
+    var soUma = itens.length < 2;
+    btnAnt.hidden = soUma;
+    btnProx.hidden = soUma;
+  }
+
+  function navegar(passo) {
+    if (!itens.length) return;
+    pos = (pos + passo + itens.length) % itens.length;
+    mostrar();
+  }
+
+  function abrir(botao) {
+    /* A navegação respeita o filtro ativo: só entram as fotos visíveis */
+    itens = PB.$$('#galeria .galeria__item:not(.esconder) .galeria__abrir');
+    pos = itens.indexOf(botao);
+    if (pos < 0) { itens = [botao]; pos = 0; }
+    mostrar();
+    PB.abrirModal('modal-foto');
+  }
+
+  galeria.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.galeria__abrir') : null;
+    if (b) abrir(b);
+  });
+
+  btnAnt.addEventListener('click', function () { navegar(-1); });
+  btnProx.addEventListener('click', function () { navegar(1); });
+
+  /* Setas do teclado enquanto o visor está aberto (Esc já fecha pelo phygital.js) */
+  document.addEventListener('keydown', function (e) {
+    if (!modal.classList.contains('aberto')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); navegar(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); navegar(1); }
+  });
+
+  /* Reobserva os elementos criados dinamicamente */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

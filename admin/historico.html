@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Histórico — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Itens removidos do painel: campeonatos, publicações, categorias, banners, usuários, times e inscrições, com restauração ou exclusão definitiva.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .hist-item { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: var(--e-3); align-items: center; padding: var(--e-3); border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); background: var(--claro); }
+  .hist-item__icone { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-2); background: var(--branco); color: var(--cinza); }
+  .hist-item__icone svg { width: 20px; height: 20px; }
+  .hist-item__nome { font-family: var(--fonte-display); font-weight: 700; }
+  .hist-item__meta { font-size: var(--t-micro); color: var(--texto-suave); }
+  @media (max-width: 720px) { .hist-item { grid-template-columns: 44px minmax(0,1fr); } .hist-item > :last-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="historico.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Histórico</h1>
+        <p class="sub">Tudo que foi removido — restaure ou exclua em definitivo</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="aviso mb-4">
+        <div>
+          <strong>Nada é apagado num clique só.</strong> Tudo que você remove no painel — campeonato,
+          publicação, categoria, banner, usuário, time ou inscrição — para aqui primeiro.
+          Daqui você <strong>restaura</strong> o item de volta ao lugar de origem ou
+          <strong>exclui em definitivo</strong>, e só então ele deixa a base.
+        </div>
+      </div>
+
+      <div class="bloco">
+        <div data-abas>
+          <div class="abas" role="tablist" aria-label="Tipo de item no histórico">
+            <button class="aba" role="tab" id="aba-campeonatos" aria-controls="p-campeonatos" aria-selected="true">
+              Campeonatos <span class="conta" data-conta="campeonatos">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-posts" aria-controls="p-posts" aria-selected="false">
+              Publicações <span class="conta" data-conta="posts">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-categorias" aria-controls="p-categorias" aria-selected="false">
+              Categorias <span class="conta" data-conta="categorias">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-bannersSite" aria-controls="p-bannersSite" aria-selected="false">
+              Banners do site <span class="conta" data-conta="bannersSite">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-banners" aria-controls="p-banners" aria-selected="false">
+              Banners do painel <span class="conta" data-conta="banners">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-adminUsuarios" aria-controls="p-adminUsuarios" aria-selected="false">
+              Usuários <span class="conta" data-conta="adminUsuarios">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-meusTimes" aria-controls="p-meusTimes" aria-selected="false">
+              Times <span class="conta" data-conta="meusTimes">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-minhasInscricoes" aria-controls="p-minhasInscricoes" aria-selected="false">
+              Inscrições <span class="conta" data-conta="minhasInscricoes">0</span>
+            </button>
+          </div>
+
+          <div id="p-campeonatos"      role="tabpanel" aria-labelledby="aba-campeonatos"      tabindex="0" class="bloco__corpo"></div>
+          <div id="p-posts"            role="tabpanel" aria-labelledby="aba-posts"            tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-categorias"       role="tabpanel" aria-labelledby="aba-categorias"       tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-bannersSite"      role="tabpanel" aria-labelledby="aba-bannersSite"      tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-banners"          role="tabpanel" aria-labelledby="aba-banners"          tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-adminUsuarios"    role="tabpanel" aria-labelledby="aba-adminUsuarios"    tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-meusTimes"        role="tabpanel" aria-labelledby="aba-meusTimes"        tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-minhasInscricoes" role="tabpanel" aria-labelledby="aba-minhasInscricoes" tabindex="0" class="bloco__corpo" hidden></div>
+        </div>
+      </div>
+
+      <div class="aviso aviso--alerta">
+        <div>
+          <strong>Exclusão definitiva não tem volta.</strong> Antes de apagar um campeonato ou um time,
+          considere que a exportação e o histórico de ranking podem depender desses registros.
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var ICONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
+              '<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+
+  /* Cada coleção sabe se descrever: rótulo, título do item e uma linha de contexto */
+  var COLECOES = {
+    campeonatos: {
+      rotulo: 'campeonato',
+      titulo: function (x) { return x.nome; },
+      meta: function (x) {
+        var m = D.modalidade(x.modalidade);
+        return m.curto + ' · ' + (x.inscritos || 0) + ' inscritos · ' + (x.local || '');
+      }
+    },
+    posts: {
+      rotulo: 'publicação',
+      titulo: function (x) { return x.titulo; },
+      meta: function (x) { return x.cat + ' · ' + PB.fmt.dataCurta(x.data) + ' · ' + x.autor; }
+    },
+    categorias: {
+      rotulo: 'categoria',
+      titulo: function (x) { return x.nome; },
+      meta: function (x) { return x.descricao || 'Sem descrição'; }
+    },
+    bannersSite: {
+      rotulo: 'banner do site',
+      titulo: function (x) { return x.semTexto ? 'Somente mídia' : (x.titulo || 'Sem título'); },
+      meta: function (x) { return (x.midia === 'video' ? 'Vídeo' : 'Imagem') + ' · posição original ' + (x.ordem || '—'); }
+    },
+    banners: {
+      rotulo: 'banner do painel',
+      titulo: function (x) { return x.titulo || 'Sem título'; },
+      meta: function (x) { return 'destino: ' + (x.link || 'sem link'); }
+    },
+    adminUsuarios: {
+      rotulo: 'usuário',
+      titulo: function (x) { return x.nome; },
+      meta: function (x) { return x.email + ' · nível ' + x.nivel; }
+    },
+    meusTimes: {
+      rotulo: 'time',
+      titulo: function (x) { return x.nome; },
+      meta: function (x) {
+        var m = D.modalidade(x.modalidade);
+        return m.curto + ' · ' + ((x.jogadores || []).length) + ' jogadores';
+      }
+    },
+    minhasInscricoes: {
+      rotulo: 'inscrição',
+      titulo: function (x) {
+        var c = D.campeonato(x.campeonato);
+        return c ? c.nome : 'Campeonato removido';
+      },
+      meta: function (x) {
+        var t = (D.tudo().meusTimes || []).filter(function (y) { return y.id === x.time; })[0];
+        return 'protocolo ' + x.protocolo + (t ? ' · ' + t.nome : '');
+      }
+    }
+  };
+
+  function render() {
+    Object.keys(COLECOES).forEach(function (col) {
+      var cfg = COLECOES[col];
+      var itens = D.arquivados(col);
+
+      var badge = document.querySelector('[data-conta="' + col + '"]');
+      if (badge) badge.textContent = itens.length;
+
+      var alvo = document.getElementById('p-' + col);
+      if (!alvo) return;
+
+      alvo.innerHTML = itens.length ? itens.map(function (x) {
+        return '' +
+        '<div class="hist-item">' +
+          '<div class="hist-item__icone">' + ICONE + '</div>' +
+          '<div>' +
+            '<div class="hist-item__nome">' + esc(cfg.titulo(x)) + '</div>' +
+            '<div class="hist-item__meta">' + esc(cfg.meta(x)) + '</div>' +
+            '<div class="hist-item__meta">Removido em ' + esc(x.arquivadoEm || 'data não registrada') + '</div>' +
+          '</div>' +
+          '<div class="linha-acoes">' +
+            '<button class="btn btn--primario btn--pequeno" data-restaurar="' + col + ':' + esc(x.id) + '">Restaurar</button>' +
+            '<button class="btn btn--perigo btn--pequeno" data-apagar="' + col + ':' + esc(x.id) + '">Excluir definitivamente</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') :
+        '<div class="vazio"><h3>Nenhum item aqui</h3>' +
+        '<p>Nada foi removido nesta categoria. Quando você remover ' + cfg.rotulo +
+        ', ele aparece aqui e pode ser restaurado.</p></div>';
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var rs = e.target.closest('[data-restaurar]');
+    if (rs) {
+      var p = rs.getAttribute('data-restaurar').split(':');
+      var cfg = COLECOES[p[0]];
+      var item = D.arquivados(p[0]).filter(function (x) { return x.id === p[1]; })[0];
+      D.restaurar(p[0], p[1]);
+      PB.toast('Restaurado', '“' + (item ? cfg.titulo(item) : p[1]) + '” voltou para a lista original.', 'info');
+      PB.recarregar();
+      return;
+    }
+
+    var ap = e.target.closest('[data-apagar]');
+    if (ap) {
+      var q = ap.getAttribute('data-apagar').split(':');
+      var c2 = COLECOES[q[0]];
+      var it = D.arquivados(q[0]).filter(function (x) { return x.id === q[1]; })[0];
+      PB.confirmar('Excluir definitivamente',
+        'Esta ação não pode ser desfeita: “' + (it ? c2.titulo(it) : q[1]) +
+        '” será apagado da base. Deseja excluir?',
+        function () {
+          D.excluirDefinitivo(q[0], q[1]);
+          PB.toast('Excluído', 'O registro foi apagado em definitivo.', 'info');
+          PB.recarregar();
+        });
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

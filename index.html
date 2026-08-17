@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phygital Brasil — Esportes Phygital: o físico e o digital no mesmo campo de jogo</title>
+<meta name="description" content="Federação brasileira de esportes phygital. Campeonatos de futebol, basquete, dance e shooter que somam o resultado digital ao resultado físico. Inscrições, ranking nacional e notícias.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="index.html" aria-current="page">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== HERO ====================
+       Os slides vêm de Alterar Banner → Site Principal (PB.dados.bannersSite()).
+       O conteúdo estático abaixo é o fallback de quando não há banner cadastrado. -->
+  <section class="hero" data-hero aria-roledescription="carrossel" aria-label="Destaques">
+    <div class="hero__slides" id="hero-slides">
+      <div class="hero__slide ativo">
+        <img src="assets/img/mock/hero-1.svg" alt="" aria-hidden="true">
+        <div class="container hero__conteudo">
+          <p class="eyebrow">Temporada 2026</p>
+          <h1 class="hero__titulo">O físico e o digital no <em>mesmo campo</em> de jogo</h1>
+          <p class="hero__texto">
+            Cada confronto tem duas metades: uma no console, outra na quadra. O placar final é a soma
+            das duas. É assim que a Phygital Brasil disputa futebol, basquete, dance e shooter em todo o país.
+          </p>
+          <div class="hero__acoes">
+            <a class="btn btn--primario btn--grande" href="inscricoes.html">Ver inscrições abertas</a>
+            <a class="btn btn--contorno-claro btn--grande" href="quem-somos.html">Como funciona</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero__fitas" aria-hidden="true">
+      <span class="hero__fita hero__fita--verde"></span>
+      <span class="hero__fita hero__fita--amarela"></span>
+      <span class="hero__fita hero__fita--azul"></span>
+    </div>
+
+    <aside class="hero__aside" aria-labelledby="hero-ultimas">
+      <h2 id="hero-ultimas">Últimas notícias</h2>
+      <a href="post.html?id=p1">
+        <span class="data">01 ago 2026</span>
+        <div>Copa Phygital Futebol 2026 abre inscrições para 24 times</div>
+      </a>
+      <a href="post.html?id=p2">
+        <span class="data">24 jul 2026</span>
+        <div>Como funciona a pontuação combinada no formato phygital</div>
+      </a>
+    </aside>
+
+    <div class="hero__pontos" role="tablist" aria-label="Selecionar destaque" id="hero-pontos"></div>
+  </section>
+
+  <!-- ==================== NÚMEROS ==================== -->
+  <section class="faixa-stats" aria-label="Números da Phygital Brasil">
+    <div class="container">
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="4">0</span></div>
+        <div class="faixa-stats__rotulo">Modalidades</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="128">0</span></div>
+        <div class="faixa-stats__rotulo">Times registrados</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="1240">0</span></div>
+        <div class="faixa-stats__rotulo">Atletas</div>
+      </div>
+      <div class="faixa-stats__item">
+        <div class="faixa-stats__valor num"><span data-contar="17">0</span></div>
+        <div class="faixa-stats__rotulo">Estados</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== INSCRIÇÕES ABERTAS ====================
+       Regra do briefing: se não houver inscrição aberta, a seção
+       inteira não aparece. O JS remove o bloco quando a lista vem vazia. -->
+  <section class="secao secao--clara" id="secao-inscricoes" hidden>
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Inscrições abertas</p>
+          <h2>Entre em campo na próxima etapa</h2>
+          <p>Inscrição por time ou atleta, direto pelo Painel do Competidor. A confirmação chega por e-mail com número de protocolo.</p>
+        </div>
+        <a class="link-seta" href="inscricoes.html">Ver todas</a>
+      </div>
+      <div id="lista-inscricoes" class="grade"></div>
+    </div>
+  </section>
+
+  <!-- ==================== MODALIDADES ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo secao-titulo--centro">
+        <p class="eyebrow">Modalidades</p>
+        <h2>Quatro disputas, uma só regra</h2>
+        <p>O resultado digital vale tanto quanto o físico. Escolha a modalidade e veja calendário, regulamento e ranking.</p>
+      </div>
+
+      <div class="grade grade--auto">
+        <a class="mod-card revelar" href="mod-futebol.html">
+          <span class="mod-card__fita fita"></span>
+          <img src="assets/img/mock/mod-futebol.svg" alt="">
+          <div class="mod-card__conteudo">
+            <h3 class="mod-card__nome">Futebol</h3>
+            <p class="mod-card__desc">6 a 8 jogadores · até 3 reservas</p>
+          </div>
+        </a>
+        <a class="mod-card revelar" data-atraso="80" href="mod-basquete.html">
+          <span class="mod-card__fita fita"></span>
+          <img src="assets/img/mock/mod-basquete.svg" alt="">
+          <div class="mod-card__conteudo">
+            <h3 class="mod-card__nome">Basquete</h3>
+            <p class="mod-card__desc">3 a 4 jogadores · até 2 reservas</p>
+          </div>
+        </a>
+        <a class="mod-card revelar" data-atraso="160" href="mod-dance.html">
+          <span class="mod-card__fita fita"></span>
+          <img src="assets/img/mock/mod-dance.svg" alt="">
+          <div class="mod-card__conteudo">
+            <h3 class="mod-card__nome">Dance</h3>
+            <p class="mod-card__desc">Atleta individual</p>
+          </div>
+        </a>
+        <a class="mod-card revelar" data-atraso="240" href="mod-shooter.html">
+          <span class="mod-card__fita fita"></span>
+          <img src="assets/img/mock/mod-shooter.svg" alt="">
+          <div class="mod-card__conteudo">
+            <h3 class="mod-card__nome">Shooter</h3>
+            <p class="mod-card__desc">5 jogadores · até 3 reservas</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== NOTÍCIAS ==================== -->
+  <section class="secao secao--clara">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Blog</p>
+          <h2>Últimas da Phygital</h2>
+        </div>
+        <a class="link-seta" href="blog.html">Todas as publicações</a>
+      </div>
+      <div class="grade grade--3" id="lista-posts"></div>
+    </div>
+  </section>
+
+  <!-- ==================== RANKING NACIONAL ==================== -->
+  <section class="secao secao--escura">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Ranking nacional</p>
+          <h2>Classificação geral Phygital Brasil</h2>
+          <p>Somatório de todas as edições disputadas. Atualizado após a apuração de cada campeonato.</p>
+        </div>
+        <a class="link-seta" href="painel/ranking.html">Ranking completo</a>
+      </div>
+
+      <div data-abas>
+        <div class="abas" role="tablist" aria-label="Modalidade do ranking">
+          <button class="aba" role="tab" id="aba-futebol" aria-controls="p-futebol" aria-selected="true">Futebol</button>
+          <button class="aba" role="tab" id="aba-basquete" aria-controls="p-basquete" aria-selected="false">Basquete</button>
+          <button class="aba" role="tab" id="aba-shooter" aria-controls="p-shooter" aria-selected="false">Shooter</button>
+          <button class="aba" role="tab" id="aba-dance" aria-controls="p-dance" aria-selected="false">Dance</button>
+        </div>
+
+        <div class="mt-4">
+          <div id="p-futebol" role="tabpanel" aria-labelledby="aba-futebol" tabindex="0"></div>
+          <div id="p-basquete" role="tabpanel" aria-labelledby="aba-basquete" tabindex="0" hidden></div>
+          <div id="p-shooter" role="tabpanel" aria-labelledby="aba-shooter" tabindex="0" hidden></div>
+          <div id="p-dance" role="tabpanel" aria-labelledby="aba-dance" tabindex="0" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ÚLTIMOS RESULTADOS ==================== -->
+  <section class="secao secao--clara">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Placar phygital</p>
+          <h2>Últimos confrontos apurados</h2>
+          <p>Cada resultado é a soma de duas metades: a disputa no digital e a disputa na arena.</p>
+        </div>
+      </div>
+      <div class="placares" id="lista-resultados"></div>
+    </div>
+  </section>
+
+  <!-- ==================== PARCEIROS ==================== -->
+  <section class="secao secao--clara secao--compacta">
+    <div class="container">
+      <div class="secao-titulo secao-titulo--centro">
+        <p class="eyebrow">Quem constrói junto</p>
+        <h2>Patrocinadores e apoiadores</h2>
+      </div>
+      <div class="parceiros" id="lista-parceiros"></div>
+      <p class="txt-centro mt-5">
+        <a class="btn btn--contorno" href="parceiros.html">Conheça todos os parceiros</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="cta-faixa secao">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Fique por dentro</p>
+          <h2>Receba a abertura de cada nova inscrição</h2>
+          <p style="color:rgba(255,255,255,.75);margin-bottom:0">
+            Avisamos por e-mail quando um campeonato abre, quando as vagas estão acabando e quando o ranking é atualizado.
+          </p>
+        </div>
+        <form class="form-inline" data-validar data-demo="Cadastro na lista registrado (protótipo).">
+          <label class="sr-only" for="news-email">Seu e-mail</label>
+          <input type="email" id="news-email" name="email" placeholder="seu@email.com" required>
+          <button class="btn btn--destaque" type="submit">Quero receber</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   HOME — renderização dos blocos dinâmicos
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ---- Hero: banners cadastrados em Alterar Banner → Site Principal ----
+     Quando não há nenhum banner ativo, o slide estático do HTML permanece
+     como fallback, para a home nunca abrir com o topo vazio. */
+  function renderHero() {
+    var banners = (D.bannersSite() || []).filter(function (b) {
+      return b.ativo !== false && !b.arquivado;
+    });
+    var slides = document.getElementById('hero-slides');
+    var pontos = document.getElementById('hero-pontos');
+    if (!slides || !pontos) return;
+
+    if (!banners.length) { pontos.innerHTML = ''; return; }
+
+    /* O h1 vai para o primeiro banner que realmente tem título: se o primeiro
+       slide for "somente mídia", a página ficaria sem nenhum h1. */
+    var indiceH1 = -1;
+    banners.forEach(function (b, i) {
+      if (indiceH1 === -1 && !b.semTexto && b.titulo) indiceH1 = i;
+    });
+
+    slides.innerHTML = banners.map(function (b, i) {
+      /* Fundo: vídeo em laço e silenciado, ou imagem */
+      var fundo = (b.midia === 'video' && b.video)
+        ? '<video src="' + esc(b.video) + '" autoplay muted loop playsinline aria-hidden="true"></video>'
+        : '<img src="' + esc(b.img) + '" alt="' + esc(b.semTexto ? (b.titulo || 'Banner Phygital Brasil') : '') + '"' +
+          (b.semTexto ? '' : ' aria-hidden="true"') + '>';
+
+      var conteudo = '';
+      if (!b.semTexto) {
+        var tag = i === indiceH1 ? 'h1' : 'p';
+        /* Todos os títulos usam a mesma fonte (Saira, via .hero__titulo).
+           O tamanho em pixels é o único ajuste por banner; 0 = automático. */
+        var estilo = b.tituloTamanho
+          ? ' style="font-size:' + parseInt(b.tituloTamanho, 10) + 'px"'
+          : '';
+        var acoes = '';
+        if (b.botao) {
+          acoes += '<a class="btn btn--primario btn--grande" href="' + esc(b.link || '#') + '">' + esc(b.botao) + '</a>';
+        }
+        if (b.botao2) {
+          acoes += '<a class="btn btn--contorno-claro btn--grande" href="' + esc(b.link2 || '#') + '">' + esc(b.botao2) + '</a>';
+        }
+        conteudo =
+          '<div class="container hero__conteudo' + (i === 0 ? ' entrando' : '') + '">' +
+            (b.eyebrow ? '<p class="eyebrow">' + esc(b.eyebrow) + '</p>' : '') +
+            (b.titulo ? '<' + tag + ' class="hero__titulo"' + estilo + '>' + esc(b.titulo) + '</' + tag + '>' : '') +
+            (b.texto ? '<p class="hero__texto">' + esc(b.texto) + '</p>' : '') +
+            (acoes ? '<div class="hero__acoes">' + acoes + '</div>' : '') +
+          '</div>';
+      }
+
+      return '<div class="hero__slide' + (i === 0 ? ' ativo' : '') + '">' + fundo + conteudo + '</div>';
+    }).join('');
+
+    /* Todos os banners são "somente mídia": a página ainda precisa de um h1. */
+    if (indiceH1 === -1) {
+      slides.insertAdjacentHTML('afterbegin',
+        '<h1 class="sr-only">Phygital Brasil — o físico e o digital no mesmo campo de jogo</h1>');
+    }
+
+    pontos.innerHTML = banners.length > 1
+      ? banners.map(function (b, i) {
+          return '<button class="hero__ponto' + (i === 0 ? ' ativo' : '') + '" role="tab" aria-selected="' +
+                 (i === 0) + '" aria-label="Destaque ' + (i + 1) + '"></button>';
+        }).join('')
+      : '';
+  }
+
+  /* ---- Inscrições abertas (seção some quando não há nenhuma) ---- */
+  function renderInscricoes() {
+    var abertas = D.inscricoesAbertas();
+    var secao = document.getElementById('secao-inscricoes');
+    if (!abertas.length) { secao.hidden = true; return; }
+    secao.hidden = false;
+
+    document.getElementById('lista-inscricoes').innerHTML = abertas.map(function (c) {
+      var m = D.modalidade(c.modalidade);
+      var dias = F.diasAte(c.encerramentoInscricoes);
+      var urgente = dias >= 0 && dias <= 10;
+      return '' +
+      '<article class="card card--fita camp-card revelar">' +
+        '<div class="camp-card__midia">' +
+          '<img src="' + esc(c.banner) + '" alt="">' +
+          '<span class="camp-card__mod">' + esc(m.curto) + '</span>' +
+        '</div>' +
+        '<div class="camp-card__corpo">' +
+          '<h3 class="camp-card__titulo">' + esc(c.nome) + '</h3>' +
+          '<div class="camp-card__infos">' +
+            '<span class="camp-card__info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' + esc(F.periodo(c.data, c.dataFim)) + '</span>' +
+            '<span class="camp-card__info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + esc(c.local) + '</span>' +
+            '<span class="camp-card__info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' + esc(c.vagas) + ' vagas</span>' +
+          '</div>' +
+          '<p class="txt-peq txt-suave" style="margin:0">' + esc(c.descricao) + '</p>' +
+        '</div>' +
+        '<div class="camp-card__lateral">' +
+          '<span class="' + (urgente ? 'tag tag--amarela' : 'tag tag--verde') + '">' +
+            (dias >= 0 ? 'Encerra em ' + dias + ' dia' + (dias === 1 ? '' : 's') : 'Encerrado') +
+          '</span>' +
+          '<div class="txt-micro txt-suave txt-centro">Inscrições até<br><strong>' + esc(F.data(c.encerramentoInscricoes)) + '</strong></div>' +
+          '<a class="btn btn--primario btn--pequeno" href="inscricoes.html#' + esc(c.id) + '">Inscrever time</a>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---- Notícias ---- */
+  function renderPosts() {
+    document.getElementById('lista-posts').innerHTML = D.posts(3).map(function (p, i) {
+      return '' +
+      '<article class="card card--fita card--interativo revelar" data-atraso="' + (i * 80) + '">' +
+        '<div class="card__midia">' +
+          '<span class="post-card__cat">' + esc(p.cat) + '</span>' +
+          '<img src="' + esc(p.img) + '" alt="">' +
+        '</div>' +
+        '<div class="card__corpo">' +
+          '<h3 class="post-card__titulo"><a href="post.html?id=' + esc(p.id) + '">' + esc(p.titulo) + '</a></h3>' +
+          '<p class="txt-peq txt-suave">' + esc(p.resumo) + '</p>' +
+          '<div class="post-meta mt-3">' +
+            '<span>' + esc(F.dataCurta(p.data)) + '</span><span class="sep">·</span><span>' + esc(p.autor) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---- Ranking ---- */
+  function tabelaRanking(mod) {
+    var linhas = D.ranking(mod);
+    var m = D.modalidade(mod);
+    if (!linhas.length) {
+      return '<div class="aviso">Ainda não há resultados apurados para esta modalidade.</div>';
+    }
+    var individual = !!m.individual;
+    return '' +
+    '<div class="tabela-wrap">' +
+      '<table class="tabela--ranking">' +
+        '<caption class="sr-only">Ranking nacional de ' + esc(m.curto) + '</caption>' +
+        '<thead><tr>' +
+          '<th scope="col">Pos</th>' +
+          '<th scope="col">' + (individual ? 'Atleta' : 'Time') + '</th>' +
+          '<th scope="col">UF</th>' +
+          '<th scope="col">V</th>' +
+          '<th scope="col">D</th>' +
+          '<th scope="col">Camp.</th>' +
+          '<th scope="col">Títulos</th>' +
+          '<th scope="col">GOTF</th>' +
+        '</tr></thead>' +
+        '<tbody>' + linhas.map(function (t, i) {
+          var pos = i + 1;
+          return '<tr>' +
+            '<td><span class="pos' + (pos <= 3 ? ' pos--' + pos : '') + '">' + pos + '</span></td>' +
+            '<td><div class="celula-time"><img src="assets/img/mock/escudo-' + ((i % 12) + 1) + '.svg" alt=""><strong>' + esc(t.nome) + '</strong></div></td>' +
+            '<td>' + esc(t.uf) + '</td>' +
+            '<td>' + t.v + '</td>' +
+            '<td>' + t.d + '</td>' +
+            '<td>' + t.camp + '</td>' +
+            '<td>' + t.titulos + '</td>' +
+            '<td>' + (t.gotf ? '<span class="tag tag--verde">Sim</span>' : '<span class="txt-suave">—</span>') + '</td>' +
+          '</tr>';
+        }).join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
+  function renderRanking() {
+    ['futebol', 'basquete', 'shooter', 'dance'].forEach(function (mod) {
+      document.getElementById('p-' + mod).innerHTML = tabelaRanking(mod);
+    });
+  }
+
+  /* ---- Últimos resultados (placar somado: digital + físico) ---- */
+  function renderResultados() {
+    document.getElementById('lista-resultados').innerHTML = D.resultados(4).map(function (r) {
+      var tc = r.casa.digital + r.casa.fisico;
+      var tf = r.fora.digital + r.fora.fisico;
+      var m = D.modalidade(r.mod);
+      function time(t, total, venceu) {
+        return '<div class="placar-card__time">' +
+          '<img src="assets/img/mock/escudo-' + t.escudo + '.svg" alt="">' +
+          '<span' + (venceu ? ' class="placar-card__venceu"' : '') + '>' + esc(t.nome) + '</span>' +
+        '</div>';
+      }
+      return '' +
+      '<article class="placar-card revelar">' +
+        '<div class="placar-card__topo">' +
+          '<span>' + esc(m.curto) + ' · ' + esc(r.fase) + '</span>' +
+          '<span>' + esc(F.dataCurta(r.data)) + '</span>' +
+        '</div>' +
+        '<div class="placar-card__corpo">' +
+          time(r.casa, tc, tc > tf) +
+          '<div class="placar-card__vs">' +
+            '<div class="placar-card__total">' + tc + ' <span class="txt-suave">–</span> ' + tf + '</div>' +
+            '<div class="placar-card__parciais">digital ' + r.casa.digital + '–' + r.fora.digital +
+              ' · arena ' + r.casa.fisico + '–' + r.fora.fisico + '</div>' +
+          '</div>' +
+          time(r.fora, tf, tf > tc) +
+        '</div>' +
+        '<div class="placar-card__rodape">' +
+          '<span>' + esc(r.camp) + '</span><span>' + esc(r.local) + '</span>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ---- Parceiros ---- */
+  function renderParceiros() {
+    document.getElementById('lista-parceiros').innerHTML = D.parceiros().slice(0, 8).map(function (p, i) {
+      return '<div class="parceiro"><img src="assets/img/mock/parceiro-' + (i + 1) + '.svg" alt="' + esc(p.nome) + '"></div>';
+    }).join('');
+  }
+
+  /* Roda antes do phygital.js ligar o slider, para ele já enxergar os slides novos */
+  renderHero();
+  renderInscricoes();
+  renderPosts();
+  renderRanking();
+  renderResultados();
+  renderParceiros();
+
+  /* Reobserva os elementos criados dinamicamente */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

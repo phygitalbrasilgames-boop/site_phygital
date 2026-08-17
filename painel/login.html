@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar no painel — Phygital Brasil</title>
+<meta name="description" content="Acesse o painel da Phygital Brasil com e-mail e senha. Um único login atende o competidor e o administrador — o perfil da conta define o painel de destino.">
+<meta name="theme-color" content="#0E1113">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes desta página — compostos sobre o design system */
+
+  /* .campo__erro { display:flex } vence o atributo [hidden]: mantém o erro oculto até a validação */
+  .campo__erro[hidden] { display: none; }
+  /* .campo label vence .check na especificidade — devolve o alinhamento do checkbox */
+  .campo label.check { display: flex; font-family: var(--fonte-texto); font-weight: 400; margin-bottom: 0; }
+
+  /* Campo de senha com botão de exibição */
+  .campo-senha { position: relative; }
+  .campo-senha input { padding-right: 56px; }
+  .ver-senha {
+    position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    width: 46px; height: 46px; display: grid; place-items: center;
+    background: none; border: 0; border-radius: var(--r-2);
+    color: var(--cinza); cursor: pointer;
+  }
+  .ver-senha:hover { color: var(--texto); background: rgba(14,17,19,.05); }
+  .ver-senha svg { width: 20px; height: 20px; }
+  .ver-senha .olho-off { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-on { display: none; }
+  .ver-senha[aria-pressed="true"] .olho-off { display: block; }
+
+  .auth__lateral .auth__rodape-lateral { font-size: var(--t-micro); color: rgba(255,255,255,.6); line-height: 1.7; }
+  .auth__lateral .auth__rodape-lateral a { color: var(--amarelo); font-weight: 600; }
+  .auth__lateral .auth__rodape-lateral a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<main class="auth" id="conteudo">
+
+  <!-- ==================== LATERAL DE MARCA ==================== -->
+  <aside class="auth__lateral">
+    <a href="../index.html" aria-label="Phygital Brasil — página inicial">
+      <img class="logo" src="../assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+    </a>
+
+    <p class="auth__frase">O físico e o digital no <span>mesmo campo</span> de jogo</p>
+
+    <div class="auth__rodape-lateral">
+      <p>
+        Temporada 2026 · Copa Phygital Futebol, Circuito Basquete 3x3, Shooter Open e Dance Championship.
+      </p>
+      <p><a href="../index.html">Voltar ao site</a> · <a href="../inscricoes.html">Ver inscrições abertas</a></p>
+    </div>
+  </aside>
+
+  <!-- ==================== PAINEL DO FORMULÁRIO ==================== -->
+  <div class="auth__painel">
+    <div class="auth__caixa">
+
+      <h1>Entrar no painel</h1>
+      <p>
+        Um acesso só para tudo: inscrever times, acompanhar a triagem das inscrições,
+        consultar o ranking e abrir chamados.
+      </p>
+
+      <form id="form-login" data-validar>
+
+        <div class="aviso aviso--erro" id="erro-login" hidden><div><strong>Não foi possível entrar.</strong> <span id="erro-texto"></span></div></div>
+
+        <div class="campo">
+          <label for="email">E-mail<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="voce@email.com.br" required>
+          <p class="campo__erro" hidden>Informe um e-mail válido.</p>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Senha<span class="obrigatorio" aria-hidden="true">*</span></label>
+          <div class="campo-senha">
+            <input type="password" id="senha" name="senha" autocomplete="current-password" placeholder="Sua senha" required>
+            <button type="button" class="ver-senha" data-ver-senha="senha" aria-pressed="false" aria-label="Mostrar senha">
+              <svg class="olho-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="olho-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M1 1l22 22"/></svg>
+            </button>
+          </div>
+          <p class="campo__erro" hidden>Digite sua senha.</p>
+        </div>
+
+        <div class="auth__opcoes">
+          <label class="check" for="lembrar">
+            <input type="checkbox" id="lembrar" name="lembrar" checked>
+            <span>Permanecer conectado</span>
+          </label>
+          <a href="recuperar-senha.html">Esqueci minha senha</a>
+        </div>
+
+        <button class="btn btn--primario btn--bloco" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Entrar
+        </button>
+
+      </form>
+
+      <p class="auth__rodape">
+        Ainda não tem conta? <a href="cadastro.html">Criar cadastro</a><br>
+        Recebeu uma senha temporária? <a href="primeiro-acesso.html">Fazer o primeiro acesso</a>
+      </p>
+
+      <p class="txt-micro txt-suave txt-centro mt-4">
+        Ao entrar você concorda com o regulamento vigente de cada campeonato em que se inscrever.
+        Dúvidas de acesso: <a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a>.
+      </p>
+
+    </div>
+  </div>
+
+</main>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+
+  var form = $('#form-login');
+  var erro = $('#erro-login');
+
+  function mostrarErro(texto) {
+    $('#erro-texto').textContent = texto;
+    erro.hidden = false;
+    $('#senha').value = '';
+    $('#senha').focus();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    erro.hidden = true;
+
+    var email = $('#email').value.trim();
+    var senha = $('#senha').value;
+    if (!email || !senha) return;   /* a validação de campo obrigatório já cuida */
+
+    var r = D.autenticar(email, senha);
+    if (!r.ok) {
+      mostrarErro(r.erro + ' Confira as credenciais e tente novamente.');
+      return;
+    }
+
+    D.abrirSessao(r.conta);
+    PB.toast('Bem-vindo', r.conta.nome + ' · entrando no painel…', 'info');
+    setTimeout(function () { location.href = r.conta.destino; }, 700);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detalhe do chamado — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Acompanhe a conversa completa de um chamado da Phygital Brasil: protocolo, campeonato, status, respostas da organização e linha do tempo do atendimento.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes locais desta tela — compõem os componentes já existentes */
+
+  /* .campo__erro é display:flex no phygital.css e vence o atributo [hidden]:
+     sem esta linha a mensagem de erro aparece antes de qualquer validação. */
+  .campo__erro[hidden] { display: none; }
+
+  .detalhe { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .detalhe { grid-template-columns: 1fr; } }
+
+  .ficha { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: var(--e-3); margin: 0; }
+  .ficha dt { font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); }
+  .ficha dd { margin: 4px 0 0; font-weight: 600; line-height: 1.35; }
+
+  .linha-tempo { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e-4); }
+  .linha-tempo li { position: relative; padding-left: 32px; }
+  .linha-tempo li::before { content: ""; position: absolute; left: 8px; top: 22px; bottom: -28px; width: 2px; background: var(--linha-clara); }
+  .linha-tempo li:last-child::before { display: none; }
+  .linha-tempo li::after { content: ""; position: absolute; left: 2px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--branco); border: 2px solid var(--cinza-20); }
+  .linha-tempo li.feito::after { background: var(--verde); border-color: var(--verde); }
+  .linha-tempo li.atual::after { background: var(--amarelo); border-color: var(--ambar); }
+  .linha-tempo__rotulo { font-family: var(--fonte-display); font-weight: 600; font-size: .9375rem; line-height: 1.2; }
+  .linha-tempo__quando { font-size: var(--t-micro); color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+  .linha-tempo__texto { font-size: var(--t-peq); color: var(--texto-suave); margin-top: 2px; }
+  .linha-tempo li:not(.feito):not(.atual) .linha-tempo__rotulo { color: var(--texto-suave); font-weight: 500; }
+
+  .conversa-wrap { max-height: 560px; overflow-y: auto; padding: var(--e-4); }
+
+  /* Em telas estreitas a ação do topo desce para a segunda linha */
+  @media (max-width: 640px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; }
+    .painel__topo .flex-fim .btn { flex: 1; }
+    .msg { max-width: 92%; }
+  }
+  .campo-fieldset { border: 0; padding: 0; margin: 0; background: transparent; }
+  /* Estado desabilitado precisa ser visível, não só programático */
+  .campo-fieldset:disabled textarea,
+  .campo-fieldset:disabled input {
+    background: var(--claro); color: var(--texto-suave);
+    border-style: dashed; cursor: not-allowed;
+  }
+  .campo-fieldset:disabled label { color: var(--texto-suave); }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1 id="ch-titulo">Chamado</h1>
+        <p class="sub" id="ch-sub">Detalhe do atendimento</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="chamados.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+          Todos os chamados
+        </a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- Chamado inexistente -->
+      <div id="ch-erro" hidden>
+        <div class="vazio">
+          <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4M12 14h.01"/></svg>
+          <h2>Chamado não encontrado</h2>
+          <p>O protocolo informado no endereço não existe ou não pertence à sua conta. Confira a lista de chamados abertos e encerrados.</p>
+          <a class="btn btn--primario" href="chamados.html">Voltar para os chamados</a>
+        </div>
+      </div>
+
+      <div id="ch-conteudo" hidden>
+
+        <!-- Ficha do chamado -->
+        <div class="bloco">
+          <div class="bloco__topo">
+            <h2>Resumo do protocolo</h2>
+            <span id="ch-tag-topo"></span>
+          </div>
+          <div class="bloco__corpo">
+            <dl class="ficha" id="ch-ficha"></dl>
+          </div>
+        </div>
+
+        <div class="detalhe">
+
+          <!-- Coluna principal: conversa + resposta -->
+          <div>
+            <div class="bloco">
+              <div class="bloco__topo">
+                <h2>Conversa</h2>
+                <span class="txt-micro txt-suave" id="ch-qtd-msg"></span>
+              </div>
+              <div class="bloco__corpo bloco__corpo--flat">
+                <div class="conversa-wrap">
+                  <div class="conversa" id="ch-conversa"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Caixa de resposta — chamado em andamento -->
+            <div class="bloco" id="resposta-ativa">
+              <div class="bloco__topo">
+                <h2>Responder</h2>
+                <span class="txt-micro txt-suave">A organização é notificada na hora</span>
+              </div>
+              <div class="bloco__corpo">
+                <form id="form-resposta" data-validar>
+                  <div class="campo">
+                    <label for="resp-texto">Sua resposta <span class="obrigatorio">*</span></label>
+                    <textarea id="resp-texto" name="resposta" required
+                              placeholder="Escreva a resposta para a organização. Se pedirem documento, anexe o arquivo abaixo."></textarea>
+                    <p class="campo__erro" hidden>Escreva a resposta antes de enviar.</p>
+                  </div>
+
+                  <div class="campo">
+                    <span class="rotulo" id="rot-anexo-resp">Anexo (opcional)</span>
+                    <div class="upload" data-upload aria-describedby="rot-anexo-resp">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--cinza)"><path d="M21 12.5V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h6"/><path d="M16 3h5v5M21 3l-9 9"/></svg>
+                      <span class="upload__titulo">Arraste um arquivo ou clique para escolher</span>
+                      <span class="upload__specs">PDF, JPG ou PNG até 5 MB</span>
+                      <button class="btn btn--contorno btn--pequeno" type="button">Escolher arquivo</button>
+                      <span class="txt-micro txt-suave" data-upload-nome>Nenhum arquivo selecionado</span>
+                      <input type="file" id="resp-anexo" name="anexo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                    </div>
+                  </div>
+
+                  <div class="flex-fim envolve">
+                    <span class="txt-micro txt-suave" style="margin-right:auto">
+                      Cada resposta reabre a contagem do prazo de retorno da organização.
+                    </span>
+                    <button class="btn btn--primario" type="submit">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                      Enviar resposta
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Caixa de resposta — chamado encerrado -->
+            <div class="bloco" id="resposta-bloqueada" hidden>
+              <div class="bloco__topo">
+                <h2>Responder</h2>
+                <span class="tag tag--cinza">Indisponível</span>
+              </div>
+              <div class="bloco__corpo">
+                <div class="aviso aviso--alerta mb-4">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                  <div>
+                    <strong>Este chamado está encerrado e não aceita novas mensagens.</strong>
+                    O histórico fica guardado para consulta e serve como comprovação do que foi combinado.
+                    Se o assunto voltou a acontecer ou surgiu um desdobramento,
+                    <strong>abra um novo chamado citando o protocolo <span id="ch-protocolo-ref">deste atendimento</span></strong>
+                    no primeiro parágrafo da mensagem — assim a organização recupera o contexto sem você precisar repetir tudo.
+                  </div>
+                </div>
+
+                <fieldset class="campo-fieldset" disabled aria-describedby="resp-bloqueada-nota">
+                  <div class="campo">
+                    <label for="resp-texto-bloq">Sua resposta</label>
+                    <textarea id="resp-texto-bloq" name="resposta-bloqueada"
+                              placeholder="Caixa desabilitada: chamados encerrados não recebem novas respostas."></textarea>
+                  </div>
+                  <div class="flex-fim">
+                    <button class="btn btn--primario" type="button">Enviar resposta</button>
+                  </div>
+                </fieldset>
+
+                <p class="txt-micro txt-suave mt-3" id="resp-bloqueada-nota">
+                  Campos desabilitados de propósito. Nenhuma mensagem enviada por aqui seria registrada no protocolo.
+                </p>
+
+                <a class="btn btn--contorno btn--bloco mt-3" href="chamados.html">Abrir um novo chamado</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna lateral: linha do tempo e ações -->
+          <div>
+            <div class="bloco">
+              <div class="bloco__topo">
+                <h2>Linha do tempo</h2>
+              </div>
+              <div class="bloco__corpo">
+                <ol class="linha-tempo" id="ch-timeline"></ol>
+              </div>
+            </div>
+
+            <div class="bloco">
+              <div class="bloco__topo">
+                <h2>Ações</h2>
+              </div>
+              <div class="bloco__corpo">
+                <p class="txt-peq txt-suave">
+                  Encerre o chamado quando o pedido estiver resolvido. Um chamado encerrado não pode ser
+                  reaberto — o histórico continua disponível para consulta.
+                </p>
+
+                <button class="btn btn--perigo btn--bloco mt-3" type="button" id="btn-encerrar"
+                        data-confirmar="O chamado será fechado e deixará de aceitar novas mensagens. Essa ação não pode ser desfeita."
+                        data-confirmar-titulo="Encerrar este chamado?"
+                        data-confirmar-ok="Chamado encerrado. A confirmação foi enviada por e-mail.">
+                  Encerrar chamado
+                </button>
+
+                <hr>
+
+                <p class="txt-micro txt-suave">
+                  <strong class="display">Notificações deste protocolo</strong><br>
+                  Toda mensagem nova, mudança de status e o encerramento são enviados por e-mail para
+                  <span data-email-usuario>diego@digitalsolvers.com</span>.
+                  Você ajusta quais avisos quer receber em <a href="conta.html" style="color:var(--verde);font-weight:600">Conta → Notificações</a>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="txt-micro txt-suave mt-3">
+          Protótipo de interface. As mensagens são dados de demonstração e nenhum e-mail é realmente disparado.
+        </p>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL — DETALHE DO CHAMADO
+   Lê ?id=c1 e monta ficha, conversa, linha do tempo e caixa de resposta.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function parametro(nome) {
+    var m = new RegExp('[?&]' + nome + '=([^&#]*)').exec(window.location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+
+  var usuario = D.usuario();
+  document.querySelectorAll('[data-email-usuario]').forEach(function (el) {
+    el.textContent = usuario.email;
+  });
+
+  var lista = D.chamados();
+  var id = parametro('id') || (lista[0] ? lista[0].id : '');
+  var c = D.chamado(id);
+
+  if (!c) {
+    document.getElementById('ch-erro').hidden = false;
+    document.getElementById('ch-titulo').textContent = 'Chamado não encontrado';
+    document.getElementById('ch-sub').textContent = 'Verifique o protocolo na lista de chamados';
+    return;
+  }
+
+  document.getElementById('ch-conteudo').hidden = false;
+
+  var camp = D.campeonato(c.campeonato);
+  var nomeCamp = camp ? camp.nome : 'Sem campeonato vinculado';
+  var encerrado = c.status === 'encerrado';
+
+  function tag(statusId) {
+    var s = D.STATUS_CHAMADO[statusId] || D.STATUS_CHAMADO.aberto;
+    return '<span class="tag ' + s.classe + '">' + esc(s.rotulo) + '</span>';
+  }
+
+  /* ---- Cabeçalho ---- */
+  document.getElementById('ch-titulo').textContent = c.assunto;
+  document.getElementById('ch-sub').textContent =
+    'Protocolo ' + c.protocolo + ' · ' + nomeCamp;
+  document.getElementById('ch-tag-topo').innerHTML = tag(c.status);
+
+  /* ---- Ficha ---- */
+  document.getElementById('ch-ficha').innerHTML =
+    '<div><dt>Protocolo</dt><dd class="num">' + esc(c.protocolo) + '</dd></div>' +
+    '<div><dt>Assunto</dt><dd>' + esc(c.assunto) + '</dd></div>' +
+    '<div><dt>Campeonato</dt><dd>' + esc(nomeCamp) + '</dd></div>' +
+    '<div><dt>Status</dt><dd id="ch-ficha-status">' + tag(c.status) + '</dd></div>' +
+    '<div><dt>Aberto em</dt><dd class="num">' + esc(F.data(c.abertoEm)) + '</dd></div>' +
+    '<div><dt>Última atualização</dt><dd class="num" id="ch-ficha-atualizado">' + esc(F.data(c.atualizadoEm)) + '</dd></div>' +
+    '<div><dt>Aberto por</dt><dd>' + esc(c.autor || usuario.nome) + '</dd></div>';
+
+  /* ---- Conversa, na ordem cronológica dos dados ---- */
+  function bloco(m) {
+    if (m.de === 'sistema') {
+      return '<div class="msg msg--sistema">' +
+        esc(m.texto) + (m.hora ? ' · ' + esc(m.hora) : '') +
+      '</div>';
+    }
+    var org = m.de === 'org';
+    return '<div class="msg ' + (org ? 'msg--org' : 'msg--usuario') + '">' +
+      '<div class="msg__autor">' + esc(m.autor || (org ? 'Organização Phygital' : usuario.nome)) + '</div>' +
+      '<div>' + esc(m.texto) + '</div>' +
+      (m.hora ? '<div class="msg__hora">' + esc(m.hora) + '</div>' : '') +
+    '</div>';
+  }
+
+  var mensagens = c.mensagens || [];
+  document.getElementById('ch-conversa').innerHTML = mensagens.map(bloco).join('');
+  document.getElementById('ch-qtd-msg').textContent =
+    mensagens.length + ' mensagem' + (mensagens.length === 1 ? '' : 's') + ' no protocolo';
+
+  /* ---- Linha do tempo do status ---- */
+  function primeiraOrg() {
+    for (var i = 0; i < mensagens.length; i++) {
+      if (mensagens[i].de === 'org') return mensagens[i].hora || '';
+    }
+    return '';
+  }
+
+  var ordem = ['aberto', 'andamento', 'respondido', 'encerrado'];
+
+  function renderTimeline(statusAtual) {
+    var indice = ordem.indexOf(statusAtual);
+    if (indice < 0) indice = 0;
+
+    var etapas = [
+      { rotulo: 'Chamado aberto',
+        quando: F.data(c.abertoEm),
+        texto: 'Protocolo ' + c.protocolo + ' gerado e e-mail de confirmação enviado.' },
+      { rotulo: 'Em andamento',
+        quando: indice >= 1 ? F.data(c.abertoEm) : 'Aguardando',
+        texto: 'Triagem da central de inscrições e análise do pedido.' },
+      { rotulo: 'Respondido pela organização',
+        quando: indice >= 2 ? (primeiraOrg() || F.data(c.atualizadoEm)) : 'Aguardando',
+        texto: 'Retorno enviado por e-mail e publicado na conversa.' },
+      { rotulo: 'Encerrado',
+        quando: indice >= 3 ? F.data(c.atualizadoEm) : 'Em aberto',
+        texto: indice >= 3 ? 'Atendimento concluído. O histórico fica disponível para consulta.'
+                           : 'Encerra quando o pedido for resolvido — por você ou pela organização.' }
+    ];
+
+    document.getElementById('ch-timeline').innerHTML = etapas.map(function (e, i) {
+      var classe = i < indice ? 'feito'
+                 : (i === indice ? (statusAtual === 'encerrado' ? 'feito' : 'atual') : '');
+      return '<li class="' + classe + '">' +
+        '<div class="linha-tempo__rotulo">' + esc(e.rotulo) + '</div>' +
+        '<div class="linha-tempo__quando">' + esc(e.quando) + '</div>' +
+        '<div class="linha-tempo__texto">' + esc(e.texto) + '</div>' +
+      '</li>';
+    }).join('');
+  }
+
+  renderTimeline(c.status);
+
+  /* ---- Caixa de resposta: bloqueada quando encerrado ---- */
+  var btn = document.getElementById('btn-encerrar');
+
+  if (encerrado) {
+    document.getElementById('resposta-ativa').hidden = true;
+    document.getElementById('resposta-bloqueada').hidden = false;
+    document.getElementById('ch-protocolo-ref').textContent = c.protocolo;
+    btn.disabled = true;
+    btn.removeAttribute('data-confirmar');
+    btn.textContent = 'Chamado já encerrado';
+  } else {
+    btn.removeAttribute('data-confirmar');
+    btn.addEventListener('click', function () {
+      PB.confirmar('Encerrar chamado',
+        'Ao encerrar, o protocolo ' + c.protocolo + ' sai da sua lista de abertos e não recebe mais respostas. Deseja encerrar?',
+        function () {
+          var d = new Date();
+          var pad = function (n) { return String(n).padStart(2, '0'); };
+          var carimbo = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+                        ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+          D.atualizarChamado(c.protocolo, {
+            status: 'encerrado',
+            atualizadoEm: carimbo,
+            mensagem: { de: 'sistema', texto: 'Chamado encerrado pelo responsável do time.', hora: carimbo }
+          });
+          PB.toast('Chamado encerrado', 'O protocolo foi para a lista de encerrados.', 'info');
+          setTimeout(function () { location.href = 'chamados.html'; }, 1100);
+        });
+    });
+  }
+
+  /* ---- Envio de resposta (registrado depois da validação do phygital.js) ---- */
+  PB.aoIniciar = function () {
+    if (encerrado) return;
+    var form = document.getElementById('form-resposta');
+
+    form.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+
+      var texto = document.getElementById('resp-texto').value;
+      var agora = new Date();
+      var carimbo = String(agora.getDate()).padStart(2, '0') + '/' +
+                    String(agora.getMonth() + 1).padStart(2, '0') + '/' +
+                    agora.getFullYear() + ' ' +
+                    String(agora.getHours()).padStart(2, '0') + ':' +
+                    String(agora.getMinutes()).padStart(2, '0');
+
+      var conversa = document.getElementById('ch-conversa');
+      conversa.insertAdjacentHTML('beforeend',
+        bloco({ de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }) +
+        bloco({ de: 'sistema', texto: 'Resposta registrada no protocolo ' + c.protocolo + '. Status: Em andamento.', hora: carimbo })
+      );
+
+      var qtd = conversa.querySelectorAll('.msg').length;
+      document.getElementById('ch-qtd-msg').textContent = qtd + ' mensagens no protocolo';
+      document.getElementById('ch-ficha-status').innerHTML = tag('andamento');
+      document.getElementById('ch-tag-topo').innerHTML = tag('andamento');
+      document.getElementById('ch-ficha-atualizado').textContent = F.data(
+        agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
+      );
+      renderTimeline('andamento');
+
+      /* Grava de verdade: a mensagem e o novo status ficam salvos e a
+         organização vê a resposta na fila de atendimento. */
+      D.atualizarChamado(c.protocolo, {
+        status: 'andamento',
+        atualizadoEm: carimbo,
+        mensagem: { de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }
+      });
+
+      form.reset();
+      var nomeArquivo = form.querySelector('[data-upload-nome]');
+      if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
+
+      PB.toast('Resposta enviada',
+        'Sua mensagem entrou no protocolo ' + c.protocolo + '. A organização foi notificada por e-mail.', 'info');
+      PB.recarregar();
+    });
+  };
+})();
+</script>
+
+</body>
+</html>
