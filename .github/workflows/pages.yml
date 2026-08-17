@@ -40,6 +40,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          # git commit-tree exige identidade de committer; sem isto ele sai com
+          # código 128 antes de criar qualquer coisa.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           # A árvore de site/ já está no commit; basta reaproveitá-la em vez de
           # copiar arquivo por arquivo.
           arvore_site=$(git rev-parse HEAD:site)
@@ -55,12 +60,17 @@ jobs:
 
           arvore=$(git write-tree)
 
-          # Encadeia no gh-pages anterior quando ele existe, para preservar o
-          # histórico das publicações.
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            pai="-p $(git rev-parse refs/remotes/origin/gh-pages)"
-          else
-            pai=""
+          # O checkout traz só o branch atual. Sem buscar o gh-pages existente, o
+          # commit sairia órfão e o push seria recusado por não ser fast-forward.
+          pai=""
+          if git fetch --depth=1 origin +refs/heads/gh-pages:refs/remotes/origin/gh-pages 2>/dev/null; then
+            anterior=$(git rev-parse refs/remotes/origin/gh-pages)
+            # Nada mudou no conteúdo: não cria commit vazio a cada push.
+            if [ "$(git rev-parse "$anterior^{tree}")" = "$arvore" ]; then
+              echo "Conteúdo idêntico ao publicado. Nada a fazer."
+              exit 0
+            fi
+            pai="-p $anterior"
           fi
 
           commit=$(git commit-tree "$arvore" $pai \
