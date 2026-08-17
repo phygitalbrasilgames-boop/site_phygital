@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Início — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Painel do Competidor da Phygital Brasil: campeonatos em destaque, pendências do seu time, inscrições em andamento e contagem regressiva para a próxima etapa.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* ---- Banner rotativo do painel (usa a lógica de slider do site: data-hero) ---- */
+  .banner-painel {
+    position: relative;
+    display: grid;
+    min-height: clamp(250px, 26vw, 320px);
+    border-radius: var(--r-3);
+    overflow: hidden;
+    background: var(--grafite);
+    color: #fff;
+    margin-bottom: var(--e-5);
+  }
+  /* Os slides são empilhados na mesma célula de grade (e não posicionados de
+     forma absoluta): assim o banner cresce junto com o texto do slide mais
+     alto e nada é cortado em telas estreitas. */
+  .banner-painel .hero__slides { display: grid; }
+  /* O texto vive dentro do slide, então a troca é sequenciada: o slide que sai
+     some primeiro e só depois o que entra aparece. Um crossfade simultâneo
+     deixaria os dois títulos legíveis ao mesmo tempo. */
+  .banner-painel .hero__slide {
+    grid-area: 1 / 1;
+    position: relative;
+    display: flex; align-items: flex-end;
+    opacity: 0; visibility: hidden;
+    transition: opacity 260ms var(--curva), visibility 0s linear 260ms;
+  }
+  .banner-painel .hero__slide.ativo {
+    opacity: 1; visibility: visible;
+    transition: opacity 320ms var(--curva) 240ms, visibility 0s linear 240ms;
+  }
+  .banner-painel .hero__slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .banner-painel .hero__slide::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(14,17,19,.94) 0%, rgba(14,17,19,.82) 46%, rgba(14,17,19,.34) 100%);
+  }
+  .banner-painel__conteudo { position: relative; z-index: 2; padding: var(--e-5) var(--e-5) var(--e-6); max-width: 62ch; min-width: 0; }
+  .banner-painel .eyebrow { color: var(--amarelo); margin-bottom: var(--e-2); }
+  .banner-painel__titulo { font-size: clamp(1.375rem, 2.6vw, 2rem); text-transform: uppercase; margin-bottom: var(--e-2); color: #fff; }
+  .banner-painel__meta { font-size: var(--t-peq); color: rgba(255,255,255,.78); margin-bottom: var(--e-3); }
+  .banner-painel__acoes { display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap; }
+  /* Sobre o fundo escuro do banner as etiquetas viram versão sólida (contraste).
+     A etiqueta também pode quebrar linha: com nowrap ela definiria a largura
+     mínima do slide e vazaria o banner em telas estreitas. */
+  .banner-painel .tag { background: rgba(255,255,255,.16); color: #fff; white-space: normal; }
+  .banner-painel .tag--amarela { background: var(--amarelo); color: var(--grafite); }
+  .banner-painel .tag--verde { background: var(--verde); color: #fff; }
+  .banner-painel .tag--cinza { background: rgba(255,255,255,.16); color: #fff; }
+  .banner-painel .hero__pontos { position: absolute; left: calc(var(--e-5) - 4px); bottom: 4px; z-index: 3; display: flex; gap: var(--e-1); }
+  .banner-painel .hero__ponto {
+    width: 44px; height: 44px; padding: 20px 4px; border: 0; cursor: pointer;
+    background-color: rgba(255,255,255,.34); background-clip: content-box;
+    transition: background-color var(--medio) var(--curva);
+  }
+  .banner-painel .hero__ponto.ativo { background-image: var(--fita-tripla); background-color: transparent; }
+
+  /* ---- Cartões de ação ---- */
+  .acoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(236px, 1fr)); gap: var(--e-3); margin-bottom: var(--e-5); }
+  .acao { display: flex; align-items: center; gap: var(--e-3); padding: var(--e-4); min-height: 112px; }
+  .acao__icone { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: var(--r-2); background: var(--claro); color: var(--grafite); }
+  .acao__icone svg { width: 22px; height: 22px; }
+  .acao__texto { display: grid; gap: 3px; min-width: 0; }
+  .acao__titulo { font-family: var(--fonte-display); font-weight: 700; font-size: 1.0625rem; line-height: 1.15; }
+  .acao__desc { font-size: var(--t-micro); color: var(--texto-suave); line-height: 1.45; }
+  .acao__seta { width: 18px; height: 18px; flex: none; margin-left: auto; color: var(--verde); transition: transform var(--medio) var(--curva); }
+  .acao:hover .acao__seta { transform: translateX(4px); }
+
+  /* ---- Grade de dois blocos ---- */
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+
+  /* ---- Linhas de pendência / inscrição (reaproveita .chamado-item) ---- */
+  .linha-icone { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--claro); color: var(--cinza); }
+  .linha-icone svg { width: 18px; height: 18px; }
+  .linha-icone--alerta { background: rgba(252,224,1,.28); color: #6b5a00; }
+  .linha-icone--info { background: rgba(10,102,177,.12); color: var(--azul); }
+  .linha-icone--ok { background: rgba(0,155,74,.12); color: var(--verde-mata); }
+  .lista-linhas .chamado-item { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .lista-linhas .chamado__assunto { display: block; line-height: 1.35; }
+  .lista-linhas .chamado__meta { display: block; overflow-wrap: anywhere; }
+  @media (max-width: 620px) {
+    .lista-linhas .chamado-item { grid-template-columns: auto minmax(0, 1fr); }
+    .lista-linhas .chamado-item > :last-child { grid-column: 2; justify-self: start; }
+  }
+
+  /* ---- Contagem regressiva ---- */
+  .contagem { display: flex; gap: var(--e-2); margin: var(--e-3) 0; }
+  .contagem__caixa { flex: 1 1 0; background: var(--claro); border-radius: var(--r-2); padding: var(--e-2); text-align: center; }
+  .contagem__caixa strong { display: block; font-family: var(--fonte-display); font-size: 1.75rem; font-weight: 700; line-height: 1.05; }
+  .contagem__caixa span { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); }
+
+  .lista-info { display: grid; gap: 0; margin: var(--e-3) 0 var(--e-4); }
+  .lista-info > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--e-3); font-size: var(--t-peq); padding: 8px 0; border-bottom: 1px dashed var(--linha-clara); }
+  .lista-info > div:last-child { border-bottom: 0; }
+  .lista-info dt { color: var(--texto-suave); }
+  .lista-info dd { margin: 0; font-weight: 600; text-align: right; }
+
+  .painel__topo { flex-wrap: wrap; }
+
+  @media (max-width: 620px) {
+    .banner-painel { min-height: 220px; }
+    .banner-painel__conteudo { padding: var(--e-4) var(--e-3) var(--e-6); }
+    .banner-painel .hero__pontos { left: calc(var(--e-3) - 4px); }
+    .contagem__caixa strong { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="inicio.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1 id="saudacao">Olá, Diego</h1>
+        <p class="sub" id="sub-topo">Temporada 2026 · veja o que precisa da sua atenção hoje</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a>
+        <a class="btn btn--primario btn--pequeno" href="time-novo.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Cadastrar Time
+        </a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- ---------- BANNER ROTATIVO ---------- -->
+      <section class="banner-painel" data-hero aria-roledescription="carrossel" aria-labelledby="titulo-banners">
+        <h2 id="titulo-banners" class="sr-only">Campeonatos em destaque</h2>
+        <div class="hero__slides" id="banner-slides"></div>
+        <div class="hero__pontos" role="tablist" aria-label="Selecionar campeonato em destaque" id="banner-pontos"></div>
+      </section>
+
+      <!-- ---------- NÚMEROS DA CONTA ---------- -->
+      <section aria-labelledby="titulo-resumo">
+        <h2 id="titulo-resumo" class="sr-only">Resumo da sua conta</h2>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <!-- ---------- CARTÕES DE AÇÃO ---------- -->
+      <section aria-labelledby="titulo-acoes">
+        <h2 id="titulo-acoes" class="mb-3" style="font-size:1.125rem">Ações rápidas</h2>
+        <div class="acoes">
+          <a class="card card--fita card--interativo acao revelar" href="meus-times.html">
+            <span class="acao__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </span>
+            <span class="acao__texto">
+              <span class="acao__titulo">Ver Meu Time</span>
+              <span class="acao__desc" id="acao-times">Elenco, escudo, staff e histórico</span>
+            </span>
+            <svg class="acao__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+
+          <a class="card card--fita card--interativo acao revelar" data-atraso="80" href="inscricoes.html">
+            <span class="acao__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+            </span>
+            <span class="acao__texto">
+              <span class="acao__titulo">Campeonatos em andamento</span>
+              <span class="acao__desc" id="acao-camp">Inscreva seu time nas etapas abertas</span>
+            </span>
+            <svg class="acao__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+
+          <a class="card card--fita card--interativo acao revelar" data-atraso="160" href="chamados.html">
+            <span class="acao__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>
+            </span>
+            <span class="acao__texto">
+              <span class="acao__titulo">Abrir chamado</span>
+              <span class="acao__desc" id="acao-chamados">Fale com a organização sobre inscrição ou elenco</span>
+            </span>
+            <svg class="acao__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+
+          <a class="card card--fita card--interativo acao revelar" data-atraso="240" href="ranking.html">
+            <span class="acao__icone">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            </span>
+            <span class="acao__texto">
+              <span class="acao__titulo">Ver ranking</span>
+              <span class="acao__desc" id="acao-ranking">Classificação nacional por modalidade</span>
+            </span>
+            <svg class="acao__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- ---------- PENDÊNCIAS + PRÓXIMO CAMPEONATO ---------- -->
+      <div class="painel-grade">
+
+        <section class="bloco lista-linhas" aria-labelledby="titulo-pendencias">
+          <div class="bloco__topo">
+            <h2 id="titulo-pendencias">Suas pendências</h2>
+            <span class="tag tag--amarela" id="conta-pendencias">3 itens</span>
+          </div>
+          <div class="bloco__corpo bloco__corpo--flat" id="lista-pendencias"></div>
+        </section>
+
+        <section class="bloco" aria-labelledby="titulo-proximo">
+          <div class="bloco__topo">
+            <h2 id="titulo-proximo">Próximo campeonato</h2>
+            <span class="tag tag--verde">Inscrições abertas</span>
+          </div>
+          <div class="bloco__corpo">
+            <p class="eyebrow" style="margin-bottom:var(--e-2)">Phygital Futebol</p>
+            <h3 style="font-size:1.25rem">Copa Phygital Futebol 2026 — Etapa Nacional</h3>
+            <p class="txt-peq txt-suave">A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.</p>
+
+            <div class="contagem" data-contagem="2026-09-19">
+              <div class="contagem__caixa"><strong class="num" data-campo="dias">00</strong><span>dias</span></div>
+              <div class="contagem__caixa"><strong class="num" data-campo="horas">00</strong><span>horas</span></div>
+              <div class="contagem__caixa"><strong class="num" data-campo="min">00</strong><span>min</span></div>
+            </div>
+            <p class="txt-micro txt-suave txt-centro" style="margin-top:calc(-1 * var(--e-2))">Tempo até a bola rolar em São Paulo</p>
+
+            <dl class="lista-info">
+              <div><dt>Disputa</dt><dd>19–21 set 2026</dd></div>
+              <div><dt>Local</dt><dd>Arena Phygital · São Paulo, SP</dd></div>
+              <div><dt>Vagas</dt><dd>24 times</dd></div>
+              <div><dt>Inscrições até</dt><dd id="prox-encerramento">05/09/2026</dd></div>
+              <div><dt>Premiação</dt><dd>R$ 60.000,00</dd></div>
+              <div><dt>Seu time</dt><dd>Tigres Phygital · lista oficial</dd></div>
+            </dl>
+
+            <a class="btn btn--contorno btn--bloco btn--pequeno" href="../inscricoes.html#cbf-2026">Ver o campeonato</a>
+            <p class="txt-micro txt-suave mt-3" style="margin-bottom:0">
+              Edições no elenco são livres até 05/09/2026. Depois dessa data, qualquer alteração só por chamado.
+            </p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ---------- MINHAS INSCRIÇÕES ---------- -->
+      <section class="bloco lista-linhas" aria-labelledby="titulo-inscricoes">
+        <div class="bloco__topo">
+          <h2 id="titulo-inscricoes">Minhas inscrições</h2>
+          <a class="link-seta" href="inscricoes.html">Ver todas</a>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat" id="lista-inscricoes"></div>
+      </section>
+
+      <!-- ---------- ÚLTIMAS NOTÍCIAS ---------- -->
+      <section class="bloco" aria-labelledby="titulo-noticias">
+        <div class="bloco__topo">
+          <h2 id="titulo-noticias">Últimas notícias</h2>
+          <a class="link-seta" href="../blog.html">Ir para o blog</a>
+        </div>
+        <div class="bloco__corpo">
+          <div class="grade grade--2" id="lista-posts"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL DO COMPETIDOR — INÍCIO
+   Este script roda durante o parse (antes do DOMContentLoaded), então tudo que
+   ele cria já existe quando phygital.js liga o slider, as contagens e o revelar.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Os caminhos de imagem e de página vêm da raiz do site; aqui estamos em /painel/ */
+  function img(p) { return /^assets\//.test(String(p)) ? '../' + p : String(p || ''); }
+  function paginaSite(p) { return /^(https?:|\.\.\/)/.test(String(p)) ? String(p) : '../' + String(p || ''); }
+
+  function plural(n, um, muitos) { return n + ' ' + (n === 1 ? um : muitos); }
+
+  /* Titulares e reservas de um time, segundo as regras da modalidade */
+  function elenco(t) {
+    var m = D.modalidade(t.modalidade);
+    var res = (t.jogadores || []).filter(function (j) { return j.reserva; }).length;
+    var tit = (t.jogadores || []).length - res;
+    return { m: m, tit: tit, res: res, val: D.validarElenco(t.modalidade, tit, res) };
+  }
+
+  var times = D.meusTimes();
+  var inscricoes = D.minhasInscricoes();
+  var abertos = D.inscricoesAbertas();
+  var chamados = D.chamados();
+  var usuario = D.usuario();
+
+  /* ---- Saudação ---- */
+  document.getElementById('saudacao').textContent = 'Olá, ' + String(usuario.nome).split(' ')[0];
+  document.getElementById('sub-topo').textContent =
+    'Temporada 2026 · ' + plural(times.length, 'time', 'times') + ' · ' +
+    plural(inscricoes.length, 'inscrição ativa', 'inscrições ativas');
+
+  /* ---- Banner rotativo: banners cadastrados pelo administrador ---- */
+  function renderBanners() {
+    var porMod = {};
+    abertos.forEach(function (c) { if (!porMod[c.modalidade]) porMod[c.modalidade] = c; });
+
+    var banners = D.banners().filter(function (b) { return b.ativo !== false; });
+    if (!banners.length) {
+      /* .esconder tem !important — .banner-painel é display:grid e ignoraria [hidden] */
+      var caixa = document.querySelector('.banner-painel');
+      caixa.hidden = true; caixa.classList.add('esconder');
+      return;
+    }
+
+    document.getElementById('banner-slides').innerHTML = banners.map(function (b, i) {
+      var mod = (String(b.img).match(/camp-([a-z]+)/) || [])[1];
+      var c = porMod[mod];
+      var m = c ? D.modalidade(c.modalidade) : null;
+      var dias = c ? F.diasAte(c.encerramentoInscricoes) : null;
+      var destino = paginaSite(b.link || 'inscricoes.html') + (c ? '#' + c.id : '');
+
+      var etiqueta = '';
+      if (c) {
+        etiqueta = dias > 0
+          ? '<span class="tag ' + (dias <= 10 ? 'tag--amarela' : 'tag--verde') + '">Inscrições até ' +
+            esc(F.data(c.encerramentoInscricoes)) + ' · ' + plural(dias, 'dia restante', 'dias restantes') + '</span>'
+          : '<span class="tag tag--cinza">Inscrições encerradas</span>';
+      }
+
+      return '' +
+      '<div class="hero__slide' + (i === 0 ? ' ativo' : '') + '">' +
+        '<img src="' + esc(img(b.img)) + '" alt="">' +
+        '<div class="banner-painel__conteudo">' +
+          '<p class="eyebrow">' + esc(m ? m.nome : 'Phygital Brasil') + (c ? ' · Inscrições abertas' : '') + '</p>' +
+          '<h3 class="banner-painel__titulo">' + esc(c ? c.nome : b.titulo) + '</h3>' +
+          (c
+            ? '<p class="banner-painel__meta">' + esc(F.periodo(c.data, c.dataFim)) + ' · ' + esc(c.local) +
+              ' · ' + esc(c.vagas) + ' vagas · ' + esc(c.inscritos) + ' times já inscritos</p>'
+            : '<p class="banner-painel__meta">Acompanhe o calendário da temporada 2026.</p>') +
+          '<div class="banner-painel__acoes">' +
+            '<a class="btn btn--primario btn--pequeno" href="' + esc(destino) + '">' +
+              (c ? 'Inscrever time' : 'Ver inscrições') + '</a>' +
+            etiqueta +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    document.getElementById('banner-pontos').innerHTML = banners.map(function (b, i) {
+      return '<button class="hero__ponto' + (i === 0 ? ' ativo' : '') + '" role="tab" ' +
+        'aria-selected="' + (i === 0 ? 'true' : 'false') + '" ' +
+        'aria-label="Destaque ' + (i + 1) + ': ' + esc(b.titulo) + '"></button>';
+    }).join('');
+  }
+
+  /* ---- Números da conta ---- */
+  function renderStats() {
+    var porMod = {};
+    times.forEach(function (t) { porMod[t.modalidade] = (porMod[t.modalidade] || 0) + 1; });
+    var notaTimes = Object.keys(porMod).map(function (k) {
+      return porMod[k] + ' de ' + D.modalidade(k).curto.toLowerCase();
+    }).join(' · ') || 'nenhum time cadastrado';
+
+    var rotuloStatus = { oficial: 'em lista oficial', triagem: 'em triagem', espera: 'em lista de espera', cancelada: 'cancelada' };
+    var porStatus = {};
+    inscricoes.forEach(function (i) { porStatus[i.status] = (porStatus[i.status] || 0) + 1; });
+    var notaInsc = Object.keys(porStatus).map(function (k) {
+      return porStatus[k] + ' ' + (rotuloStatus[k] || k);
+    }).join(' · ') || 'nenhuma inscrição enviada';
+
+    var aguardando = chamados.filter(function (c) { return c.status === 'respondido' || c.status === 'aberto'; });
+
+    var cartoes = [
+      { classe: 'stat--verde', rotulo: 'Meus times', valor: times.length, nota: notaTimes },
+      { classe: 'stat--azul', rotulo: 'Inscrições ativas', valor: inscricoes.length, nota: notaInsc },
+      { classe: 'stat--amarela', rotulo: 'Campeonatos abertos', valor: abertos.length, nota: 'com inscrições em andamento' },
+      { classe: 'stat--cinza', rotulo: 'Chamados com você', valor: aguardando.length, nota: aguardando.length ? 'aguardando sua resposta' : 'nada pendente' }
+    ];
+
+    document.getElementById('stats').innerHTML = cartoes.map(function (c, i) {
+      return '' +
+      '<div class="stat ' + c.classe + ' revelar" data-atraso="' + (i * 60) + '">' +
+        '<div class="stat__rotulo">' + esc(c.rotulo) + '</div>' +
+        '<div class="stat__valor num">' + esc(c.valor) + '</div>' +
+        '<div class="stat__nota">' + esc(c.nota) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---- Descrições dos cartões de ação ---- */
+  function renderAcoes() {
+    var nomes = times.map(function (t) { return t.nome; }).join(' e ');
+    document.getElementById('acao-times').textContent = times.length
+      ? plural(times.length, 'time cadastrado', 'times cadastrados') + ' · ' + nomes
+      : 'Nenhum time ainda — comece o cadastro';
+    document.getElementById('acao-camp').textContent =
+      plural(abertos.length, 'campeonato com inscrição aberta', 'campeonatos com inscrições abertas') +
+      ' · futebol, basquete e shooter';
+    var respondidos = chamados.filter(function (c) { return c.status === 'respondido'; }).length;
+    document.getElementById('acao-chamados').textContent = respondidos
+      ? plural(respondidos, 'chamado respondido', 'chamados respondidos') + ' aguardando você'
+      : 'Fale com a organização sobre inscrição ou elenco';
+    document.getElementById('acao-ranking').textContent = 'Classificação nacional das quatro modalidades';
+  }
+
+  /* ---- Pendências: só o que exige uma ação sua ---- */
+  var ICONES = {
+    time: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+    lista: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>',
+    balao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>'
+  };
+
+  function linha(item) {
+    return '' +
+    '<a class="chamado-item" href="' + esc(item.href) + '">' +
+      '<span class="linha-icone linha-icone--' + esc(item.tom) + '">' + item.icone + '</span>' +
+      '<span>' +
+        '<span class="chamado__assunto">' + esc(item.titulo) + '</span>' +
+        '<span class="chamado__meta">' + esc(item.texto) + '</span>' +
+      '</span>' +
+      '<span class="tag ' + esc(item.tagClasse) + '">' + esc(item.tag) + '</span>' +
+    '</a>';
+  }
+
+  function renderPendencias() {
+    var itens = [];
+
+    /* 1. Elenco de cada time contra as regras da modalidade */
+    times.forEach(function (t) {
+      var e = elenco(t);
+      if (!e.val.valido) {
+        itens.push({
+          tom: 'alerta', icone: ICONES.time, href: 'time-detalhe.html?id=' + t.id,
+          titulo: 'Elenco do ' + t.nome + ' incompleto',
+          texto: e.val.erros.join(' '),
+          tag: 'Ação necessária', tagClasse: 'tag--erro'
+        });
+      } else if (e.m.reservasMax > 0 && e.res < e.m.reservasMax) {
+        itens.push({
+          tom: 'alerta', icone: ICONES.time, href: 'time-detalhe.html?id=' + t.id,
+          titulo: 'Elenco do ' + t.nome + ' completo — faltam reservas',
+          texto: e.tit + ' de ' + e.m.jogadoresMin + ' titulares obrigatórios e ' + e.res + ' de ' +
+                 e.m.reservasMax + ' reservas. Cadastre os reservas antes do encerramento das inscrições.',
+          tag: 'Recomendado', tagClasse: 'tag--amarela'
+        });
+      }
+    });
+
+    /* 2. Inscrições ainda em triagem */
+    inscricoes.filter(function (i) { return i.status === 'triagem'; }).forEach(function (i) {
+      var c = D.campeonato(i.campeonato);
+      var t = D.time(i.time);
+      itens.push({
+        tom: 'info', icone: ICONES.lista, href: 'inscricoes.html',
+        titulo: 'Inscrição em triagem — ' + (c ? c.nome : i.campeonato),
+        texto: 'Protocolo ' + i.protocolo + ' · time ' + (t ? t.nome : '—') +
+               '. A confirmação de inscrição não é garantia de vaga: a organização ainda vai mover o time para a lista oficial ou para a lista de espera.',
+        tag: 'Em análise', tagClasse: 'tag--azul'
+      });
+    });
+
+    /* 3. Chamados respondidos aguardando o competidor */
+    chamados.filter(function (c) { return c.status === 'respondido'; }).forEach(function (c) {
+      var ultima = (c.mensagens || []).filter(function (m) { return m.de === 'org'; }).pop();
+      itens.push({
+        tom: 'alerta', icone: ICONES.balao, href: 'chamado.html?id=' + c.id,
+        titulo: 'Chamado ' + c.protocolo + ' respondido — ' + c.assunto,
+        texto: 'A organização respondeu em ' + F.data(c.atualizadoEm) + ': ' +
+               (ultima ? ultima.texto : c.assunto) + ' Envie o documento pelo próprio chamado para concluir a solicitação.',
+        tag: 'Responder', tagClasse: 'tag--amarela'
+      });
+    });
+
+    var caixa = document.getElementById('lista-pendencias');
+    var conta = document.getElementById('conta-pendencias');
+
+    if (!itens.length) {
+      conta.className = 'tag tag--verde';
+      conta.textContent = 'Tudo em dia';
+      caixa.innerHTML = '' +
+        '<div class="vazio" style="border:0;padding:var(--e-6) var(--e-4)">' +
+          '<span class="linha-icone linha-icone--ok" style="width:56px;height:56px">' + ICONES.ok + '</span>' +
+          '<h3 style="font-size:1.125rem">Nenhuma pendência</h3>' +
+          '<p>Elencos completos, inscrições confirmadas e nenhum chamado aguardando resposta.</p>' +
+          '<a class="btn btn--contorno btn--pequeno" href="../inscricoes.html">Ver campeonatos abertos</a>' +
+        '</div>';
+      return;
+    }
+
+    conta.textContent = plural(itens.length, 'item', 'itens');
+    caixa.innerHTML = itens.map(linha).join('');
+  }
+
+  /* ---- Minhas inscrições (resumo) ---- */
+  function renderInscricoes() {
+    var caixa = document.getElementById('lista-inscricoes');
+    if (!inscricoes.length) {
+      caixa.innerHTML = '' +
+        '<div class="vazio" style="border:0">' +
+          '<h3 style="font-size:1.125rem">Você ainda não inscreveu nenhum time</h3>' +
+          '<p>Escolha um campeonato com inscrições abertas e envie o elenco. Você recebe o número de protocolo por e-mail.</p>' +
+          '<a class="btn btn--primario" href="../inscricoes.html">Ver campeonatos abertos</a>' +
+        '</div>';
+      return;
+    }
+
+    caixa.innerHTML = inscricoes.slice(0, 2).map(function (i) {
+      var c = D.campeonato(i.campeonato);
+      var t = D.time(i.time);
+      var s = D.STATUS_INSCRICAO[i.status] || { rotulo: i.status, classe: 'tag--cinza' };
+      var m = c ? D.modalidade(c.modalidade) : null;
+      return '' +
+      '<a class="chamado-item" href="inscricoes.html">' +
+        '<span class="chamado__protocolo">' + esc(i.protocolo) + '</span>' +
+        '<span>' +
+          '<span class="chamado__assunto">' + esc(c ? c.nome : i.campeonato) + '</span>' +
+          '<span class="chamado__meta">' + esc(m ? m.curto : '') + ' · ' + esc(t ? t.nome : '—') +
+            ' · enviada em ' + esc(F.data(i.data)) +
+            (c ? ' · disputa em ' + esc(F.periodo(c.data, c.dataFim)) : '') + '</span>' +
+        '</span>' +
+        '<span class="tag ' + esc(s.classe) + '">' + esc(s.rotulo) + '</span>' +
+      '</a>';
+    }).join('');
+  }
+
+  /* ---- Últimas notícias ---- */
+  function renderPosts() {
+    document.getElementById('lista-posts').innerHTML = D.posts(2).map(function (p, i) {
+      return '' +
+      '<article class="card card--fita card--interativo revelar" data-atraso="' + (i * 80) + '">' +
+        '<div class="card__midia"><img src="' + esc(img(p.img)) + '" alt=""></div>' +
+        '<div class="card__corpo">' +
+          '<div class="card__meta">' + esc(p.cat) + ' · ' + esc(F.dataCurta(p.data)) + '</div>' +
+          '<h3 class="mt-2" style="font-size:1.0625rem"><a href="../post.html?id=' + esc(p.id) + '">' + esc(p.titulo) + '</a></h3>' +
+          '<p class="txt-peq txt-suave" style="margin-bottom:0">' + esc(p.resumo) + '</p>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  renderBanners();
+  renderStats();
+  renderAcoes();
+  renderPendencias();
+  renderInscricoes();
+  renderPosts();
+})();
+</script>
+
+</body>
+</html>

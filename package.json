@@ -1,0 +1,20 @@
+{
+  "name": "site-phygital",
+  "version": "2.0.0",
+  "description": "Site e painéis da Phygital Brasil — front-end estático + backend Node com SQLite.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "estatico": "node servidor.js",
+    "semear": "node server/semente.js",
+    "recriar": "node server/semente.js --recriar",
+    "testar": "node testes/executar.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

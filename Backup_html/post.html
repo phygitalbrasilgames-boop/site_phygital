@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publicação — Phygital Brasil</title>
+<meta name="description" content="Publicação do blog da Phygital Brasil: notícias, regulamento, inscrições e cobertura das etapas das quatro modalidades phygital.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes exclusivos da página de publicação */
+
+  /* No topo escuro o cinza padrão de .post-meta não alcança 4.5:1 */
+  .pagina-topo .post-meta { color: rgba(255,255,255,.78); gap: var(--e-3); }
+  .pagina-topo .post-meta svg { width: 15px; height: 15px; opacity: .8; }
+  .pagina-topo .post-meta span { display: inline-flex; align-items: center; gap: 7px; }
+
+  /* Blocos que acompanham a largura de leitura do artigo */
+  .artigo-rodape { max-width: var(--largura-texto); margin-inline: auto; }
+
+  .artigo blockquote footer {
+    display: block; margin-top: var(--e-2);
+    font-style: normal; font-family: var(--fonte-display); font-weight: 600;
+    font-size: var(--t-peq); color: var(--texto-suave);
+  }
+
+  /* Galeria dentro do artigo */
+  .artigo__galeria { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--e-2); margin: var(--e-5) 0; }
+  .artigo__galeria img { margin: 0; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-2); }
+  .artigo__galeria figcaption { grid-column: 1 / -1; font-size: var(--t-micro); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .08em; }
+  @media (max-width: 600px) { .artigo__galeria { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* Compartilhar */
+  .compartilhar { display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap; margin-top: var(--e-6); padding-top: var(--e-4); border-top: 1px solid var(--linha-clara); }
+  .compartilhar__rot { font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); margin-right: var(--e-2); }
+
+  /* Assinatura do autor */
+  .autor-box { display: flex; gap: var(--e-4); align-items: flex-start; padding: var(--e-4); }
+  .autor-box__sigla {
+    display: grid; place-items: center; width: 64px; height: 64px; flex: none;
+    border-radius: 50%; background: var(--grafite); color: #fff;
+    font-family: var(--fonte-display); font-weight: 700; font-size: 1.25rem; letter-spacing: .02em;
+  }
+  .autor-box h3 { font-size: var(--t-h4); margin-bottom: 4px; }
+
+  /* Publicação anterior / próxima */
+  .post-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-3); margin-top: var(--e-4); }
+  .post-nav a { display: block; padding: var(--e-4); background: var(--branco); border: 1px solid var(--linha-clara); border-radius: var(--r-3); }
+  .post-nav a:hover { border-color: var(--verde); }
+  .post-nav__rot { display: block; font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); margin-bottom: 6px; }
+  .post-nav__titulo { font-family: var(--fonte-display); font-weight: 700; line-height: 1.2; }
+  .post-nav__prox { text-align: right; }
+  @media (max-width: 720px) { .post-nav { grid-template-columns: 1fr; } .post-nav__prox { text-align: left; } }
+
+  /* Toast (o CSS do componente vive em painel.css, não carregado no site público) */
+  .toasts { position: fixed; bottom: var(--e-4); right: var(--e-4); z-index: 200; display: grid; gap: var(--e-2); max-width: calc(100vw - 2 * var(--e-4)); }
+  .toast {
+    display: flex; align-items: flex-start; gap: var(--e-3);
+    min-width: 280px; max-width: 400px; padding: var(--e-3) var(--e-4);
+    background: var(--grafite); color: #fff; border-radius: var(--r-3);
+    box-shadow: var(--sombra-3); font-size: var(--t-peq);
+  }
+  .toast::before { content: ""; width: 4px; align-self: stretch; border-radius: var(--r-pill); background: var(--verde); flex: none; }
+  .toast--info::before { background: var(--azul-claro); }
+  .toast strong { font-family: var(--fonte-display); display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item nav__item--ativo"><a class="nav__link" href="blog.html" aria-current="page">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO ESCURO DA PUBLICAÇÃO ==================== -->
+  <section class="pagina-topo">
+    <div class="container">
+      <div class="pagina-topo__conteudo">
+        <nav class="trilha" aria-label="Você está em">
+          <a href="index.html">Home</a>
+          <span aria-hidden="true">/</span>
+          <a href="blog.html">Blog</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" id="trilha-atual">Publicação</span>
+        </nav>
+        <p class="eyebrow" id="post-cat">Blog</p>
+        <h1 id="post-titulo">Publicação</h1>
+        <div class="post-meta" id="post-meta"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CORPO DO ARTIGO ==================== -->
+  <section class="secao secao--clara" id="secao-artigo" hidden>
+    <div class="container">
+      <article class="artigo" id="post-corpo"></article>
+
+      <div class="artigo-rodape">
+        <div class="compartilhar">
+          <span class="compartilhar__rot">Compartilhar</span>
+          <button class="btn btn--contorno" type="button" data-compartilhar="link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            Copiar link
+          </button>
+          <button class="btn btn--contorno" type="button" data-compartilhar="whatsapp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-4-1L3 20l1.2-5.3A8.3 8.3 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z"/><path d="M8.8 8.4c.6-.1 1 .3 1.2.8l.4 1c.1.3 0 .6-.2.8l-.4.4c.5 1 1.3 1.7 2.3 2.2l.4-.5c.2-.2.5-.3.8-.2l1 .4c.5.2.8.7.7 1.2-.1.6-.6 1-1.2 1.1-2.6.2-5.3-2.6-5.4-5.2 0-.6.3-1.1.9-1.2z"/></svg>
+            WhatsApp
+          </button>
+          <button class="btn btn--contorno" type="button" data-compartilhar="email">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            E-mail
+          </button>
+        </div>
+
+        <div class="card card--fita mt-5">
+          <div class="autor-box" id="autor-box"></div>
+        </div>
+
+        <nav class="post-nav" id="post-nav" aria-label="Publicação anterior e próxima"></nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PUBLICAÇÃO INEXISTENTE ==================== -->
+  <section class="secao secao--clara" id="secao-vazio" hidden>
+    <div class="container container--estreito">
+      <div class="vazio">
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14h6"/></svg>
+        <h2>Publicação não encontrada</h2>
+        <p>
+          O endereço acessado não corresponde a nenhuma publicação do blog da Phygital Brasil.
+          Ela pode ter sido removida ou o link pode estar incompleto.
+        </p>
+        <a class="btn btn--primario" href="blog.html">Voltar para o blog</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LEIA TAMBÉM ==================== -->
+  <section class="secao secao--branca" id="secao-leia" hidden>
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Continue lendo</p>
+          <h2>Leia também</h2>
+        </div>
+        <a class="link-seta" href="blog.html">Todas as publicações</a>
+      </div>
+      <div class="grade grade--3" id="lista-leia"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   POST — monta a publicação a partir de ?id= (padrão p1)
+   O texto de cada publicação vive no mapa CORPOS; os metadados vêm de
+   PB.dados.post(id). Id inexistente cai no estado vazio com ação de volta.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function param(nome) {
+    var m = new RegExp('[?&]' + nome + '=([^&]*)').exec(window.location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+  }
+
+  /* Tempo de leitura — o mesmo mapa usado na listagem (blog.html) */
+  var TEMPO = { p1: 6, p2: 5, p3: 4, p4: 4, p5: 5, p6: 4 };
+
+  /* ---------------------------------------------------------------------
+     CORPO DE CADA PUBLICAÇÃO
+     --------------------------------------------------------------------- */
+  var CORPOS = {
+
+    /* ---- p1 · Copa Phygital Futebol 2026 abre inscrições para 24 times ---- */
+    p1:
+      '<p>As inscrições para a <strong>Copa Phygital Futebol 2026 — Etapa Nacional</strong> estão abertas desde o dia 1º de agosto e seguem até 5 de setembro. São 24 vagas para times de todo o país, e a disputa acontece de 19 a 21 de setembro, na Arena Phygital, em São Paulo. É a principal etapa do calendário da Phygital Brasil e a única do ano que distribui vaga direta na seletiva do Games of the Future.</p>' +
+
+      '<p>Como em toda competição phygital, o confronto não termina no gramado nem no console: ele acontece nos dois. Cada partida tem uma metade disputada no jogo eletrônico e outra em campo reduzido, e o placar final é a soma das duas. Um time que abre vantagem no digital entra em campo na frente, mas raramente sai de lá com o resultado garantido — foi assim em 14 dos 20 jogos da edição de 2025.</p>' +
+
+      '<h2>Quem pode inscrever um time</h2>' +
+      '<p>A inscrição é feita pelo responsável do time, que precisa ter conta no Painel do Competidor. Vale para clubes, escolinhas, projetos sociais e equipes independentes, desde que o elenco respeite as regras da modalidade:</p>' +
+      '<ul>' +
+        '<li><strong>6 a 8 jogadores titulares</strong> — o mínimo de 6 é obrigatório para a inscrição ser aceita na triagem.</li>' +
+        '<li><strong>Até 3 reservas</strong>, cadastrados com os mesmos dados dos titulares.</li>' +
+        '<li><strong>Comissão técnica</strong>: treinador mais 2 integrantes (preparação, mídia ou apoio).</li>' +
+        '<li><strong>Categoria única por time</strong>: Sub 16, Sub 17, Sub 18, Amador ou Profissional.</li>' +
+        '<li>Para cada atleta: nome, apelido, e-mail, telefone, data de nascimento, foto, @Instagram, número da camisa e função em campo.</li>' +
+      '</ul>' +
+
+      '<h2>O passo a passo da inscrição</h2>' +
+      '<ol>' +
+        '<li>Acesse o Painel do Competidor e crie a conta do responsável.</li>' +
+        '<li>Cadastre o time: nome, escudo, categoria e histórico.</li>' +
+        '<li>Monte o elenco titular, os reservas e a comissão técnica.</li>' +
+        '<li>Leia e aceite o termo de responsabilidade e de uso de imagem.</li>' +
+        '<li>Envie a inscrição e guarde o número de protocolo que chega por e-mail.</li>' +
+      '</ol>' +
+
+      '<p>Enviada a inscrição, o time entra na <strong>Lista de Inscritos</strong> e passa por triagem da organização. A partir dali, ele pode ser movido para a <strong>Lista Oficial</strong> — a que garante a vaga na chave — ou para a <strong>Lista de Espera</strong>, acionada sempre que uma vaga é liberada. Cada mudança de lista dispara um novo e-mail para o responsável.</p>' +
+
+      '<blockquote>' +
+        '<p>O primeiro e-mail confirma que recebemos a sua inscrição e traz o número de protocolo. Ele não é confirmação de vaga: a vaga só existe quando o time aparece na Lista Oficial.</p>' +
+        '<footer>Organização Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>A premiação da etapa nacional é de R$ 60 mil, divididos entre os três primeiros colocados: R$ 30 mil para o campeão, R$ 18 mil para o vice e R$ 12 mil para o terceiro lugar. Além do prêmio em dinheiro, o campeão leva a vaga direta na seletiva do Games of the Future, ao lado dos vencedores de basquete, dance e shooter.</p>' +
+
+      '<figure class="artigo__galeria">' +
+        '<img src="assets/img/mock/camp-futebol.svg" alt="Identidade visual da Copa Phygital Futebol 2026">' +
+        '<img src="assets/img/mock/hero-1.svg" alt="Arena Phygital montada para a etapa nacional de futebol">' +
+        '<img src="assets/img/mock/camp-futebol-2.svg" alt="Registro da Copa Phygital Futebol 2025, edição anterior do torneio">' +
+        '<figcaption>Arena Phygital, São Paulo · edições 2025 e 2026 da Copa Phygital Futebol</figcaption>' +
+      '</figure>' +
+
+      '<p>O responsável pode editar o elenco livremente até 5 de setembro, data de encerramento das inscrições. Depois disso, qualquer troca — lesão, documentação ou desistência — só é analisada por meio de chamado no painel, com o comprovante correspondente anexado. O regulamento completo e o termo de responsabilidade estão disponíveis na página da competição.</p>',
+
+    /* ---- p2 · Pontuação combinada ---- */
+    p2:
+      '<p>Entender a pontuação combinada é o primeiro passo para montar um time competitivo no formato phygital. O resultado digital e o resultado físico não são disputas separadas: eles se somam para definir um único placar por confronto, e é essa soma que aparece na súmula e no ranking nacional.</p>' +
+
+      '<p>Todo confronto começa no digital. As equipes jogam a primeira metade no console, no jogo oficial da modalidade, e o placar dessa metade é registrado pela arbitragem. Em seguida, as mesmas equipes entram na quadra ou no campo reduzido para a metade física, já carregando o resultado anterior. Quem venceu no digital entra na frente; quem perdeu tem a partida inteira para reverter.</p>' +
+
+      '<h2>A conta, na prática</h2>' +
+      '<p>Um exemplo real da Copa Phygital Futebol 2025: o time que venceu a metade digital por 3 a 1 entrou em campo com dois gols de vantagem no placar agregado. Sofreu 3 a 0 na metade física e perdeu o confronto por 4 a 3 na soma. A regra vale para as quatro modalidades, com adaptações:</p>' +
+      '<ul>' +
+        '<li><strong>Futebol</strong>: gols do digital somam aos gols do campo reduzido.</li>' +
+        '<li><strong>Basquete 3x3</strong>: cestas convertidas em pontos, com saldo combinado como critério de classificação.</li>' +
+        '<li><strong>Shooter</strong>: rodadas vencidas no servidor oficial somam à prova física de desempate.</li>' +
+        '<li><strong>Dance</strong>: nota de execução digital somada à nota de pista, avaliada por precisão de movimento e sincronia.</li>' +
+      '</ul>' +
+
+      '<blockquote>' +
+        '<p>Nenhuma metade decide sozinha. Um time que domina o console e não corre em campo perde tanto quanto um time que só sabe correr.</p>' +
+        '<footer>Comitê Técnico da Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>Em caso de empate na soma, os critérios de desempate são aplicados nesta ordem: saldo da metade física, saldo da metade digital, confronto direto e, por fim, prova de desempate definida pela arbitragem. Todos os resultados ficam registrados em súmula única, assinada pelos dois responsáveis ao fim do confronto.</p>' +
+
+      '<p>As tabelas completas de pontuação, com os valores por modalidade, estão no regulamento de cada campeonato, sempre publicado antes da abertura das inscrições. Mudanças de regra nunca valem para competições em andamento: elas entram apenas na edição seguinte.</p>',
+
+    /* ---- p3 · Delegação para o Games of the Future ---- */
+    p3:
+      '<p>A Phygital Brasil confirmou a delegação brasileira para a próxima edição do Games of the Future. Os times campeões das quatro modalidades — futebol, basquete, dance e shooter — representam o país na competição internacional, com apoio institucional e logística coordenada pela federação.</p>' +
+
+      '<p>A convocação segue o mesmo critério desde a primeira temporada: classifica-se quem venceu a etapa nacional da modalidade no ciclo, com a classificação apurada e homologada pela organização. Nenhuma vaga é distribuída por convite.</p>' +
+
+      '<h2>O que muda para os times convocados</h2>' +
+      '<ul>' +
+        '<li>Calendário de preparação com datas fechadas de treino físico e digital.</li>' +
+        '<li>Uniformes e equipamentos fornecidos pelos parceiros oficiais da federação.</li>' +
+        '<li>Documentação internacional dos atletas conferida com antecedência pela organização.</li>' +
+        '<li>Elenco fechado: alterações só mediante chamado, com justificativa e comprovante.</li>' +
+      '</ul>' +
+
+      '<blockquote>' +
+        '<p>A delegação não é uma seleção montada de última hora. São os times que venceram as etapas nacionais, com o elenco que os levou até lá.</p>' +
+        '<footer>Organização Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>A preparação inclui rodadas de treino conjunto na Arena Phygital e sessões de análise de desempenho baseadas nas súmulas das etapas nacionais. Os times seguem disputando o calendário interno normalmente — a convocação não impede a participação nas competições da temporada.</p>' +
+
+      '<p>As datas oficiais, a lista de atletas e o calendário de transmissão são publicados aqui no blog assim que a organização internacional divulgar o cronograma completo.</p>',
+
+    /* ---- p4 · Circuito de Basquete 3x3 em Belo Horizonte ---- */
+    p4:
+      '<p>A segunda edição do <strong>Circuito Phygital Basquete 3x3</strong> acontece nos dias 11 e 12 de outubro, no Ginásio Poliesportivo de Belo Horizonte. São 16 vagas e as inscrições ficam abertas de 10 de agosto a 28 de setembro, pelo Painel do Competidor.</p>' +
+
+      '<p>A grande mudança da edição é o formato de classificação. As rodadas passam a acontecer simultaneamente no console e na quadra, com times alternando entre as duas estações a cada chamada da mesa. A classificação para as quartas de final é definida pelo <strong>saldo combinado</strong> — a soma dos pontos das duas metades ao longo de toda a fase de grupos.</p>' +
+
+      '<h2>Regras de elenco</h2>' +
+      '<ul>' +
+        '<li><strong>3 a 4 jogadores</strong> titulares por time.</li>' +
+        '<li><strong>Até 2 reservas</strong>, cadastrados com dados completos.</li>' +
+        '<li><strong>Comissão</strong>: treinador mais 1 integrante.</li>' +
+        '<li>Número de camisa obrigatório para todos os atletas inscritos.</li>' +
+      '</ul>' +
+
+      '<p>A premiação da etapa é composta por kit completo de material esportivo e vaga na etapa nacional da modalidade. O ritmo curto do 3x3 favorece viradas: na primeira edição, metade dos confrontos foi decidida na última posse de bola da metade física.</p>' +
+
+      '<blockquote>' +
+        '<p>No 3x3 phygital não existe folga entre as metades. O time troca de estação e joga de novo — e é aí que a preparação física aparece.</p>' +
+        '<footer>Comitê Técnico da Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>Para inscrever, o responsável cadastra o time no painel, monta o elenco, aceita o termo e envia a inscrição. O protocolo chega por e-mail e o time entra na triagem, de onde é movido para a Lista Oficial ou para a Lista de Espera conforme as vagas.</p>',
+
+    /* ---- p5 · Guia do responsável ---- */
+    p5:
+      '<p>A maior parte das inscrições que travam na triagem não trava por falta de vaga: trava por detalhe de cadastro. O levantamento da Central de Inscrições sobre a temporada 2026 mostra que três problemas respondem por quase todas as pendências abertas até aqui.</p>' +
+
+      '<h2>Os três erros mais comuns</h2>' +
+      '<ol>' +
+        '<li><strong>Foto fora do padrão.</strong> A foto de cada atleta e de cada integrante do staff precisa estar na proporção 3:4, com no mínimo 600 x 800 pixels, em JPG ou PNG de até 5 MB. Print de rede social e imagem cortada na horizontal são recusados.</li>' +
+        '<li><strong>Elenco incompleto.</strong> Cada modalidade tem um mínimo obrigatório: 6 jogadores no futebol, 3 no basquete, 5 no shooter e 1 atleta no dance. Inscrição enviada abaixo do mínimo volta para o responsável.</li>' +
+        '<li><strong>Documento vencido.</strong> Documento de identificação com validade expirada invalida o cadastro do atleta — e, se ele for titular, invalida a inscrição inteira até a correção.</li>' +
+      '</ol>' +
+
+      '<p>A organização não recusa a inscrição em silêncio. Sempre que uma pendência é aberta, o responsável recebe um e-mail com o número de protocolo, o campo com problema e o prazo para correção. Enquanto a pendência estiver aberta, o time permanece na Lista de Inscritos e não avança para a Lista Oficial.</p>' +
+
+      '<blockquote>' +
+        '<p>Confira o elenco inteiro antes de enviar. Corrigir depois do encerramento das inscrições exige chamado, e chamado leva mais tempo do que refazer um cadastro.</p>' +
+        '<footer>Central de Inscrições da Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>Vale lembrar do prazo: até a data de encerramento das inscrições do campeonato, o responsável edita o time livremente pelo painel. Depois dessa data, qualquer alteração — inclusive troca por lesão — só é analisada por chamado, com comprovante anexado.</p>',
+
+    /* ---- p6 · Retrospectiva do Dance Championship 2025 ---- */
+    p6:
+      '<p>O <strong>Phygital Dance Championship 2025</strong> encerrou a temporada no Teatro Municipal do Recife, nos dias 22 e 23 de novembro. Foram 38 inscritos, 36 atletas confirmados na lista oficial e dois dias de disputa individual, com uma final decidida por menos de um ponto na soma das notas.</p>' +
+
+      '<p>O título ficou com <strong>Marina Duarte (PE)</strong>, que somou a maior nota de execução digital da competição e sustentou a vantagem na pista. <strong>Yasmin Rocha (SP)</strong> ficou com o vice-campeonato e <strong>Letícia Alves (RJ)</strong> completou o pódio. A premiação total da edição foi de R$ 15 mil, distribuída entre as três primeiras colocadas.</p>' +
+
+      '<h2>O que ficou da edição</h2>' +
+      '<ul>' +
+        '<li>Julgamento em duas etapas: precisão de movimento no digital e execução em pista, com notas somadas.</li>' +
+        '<li>Recorde de inscritas para a modalidade individual desde a criação do circuito.</li>' +
+        '<li>Diferença de 0,8 ponto entre a campeã e a vice — a menor margem já registrada em uma final phygital.</li>' +
+      '</ul>' +
+
+      '<figure class="artigo__galeria">' +
+        '<img src="assets/img/mock/post-6.svg" alt="Apresentação na final do Phygital Dance Championship 2025">' +
+        '<img src="assets/img/mock/camp-dance.svg" alt="Identidade visual do Phygital Dance Championship 2025">' +
+        '<figcaption>Teatro Municipal do Recife · Dance Championship 2025</figcaption>' +
+      '</figure>' +
+
+      '<blockquote>' +
+        '<p>A pista mostrou o que o console já tinha indicado. Foi a final mais equilibrada que a modalidade já teve no Brasil.</p>' +
+        '<footer>Organização Phygital Brasil</footer>' +
+      '</blockquote>' +
+
+      '<p>Os resultados apurados alimentam o ranking nacional da modalidade, que segue liderado por Marina Duarte. A próxima edição entra no calendário da temporada e será anunciada aqui no blog junto com a abertura das inscrições.</p>'
+  };
+
+  /* Corpo genérico para publicações sem texto próprio no mapa */
+  function corpoPadrao(p) {
+    return '' +
+      '<p>' + esc(p.resumo) + '</p>' +
+      '<p>A publicação faz parte da cobertura da Phygital Brasil sobre ' + esc(String(p.cat).toLowerCase()) +
+      '. Todo o conteúdo da editoria é produzido pela organização com base nas súmulas, nos regulamentos e nos dados oficiais de cada competição da temporada.</p>' +
+      '<h2>Onde acompanhar</h2>' +
+      '<p>As atualizações de calendário, regulamento e classificação são publicadas no blog e enviadas por e-mail aos responsáveis de time cadastrados no Painel do Competidor. Dúvidas específicas sobre uma inscrição devem ser abertas como chamado, para que fiquem registradas com número de protocolo.</p>';
+  }
+
+  /* ---------------------------------------------------------------------
+     MONTAGEM DA PÁGINA
+     --------------------------------------------------------------------- */
+  var id = param('id') || 'p1';
+  var post = D.post(id);
+
+  var secaoArtigo = document.getElementById('secao-artigo');
+  var secaoVazio = document.getElementById('secao-vazio');
+  var secaoLeia = document.getElementById('secao-leia');
+
+  if (!post) {
+    document.title = 'Publicação não encontrada — Phygital Brasil';
+    document.getElementById('post-cat').textContent = 'Blog';
+    document.getElementById('post-titulo').textContent = 'Publicação não encontrada';
+    document.getElementById('trilha-atual').textContent = 'Não encontrada';
+    document.getElementById('post-meta').innerHTML =
+      '<span>Endereço solicitado: ' + esc(id || '(vazio)') + '</span>';
+    secaoVazio.hidden = false;
+    return;
+  }
+
+  var minutos = TEMPO[post.id] || 5;
+
+  document.title = post.titulo + ' — Phygital Brasil';
+  var metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', post.resumo);
+
+  document.getElementById('trilha-atual').textContent = post.cat;
+  document.getElementById('post-cat').textContent = post.cat;
+  document.getElementById('post-titulo').textContent = post.titulo;
+  document.getElementById('post-meta').innerHTML = '' +
+    '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>' + esc(post.autor) + '</span>' +
+    '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' + esc(F.dataExtenso(post.data)) + '</span>' +
+    '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' + minutos + ' min de leitura</span>';
+
+  document.getElementById('post-corpo').innerHTML = CORPOS[post.id] || corpoPadrao(post);
+  secaoArtigo.hidden = false;
+
+  /* ---- Bloco do autor ---- */
+  var SOBRE_AUTOR = {
+    'Redação Phygital': 'Equipe de conteúdo da federação. Cobre abertura de inscrições, calendário e resultados apurados das quatro modalidades.',
+    'Comitê Técnico': 'Responsável pelos regulamentos, pelas regras de elenco e pelos critérios de pontuação combinada das competições phygital.',
+    'Central de Inscrições': 'Atende os responsáveis de time na triagem, na correção de pendências e no acompanhamento dos chamados abertos.'
+  };
+  document.getElementById('autor-box').innerHTML = '' +
+    '<span class="autor-box__sigla" aria-hidden="true">' + esc(F.iniciais(post.autor)) + '</span>' +
+    '<div>' +
+      '<p class="txt-micro txt-suave" style="text-transform:uppercase;letter-spacing:.12em;margin-bottom:2px">Publicado por</p>' +
+      '<h3>' + esc(post.autor) + '</h3>' +
+      '<p class="txt-peq txt-suave">' + esc(SOBRE_AUTOR[post.autor] || 'Conteúdo produzido pela organização da Phygital Brasil.') + '</p>' +
+      '<p class="txt-peq mt-3"><a class="link-seta" href="contato.html">Falar com a organização</a></p>' +
+    '</div>';
+
+  /* ---- Compartilhar ---- */
+  var titulos = {
+    link: ['Link copiado', 'O endereço desta publicação foi copiado para a área de transferência.'],
+    whatsapp: ['Compartilhar no WhatsApp', 'No site publicado, a janela de compartilhamento abriria aqui.'],
+    email: ['Compartilhar por e-mail', 'No site publicado, o cliente de e-mail abriria com o link já preenchido.']
+  };
+  Array.prototype.slice.call(document.querySelectorAll('[data-compartilhar]')).forEach(function (b) {
+    b.addEventListener('click', function () {
+      var tipo = b.getAttribute('data-compartilhar');
+      var msg = titulos[tipo] || titulos.link;
+      if (tipo === 'link' && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(window.location.href).then(function () {
+          PB.toast(msg[0], msg[1], 'info');
+        }, function () {
+          PB.toast('Copie o link', window.location.href, 'info');
+        });
+        return;
+      }
+      PB.toast(msg[0], msg[1], 'info');
+    });
+  });
+
+  /* ---- Publicação anterior e próxima ---- */
+  var lista = D.posts();
+  var pos = 0;
+  lista.forEach(function (p, i) { if (p.id === post.id) pos = i; });
+  var maisNova = lista[pos - 1];
+  var maisAntiga = lista[pos + 1];
+
+  var nav = '';
+  if (maisAntiga) {
+    nav += '<a href="post.html?id=' + esc(maisAntiga.id) + '">' +
+      '<span class="post-nav__rot">← Publicação anterior</span>' +
+      '<span class="post-nav__titulo">' + esc(maisAntiga.titulo) + '</span></a>';
+  } else {
+    nav += '<div></div>';
+  }
+  if (maisNova) {
+    nav += '<a class="post-nav__prox" href="post.html?id=' + esc(maisNova.id) + '">' +
+      '<span class="post-nav__rot">Próxima publicação →</span>' +
+      '<span class="post-nav__titulo">' + esc(maisNova.titulo) + '</span></a>';
+  } else {
+    nav += '<div></div>';
+  }
+  document.getElementById('post-nav').innerHTML = nav;
+
+  /* ---- Leia também ---- */
+  var relacionados = lista.filter(function (p) { return p.id !== post.id; });
+  var mesmaCat = relacionados.filter(function (p) { return p.cat === post.cat; });
+  var outros = relacionados.filter(function (p) { return p.cat !== post.cat; });
+  var leia = mesmaCat.concat(outros).slice(0, 3);
+
+  document.getElementById('lista-leia').innerHTML = leia.map(function (p, i) {
+    return '' +
+    '<article class="card card--fita card--interativo revelar" data-atraso="' + (i * 80) + '">' +
+      '<div class="card__midia">' +
+        '<span class="post-card__cat">' + esc(p.cat) + '</span>' +
+        '<img src="' + esc(p.img) + '" alt="Imagem da publicação: ' + esc(p.titulo) + '">' +
+      '</div>' +
+      '<div class="card__corpo">' +
+        '<h3 class="post-card__titulo"><a href="post.html?id=' + esc(p.id) + '">' + esc(p.titulo) + '</a></h3>' +
+        '<p class="txt-peq txt-suave">' + esc(p.resumo) + '</p>' +
+        '<div class="post-meta mt-3">' +
+          '<span>' + esc(F.dataCurta(p.data)) + '</span><span class="sep">·</span>' +
+          '<span>' + esc(p.autor) + '</span><span class="sep">·</span>' +
+          '<span>' + (TEMPO[p.id] || 5) + ' min</span>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('');
+  secaoLeia.hidden = false;
+
+  /* ---- Reobserva os elementos criados dinamicamente ---- */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

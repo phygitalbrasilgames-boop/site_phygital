@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categorias do Blog — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Crie, edite e remova as categorias usadas nas publicações do blog.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .cat-item { display: grid; grid-template-columns: 12px minmax(0,1fr) auto auto; gap: var(--e-3); align-items: center; padding: var(--e-3); border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); background: var(--branco); }
+  .cat-cor { width: 12px; height: 42px; border-radius: var(--r-pill); }
+  @media (max-width: 720px) { .cat-item { grid-template-columns: 12px minmax(0,1fr); } .cat-item > :nth-child(n+3) { grid-column: 2; } }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html" class="ativo">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Categorias do Blog</h1>
+        <p class="sub">Etiquetas usadas nas publicações e no filtro do blog</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><button class="btn btn--primario btn--pequeno" data-nova-cat><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Nova Categoria</button></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="aviso mb-4">
+        <div>
+          As categorias aparecem como etiqueta em cada publicação e alimentam o filtro da página do
+          blog. Renomear uma categoria atualiza a etiqueta em todos os posts que a usam.
+        </div>
+      </div>
+
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2>Categorias</h2>
+          <span class="txt-peq txt-suave" id="conta-cat">—</span>
+        </div>
+        <div class="bloco__corpo"><div id="lista-cat"></div></div>
+      </div>
+
+      <div class="modal" id="modal-cat" role="dialog" aria-modal="true" aria-labelledby="cat-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="cat-titulo" style="font-size:1.375rem">Categoria</h2>
+            <form id="form-cat" data-validar>
+              <input type="hidden" id="c-id">
+              <div class="campo">
+                <label for="c-nome">Nome <span class="obrigatorio">*</span></label>
+                <input type="text" id="c-nome" required placeholder="Ex.: Bastidores">
+                <p class="campo__erro" hidden>Informe o nome da categoria.</p>
+              </div>
+              <div class="campo">
+                <label for="c-desc">Descrição</label>
+                <textarea id="c-desc" placeholder="Para que serve esta categoria."></textarea>
+              </div>
+              <div class="campo">
+                <label for="c-cor">Cor da etiqueta</label>
+                <select id="c-cor">
+                  <option value="#009B4A">Verde Phygital</option>
+                  <option value="#FCE001">Amarelo Ouro</option>
+                  <option value="#0A66B1">Azul Atlântico</option>
+                  <option value="#DF9911">Âmbar</option>
+                  <option value="#3D93D6">Azul claro</option>
+                  <option value="#6E7377">Cinza</option>
+                </select>
+              </div>
+              <div class="modal__acoes">
+                <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+                <button type="submit" class="btn btn--primario">Salvar categoria</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function usoDaCategoria(nome) {
+    return D.posts().filter(function (p) { return p.cat === nome; }).length;
+  }
+
+  function render() {
+    var cats = D.categorias();
+    $('#conta-cat').textContent = cats.length + (cats.length === 1 ? ' categoria' : ' categorias');
+    $('#lista-cat').innerHTML = cats.map(function (c) {
+      var uso = usoDaCategoria(c.nome);
+      return '' +
+      '<div class="cat-item">' +
+        '<span class="cat-cor" style="background:' + esc(c.cor) + '"></span>' +
+        '<div>' +
+          '<div style="font-family:var(--fonte-display);font-weight:700">' + esc(c.nome) + '</div>' +
+          '<div class="txt-micro txt-suave">' + esc(c.descricao || 'Sem descrição') + '</div>' +
+        '</div>' +
+        '<span class="tag tag--cinza">' + uso + (uso === 1 ? ' post' : ' posts') + '</span>' +
+        '<div class="linha-acoes">' +
+          '<button class="btn btn--contorno btn--pequeno" data-editar="' + esc(c.id) + '">Editar</button>' +
+          '<button class="btn btn--perigo btn--pequeno" data-remover="' + esc(c.id) + '"' +
+            (uso ? ' disabled aria-disabled="true" title="Há publicações usando esta categoria"' : '') + '>Remover</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function abrir(id) {
+    var c = id ? D.categoria(id) : null;
+    $('#cat-titulo').textContent = c ? 'Editar categoria' : 'Nova categoria';
+    $('#c-id').value = c ? c.id : '';
+    $('#c-nome').value = c ? c.nome : '';
+    $('#c-desc').value = c ? (c.descricao || '') : '';
+    $('#c-cor').value = c ? c.cor : '#009B4A';
+    PB.abrirModal('modal-cat');
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-nova-cat]')) { abrir(null); return; }
+    var ed = e.target.closest('[data-editar]');
+    if (ed) { abrir(ed.getAttribute('data-editar')); return; }
+    var rm = e.target.closest('[data-remover]');
+    if (rm && !rm.disabled) {
+      var c = D.categoria(rm.getAttribute('data-remover'));
+      PB.confirmar('Remover categoria',
+        'A categoria "' + c.nome + '" sai do filtro do blog e vai para o Histórico, de onde pode ser restaurada. Deseja remover?',
+        function () {
+          D.arquivar('categorias', c.id);
+          PB.toast('Categoria removida', 'Ela está no Histórico e pode ser restaurada.', 'info');
+          PB.recarregar();
+        });
+    }
+  });
+
+  $('#form-cat').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nome = $('#c-nome').value.trim();
+    if (!nome) return;
+    var id = $('#c-id').value;
+    var antiga = id ? D.categoria(id) : null;
+
+    D.gravar('categorias', {
+      id: id || nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'),
+      nome: nome,
+      descricao: $('#c-desc').value.trim(),
+      cor: $('#c-cor').value
+    });
+
+    /* Renomear atualiza a etiqueta nos posts que usavam o nome antigo */
+    if (antiga && antiga.nome !== nome) {
+      var d = D.tudo();
+      d.posts.forEach(function (p) { if (p.cat === antiga.nome) p.cat = nome; });
+      D.salvar();
+    }
+
+    PB.fecharModal('modal-cat');
+    PB.toast('Categoria salva', 'O blog já reflete a alteração.', 'info');
+    PB.recarregar();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerenciar Campeonato — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Gerencie um campeonato: contagem regressiva, listas de inscritos, oficial e espera, movimentação de times, início, encerramento e exportação.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
+  .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
+  .barra-ocupacao i.cheia { background: var(--fita-amarela); }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .camp-hero { position: relative; min-height: 200px; display: flex; align-items: flex-end; background: var(--grafite); }
+  .camp-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .camp-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,17,19,.94), rgba(14,17,19,.5)); }
+  .camp-hero__sobre { position: relative; z-index: 1; padding: var(--e-4); color: #fff; }
+  .camp-hero__sobre h2 { color: #fff; }
+  .time-linha { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: var(--e-3); align-items: center; padding: var(--e-3); border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); background: var(--branco); }
+  .time-linha img { width: 44px; height: 44px; object-fit: contain; }
+  .time-linha__nome { font-family: var(--fonte-display); font-weight: 700; }
+  @media (max-width: 700px) { .time-linha { grid-template-columns: 44px minmax(0,1fr); } .time-linha > :last-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026" class="ativo">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Gerenciar Campeonato</h1>
+        <p class="sub">Listas de inscrição, ciclo de vida e exportação</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><button class="btn btn--primario btn--pequeno" data-abrir-modal="modal-exportar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar informações</button></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="bloco">
+        <div class="camp-hero">
+          <img id="camp-banner" src="../assets/img/mock/camp-futebol.svg" alt="">
+          <div class="camp-hero__sobre">
+            <span class="tag tag--verde" id="camp-status">—</span>
+            <h2 id="camp-nome" style="margin:8px 0 4px">—</h2>
+            <p class="txt-peq" style="color:rgba(255,255,255,.75);margin:0" id="camp-meta">—</p>
+          </div>
+        </div>
+        <div class="bloco__corpo">
+          <div class="stats" style="margin-bottom:0">
+            <div class="stat stat--amarela">
+              <div class="stat__rotulo">Contagem regressiva</div>
+              <div class="stat__valor" id="camp-dias">—</div>
+              <div class="stat__nota">até o início do campeonato</div>
+            </div>
+            <div class="stat stat--cinza">
+              <div class="stat__rotulo">Times inscritos</div>
+              <div class="stat__valor" id="camp-inscritos">0</div>
+              <div class="stat__nota">total recebido</div>
+            </div>
+            <div class="stat stat--verde">
+              <div class="stat__rotulo">Lista oficial</div>
+              <div class="stat__valor" id="camp-oficial">0</div>
+              <div class="stat__nota">vaga confirmada</div>
+            </div>
+            <div class="stat stat--azul">
+              <div class="stat__rotulo">Lista de espera</div>
+              <div class="stat__valor" id="camp-espera">0</div>
+              <div class="stat__nota">entram se houver desistência</div>
+            </div>
+          </div>
+
+          <div class="linha-acoes mt-4">
+            <a class="btn btn--contorno btn--pequeno" href="#listas">Gerenciar inscrições</a>
+            <a class="btn btn--contorno btn--pequeno" id="btn-editar" href="campeonato-novo.html">Editar informações</a>
+            <button class="btn btn--primario btn--pequeno" id="btn-iniciar">Iniciar Campeonato</button>
+            <button class="btn btn--destaque btn--pequeno" id="btn-encerrar" hidden>Encerrar Campeonato</button>
+          </div>
+          <p class="txt-micro txt-suave mt-3" id="estado-nota">
+            O campeonato ainda não foi iniciado. Ao iniciar, as listas ficam congeladas e o botão de encerramento aparece.
+          </p>
+        </div>
+      </div>
+
+      <div class="bloco" id="listas">
+        <div class="bloco__topo">
+          <h2>Gerenciar inscrições</h2>
+          <span class="txt-micro txt-suave">Mover um time entre listas dispara e-mail automático ao responsável</span>
+        </div>
+
+        <div data-abas>
+          <div class="abas" role="tablist" aria-label="Listas de inscrição">
+            <button class="aba" role="tab" id="aba-triagem" aria-controls="p-triagem" aria-selected="true">
+              Lista de Inscritos <span class="conta" id="n-triagem">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-oficial" aria-controls="p-oficial" aria-selected="false">
+              Lista Oficial <span class="conta" id="n-oficial">0</span>
+            </button>
+            <button class="aba" role="tab" id="aba-espera" aria-controls="p-espera" aria-selected="false">
+              Lista de Espera <span class="conta" id="n-espera">0</span>
+            </button>
+          </div>
+          <div id="p-triagem" role="tabpanel" aria-labelledby="aba-triagem" tabindex="0" class="bloco__corpo"></div>
+          <div id="p-oficial" role="tabpanel" aria-labelledby="aba-oficial" tabindex="0" class="bloco__corpo" hidden></div>
+          <div id="p-espera" role="tabpanel" aria-labelledby="aba-espera" tabindex="0" class="bloco__corpo" hidden></div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-exportar" role="dialog" aria-modal="true" aria-labelledby="exp-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="exp-titulo" style="font-size:1.375rem">Exportar informações do campeonato</h2>
+            <p class="txt-peq txt-suave">O download sai em um arquivo <strong>.zip</strong> com esta estrutura:</p>
+
+              <ul class="txt-peq" style="line-height:1.9">
+                <li>Uma <strong>pasta por time</strong> inscrito</li>
+                <li>Dentro de cada pasta, o <strong>logo</strong> nomeado com o nome do time</li>
+                <li>As <strong>fotos dos jogadores</strong>, cada uma nomeada com o nome do jogador</li>
+                <li>Um arquivo <strong>.xlsx</strong> com <strong>uma página por time</strong></li>
+              </ul>
+            <div class="aviso aviso--alerta mt-3">
+              <div>
+                <strong>Por que os nomes importam.</strong> Cada foto recebe o nome do campo
+                “nome” do jogador. É isso que permite identificar a quem a foto pertence na hora
+                de montar crachás, transmissão e material da arena.
+              </div>
+            </div>
+
+            <div class="aviso mt-3" id="excecao-danca" hidden>
+              <div>
+                <strong>Exceção da Dança.</strong> Em campeonatos de dança não há pasta por atleta:
+                a exportação traz as fotos nomeadas corretamente e um único <strong>.xlsx</strong>
+                com uma só página listando todos os atletas inscritos.
+              </div>
+            </div>
+
+            <div class="modal__acoes">
+              <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+              <button type="button" class="btn btn--primario" id="confirmar-exportacao">Gerar arquivo .zip</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/exportar.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var $ = function (s) { return document.querySelector(s); };
+
+  var id = new URLSearchParams(location.search).get('id') || 'cbf-2026';
+  var c = D.campeonato(id);
+  if (!c) {
+    $('#conteudo').innerHTML = '<div class="vazio"><h3>Campeonato não encontrado</h3>' +
+      '<p>O identificador informado não corresponde a nenhum campeonato cadastrado.</p>' +
+      '<a class="btn btn--primario" href="campeonatos.html">Ver todos os campeonatos</a></div>';
+    return;
+  }
+
+  var m = D.modalidade(c.modalidade);
+  var st = D.STATUS_CAMPEONATO[c.status] || D.STATUS_CAMPEONATO.rascunho;
+
+  $('#camp-banner').src = '../' + (c.banner || 'assets/img/mock/camp-futebol.svg');
+  $('#camp-nome').textContent = c.nome;
+  $('#camp-status').textContent = st.rotulo;
+  $('#camp-status').className = 'tag ' + st.classe;
+  $('#camp-meta').textContent = m.curto + ' · ' + F.periodo(c.data, c.dataFim) + ' · ' + c.local;
+  $('#btn-editar').href = 'campeonato-novo.html?id=' + c.id;
+
+  var dias = F.diasAte(c.data);
+  $('#camp-dias').textContent = dias > 0 ? dias : (dias === 0 ? 'hoje' : '—');
+  $('#camp-inscritos').textContent = c.inscritos || 0;
+  $('#camp-oficial').textContent = c.oficial || 0;
+  $('#camp-espera').textContent = c.espera || 0;
+
+  /* Exceção da dança no modal de exportação */
+  if (c.modalidade === 'dance') $('#excecao-danca').hidden = false;
+
+  /* ---- Times de demonstração distribuídos nas três listas ---- */
+  var base = D.ranking(c.modalidade);
+  if (!base.length) base = D.ranking('futebol');
+  var times = base.map(function (t, i) {
+    return { nome: t.nome, uf: t.uf, escudo: (i % 12) + 1,
+             protocolo: '2026-000' + (400 + i * 7),
+             lista: i < (c.oficial || 0) ? 'oficial' : (i < (c.oficial || 0) + (c.espera || 0) ? 'espera' : 'triagem') };
+  });
+
+  function linhaTime(t) {
+    var acoes = '';
+    if (t.lista !== 'oficial') acoes += '<button class="btn btn--primario btn--pequeno" data-mover="' + esc(t.protocolo) + '" data-para="oficial">Mover para Oficial</button>';
+    if (t.lista !== 'espera') acoes += '<button class="btn btn--contorno btn--pequeno" data-mover="' + esc(t.protocolo) + '" data-para="espera">Mover para Espera</button>';
+    if (t.lista !== 'triagem') acoes += '<button class="btn btn--fantasma btn--pequeno" data-mover="' + esc(t.protocolo) + '" data-para="triagem">Devolver à triagem</button>';
+    return '' +
+    '<div class="time-linha">' +
+      '<img src="../assets/img/mock/escudo-' + t.escudo + '.svg" alt="">' +
+      '<div>' +
+        '<a class="time-linha__nome" href="campeonato-time.html?camp=' + esc(c.id) + '&time=' + esc(t.protocolo) + '">' + esc(t.nome) + '</a>' +
+        '<div class="txt-micro txt-suave">' + esc(t.uf) + ' · protocolo ' + esc(t.protocolo) + '</div>' +
+      '</div>' +
+      '<div class="linha-acoes">' + acoes + '</div>' +
+    '</div>';
+  }
+
+  function render() {
+    ['triagem', 'oficial', 'espera'].forEach(function (lista) {
+      var itens = times.filter(function (t) { return t.lista === lista; });
+      document.getElementById('n-' + lista).textContent = itens.length;
+      var vazioTexto = {
+        triagem: 'Nenhum time aguardando triagem no momento.',
+        oficial: 'Nenhum time confirmado na lista oficial ainda.',
+        espera: 'Nenhum time na lista de espera.'
+      }[lista];
+      document.getElementById('p-' + lista).innerHTML = itens.length
+        ? itens.map(linhaTime).join('')
+        : '<div class="vazio"><h3>Lista vazia</h3><p>' + vazioTexto + '</p></div>';
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-mover]');
+    if (!b) return;
+    var proto = b.getAttribute('data-mover');
+    var para = b.getAttribute('data-para');
+    var t = times.filter(function (x) { return x.protocolo === proto; })[0];
+    if (!t) return;
+    var nomes = { oficial: 'Lista Oficial', espera: 'Lista de Espera', triagem: 'Lista de Inscritos' };
+    var de = t.lista;
+    t.lista = para;
+    D.registrar('inscricao', t.nome, 'moveu para ' + nomes[para],
+                c.nome + ' · vinha de ' + (nomes[de] || de));
+    render();
+    PB.toast('Time movido',
+      t.nome + ' foi para a ' + nomes[para] + '. Um e-mail automático avisa o responsável sobre o novo status.', 'info');
+  });
+
+  /* ---- Ciclo de vida do campeonato ---- */
+  $('#btn-iniciar').addEventListener('click', function () {
+    PB.confirmar('Iniciar campeonato',
+      'Ao iniciar, as listas ficam congeladas e qualquer alteração passa a exigir chamado. Deseja iniciar o campeonato?',
+      function () {
+        $('#btn-iniciar').hidden = true;
+        $('#btn-encerrar').hidden = false;
+        $('#camp-status').textContent = 'Em andamento';
+        $('#camp-status').className = 'tag tag--azul';
+        $('#estado-nota').textContent = 'Campeonato em andamento. Ao encerrar, você vai para a tela de apuração para ordenar a classificação final.';
+        D.registrar('campeonato', c.nome, 'iniciou o campeonato', 'listas congeladas');
+        PB.toast('Campeonato iniciado', 'As listas foram congeladas.', 'info');
+      });
+  });
+
+  $('#btn-encerrar').addEventListener('click', function () {
+    PB.confirmar('Encerrar campeonato',
+      'O encerramento leva à apuração, onde você define manualmente a classificação final que alimenta o ranking. Deseja apurar agora?',
+      function () { location.href = 'campeonato-apuracao.html?id=' + c.id; });
+  });
+
+  document.getElementById('confirmar-exportacao').addEventListener('click', function (ev) {
+    var bt = ev.currentTarget;
+    bt.disabled = true;
+    bt.textContent = 'Gerando arquivo…';
+
+    /* Times reais do usuário + os times de demonstração das listas */
+    var doUsuario = D.meusTimes().filter(function (t) { return t.modalidade === c.modalidade; });
+    var lista = doUsuario.length ? doUsuario : D.meusTimes().slice(0, 1);
+
+    PB.exportar.campeonato(c, lista)
+      .then(function (r) {
+        PB.fecharModal('modal-exportar');
+        PB.toast('Download iniciado',
+          r.danca
+            ? 'Arquivo .zip com as fotos nomeadas e a planilha de página única.'
+            : 'Arquivo .zip com uma pasta por time, logos, fotos nomeadas e a planilha.', 'info');
+      })
+      .catch(function (e) {
+        PB.toast('Falha na exportação', String(e && e.message ? e.message : e), 'erro');
+      })
+      .then(function () {
+        bt.disabled = false;
+        bt.textContent = 'Gerar arquivo .zip';
+      });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

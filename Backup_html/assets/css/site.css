@@ -1,0 +1,616 @@
+/* ==========================================================================
+   PHYGITAL BRASIL — SITE PÚBLICO
+   Cabeçalho, hero, seções da home, páginas internas e rodapé.
+   Depende de phygital.css (tokens).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CABEÇALHO
+   -------------------------------------------------------------------------- */
+.cabecalho {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--grafite);
+  color: var(--branco);
+  border-bottom: 1px solid var(--linha);
+  transition: box-shadow var(--medio) var(--curva);
+}
+.cabecalho--fixo { box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+
+/* Faixa superior: contato + redes */
+.cabecalho__topo {
+  background: var(--grafite-90);
+  border-bottom: 1px solid var(--linha);
+  font-size: var(--t-micro);
+  letter-spacing: .04em;
+}
+.cabecalho__topo .container {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--e-4); min-height: 40px; flex-wrap: wrap;
+}
+.cabecalho__topo a { color: var(--cinza-40); }
+.cabecalho__topo a:hover { color: var(--amarelo); }
+.cabecalho__topo .flex { gap: var(--e-4); align-items: center; }
+
+.cabecalho__barra {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--e-4);
+  min-height: var(--altura-header);
+}
+
+.marca { display: flex; align-items: center; flex: none; }
+.marca img { height: 36px; width: auto; }
+@media (max-width: 720px) { .marca img { height: 30px; } }
+
+/* Navegação principal */
+.nav { display: flex; align-items: center; gap: 0; min-width: 0; }
+.nav__item { position: relative; }
+.nav__link {
+  display: flex; align-items: center; gap: 5px;
+  padding: 10px 11px;
+  font-family: var(--fonte-display);
+  font-size: .8125rem;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.82);
+  white-space: nowrap;
+  cursor: pointer;
+  background: none; border: 0;
+}
+.nav__link:hover { color: var(--branco); }
+
+/* Fita como indicador de item ativo — assinatura da marca */
+.nav__link::after {
+  content: "";
+  position: absolute; left: 11px; right: 11px; bottom: 2px;
+  height: 3px;
+  background: var(--fita-tripla);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform var(--medio) var(--curva);
+}
+.nav__link:hover::after { transform: scaleX(1); }
+.nav__item--ativo > .nav__link { color: var(--branco); font-weight: 600; }
+.nav__item--ativo > .nav__link::after { transform: scaleX(1); }
+
+.nav__seta { width: 12px; height: 12px; transition: transform var(--medio) var(--curva); }
+.nav__item--drop:hover .nav__seta { transform: rotate(180deg); }
+
+/* Submenu de Modalidades */
+.submenu {
+  position: absolute; top: 100%; left: 0;
+  min-width: 240px;
+  background: var(--grafite-80);
+  border: 1px solid var(--linha);
+  border-radius: 0 0 var(--r-3) var(--r-3);
+  padding: var(--e-2) 0;
+  opacity: 0; visibility: hidden; transform: translateY(8px);
+  transition: opacity var(--medio) var(--curva), transform var(--medio) var(--curva), visibility var(--medio);
+  box-shadow: var(--sombra-3);
+  list-style: none; margin: 0;
+}
+.submenu::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--fita-tripla);
+}
+.nav__item--drop:hover .submenu,
+.nav__item--drop:focus-within .submenu { opacity: 1; visibility: visible; transform: none; }
+
+.submenu a {
+  display: flex; align-items: center; gap: var(--e-3);
+  padding: 11px var(--e-4);
+  font-size: var(--t-peq);
+  color: rgba(255,255,255,.8);
+  border-left: 3px solid transparent;
+}
+.submenu a:hover { background: rgba(255,255,255,.06); color: #fff; border-left-color: var(--verde); }
+.submenu a .ponto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+.cabecalho__acoes { display: flex; align-items: center; gap: var(--e-2); flex: none; }
+.cabecalho__acoes .btn { padding-inline: var(--e-4); font-size: var(--t-micro); }
+
+/* Em telas médias o rótulo do botão encolhe para o ícone caber sem estourar */
+@media (max-width: 1240px) {
+  .nav__link { padding-inline: 9px; font-size: .78125rem; }
+  .nav__link::after { left: 9px; right: 9px; }
+}
+
+/* No celular o botão vira só o ícone: o rótulo completo empurrava o
+   hambúrguer para fora da tela. O texto continua no DOM para leitores de tela,
+   e o menu mobile traz o botão inteiro, com rótulo. */
+@media (max-width: 720px) {
+  .cabecalho__acoes .btn {
+    font-size: 0;
+    padding-inline: 0;
+    width: 46px; min-width: 46px;
+    gap: 0;
+  }
+  .cabecalho__acoes .btn svg { width: 20px; height: 20px; }
+}
+
+.icone-btn {
+  display: grid; place-items: center;
+  width: 44px; height: 44px;
+  border: 0; background: transparent;
+  color: rgba(255,255,255,.85);
+  cursor: pointer; border-radius: var(--r-2);
+  transition: background var(--rapido) var(--curva), color var(--rapido) var(--curva);
+}
+.icone-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+.icone-btn svg { width: 20px; height: 20px; }
+
+/* Menu mobile */
+.menu-toggle { display: none; }
+.nav-mobile {
+  position: fixed; inset: var(--altura-header) 0 0;
+  background: var(--grafite);
+  padding: var(--e-4) var(--gutter) var(--e-8);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform var(--lento) var(--curva);
+  z-index: 99;
+}
+.nav-mobile.aberto { transform: none; }
+.nav-mobile a, .nav-mobile summary {
+  display: block; padding: var(--e-3) 0;
+  border-bottom: 1px solid var(--linha);
+  font-family: var(--fonte-display); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em; font-size: .9375rem;
+  color: rgba(255,255,255,.9); cursor: pointer;
+}
+.nav-mobile details ul { list-style: none; padding: 0 0 0 var(--e-3); margin: 0; }
+.nav-mobile details a { font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+@media (max-width: 1080px) {
+  .nav { display: none; }
+  .menu-toggle { display: grid; }
+  .cabecalho__topo { display: none; }
+}
+@media (min-width: 1081px) { .nav-mobile { display: none; } }
+
+/* --------------------------------------------------------------------------
+   2. HERO
+   -------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  min-height: min(88vh, 780px);
+  display: grid;
+  align-items: center;
+  background: var(--grafite);
+  color: var(--branco);
+  overflow: hidden;
+}
+.hero__slides { position: absolute; inset: 0; }
+
+/* Cada slide carrega a própria imagem e o próprio texto — é o que o
+   administrador edita em Alterar Banner → Site Principal. A troca é
+   sequenciada (sai um, entra o outro) para os dois títulos nunca
+   aparecerem legíveis ao mesmo tempo. */
+.hero__slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 300ms var(--curva), visibility 0s linear 300ms;
+}
+.hero__slide.ativo {
+  opacity: 1; visibility: visible;
+  transition: opacity 360ms var(--curva) 260ms, visibility 0s linear 260ms;
+}
+.hero__slide > img,
+.hero__slide > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero__slide .hero__conteudo { position: relative; z-index: 2; width: 100%; }
+
+/* Zoom lento na mídia enquanto o slide está no ar: dá vida sem distrair */
+.hero__slide.ativo > img,
+.hero__slide.ativo > video { animation: hero-zoom 11s ease-out both; }
+@keyframes hero-zoom { from { transform: scale(1.06); } to { transform: scale(1); } }
+
+/* Entrada escalonada do texto a cada troca de slide */
+.hero__conteudo.entrando > * { animation: hero-sobe 620ms var(--curva) both; }
+.hero__conteudo.entrando > *:nth-child(1) { animation-delay: 60ms; }
+.hero__conteudo.entrando > *:nth-child(2) { animation-delay: 150ms; }
+.hero__conteudo.entrando > *:nth-child(3) { animation-delay: 240ms; }
+.hero__conteudo.entrando > *:nth-child(4) { animation-delay: 330ms; }
+@keyframes hero-sobe {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__slide.ativo > img,
+  .hero__slide.ativo > video,
+  .hero__conteudo.entrando > * { animation: none; }
+}
+
+/* Escurecimento de 30% exigido pelo branding book ao usar a marca sobre foto */
+.hero__slide::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(14,17,19,.94) 0%, rgba(14,17,19,.78) 42%, rgba(14,17,19,.35) 100%),
+    rgba(14,17,19,.3);
+}
+
+/* Fitas cinéticas: as três fitas do símbolo atravessando o hero */
+.hero__fitas {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+.hero__fita {
+  position: absolute;
+  top: -30%; height: 160%;
+  width: clamp(60px, 9vw, 130px);
+  transform: skewX(-14deg);
+  opacity: .5;
+  mix-blend-mode: screen;
+}
+.hero__fita--verde { right: 22%; background: var(--fita-verde); animation: fita-flutua 9s ease-in-out infinite; }
+.hero__fita--amarela { right: 13%; background: var(--fita-amarela); opacity: .42; animation: fita-flutua 11s ease-in-out infinite reverse; }
+.hero__fita--azul { right: 4%; background: var(--fita-azul); animation: fita-flutua 13s ease-in-out infinite; }
+@keyframes fita-flutua {
+  0%, 100% { transform: skewX(-14deg) translateY(0); }
+  50% { transform: skewX(-14deg) translateY(-3%); }
+}
+@media (max-width: 900px) { .hero__fitas { opacity: .5; } }
+
+.hero__conteudo { position: relative; z-index: 2; padding-block: var(--e-8); }
+.hero__titulo {
+  font-size: var(--t-hero);
+  line-height: .97;
+  text-transform: uppercase;
+  margin-bottom: var(--e-4);
+  max-width: 16ch;
+}
+.hero__titulo em {
+  font-style: normal;
+  background: var(--fita-amarela);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.hero__texto { font-size: 1.125rem; color: rgba(255,255,255,.78); max-width: 52ch; margin-bottom: var(--e-5); }
+.hero__acoes { display: flex; gap: var(--e-3); flex-wrap: wrap; }
+
+/* Painel lateral "Últimas" — inspirado na referência tornados */
+.hero__aside {
+  position: absolute; right: var(--gutter); bottom: var(--e-7); z-index: 3;
+  width: 300px;
+  background: rgba(14,17,19,.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--linha);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.hero__aside h2 { font-size: var(--t-peq); text-transform: uppercase; letter-spacing: .12em; padding: var(--e-3); margin: 0; border-bottom: 1px solid var(--linha); color: #fff; }
+.hero__aside a { display: block; padding: var(--e-3); border-bottom: 1px solid var(--linha); font-size: var(--t-peq); }
+.hero__aside a:last-child { border-bottom: 0; }
+.hero__aside a:hover { background: rgba(255,255,255,.06); }
+.hero__aside .data { font-size: var(--t-micro); color: var(--cinza-40); text-transform: uppercase; letter-spacing: .08em; }
+@media (max-width: 1200px) { .hero__aside { display: none; } }
+
+/* Controles do slider */
+.hero__pontos {
+  position: absolute; left: var(--gutter); bottom: var(--e-5); z-index: 3;
+  display: flex; gap: var(--e-2);
+}
+.hero__ponto {
+  width: 36px; height: 4px; border: 0; padding: 0;
+  background: rgba(255,255,255,.3); cursor: pointer;
+  transition: background var(--medio) var(--curva);
+}
+.hero__ponto.ativo { background: var(--fita-tripla); }
+
+/* Barra de estatísticas colada ao hero */
+.faixa-stats {
+  background: var(--verde);
+  color: #fff;
+}
+.faixa-stats .container { display: grid; grid-template-columns: repeat(4, 1fr); }
+.faixa-stats__item { padding: var(--e-4) var(--e-3); text-align: center; border-right: 1px solid rgba(255,255,255,.2); }
+.faixa-stats__item:last-child { border-right: 0; }
+.faixa-stats__valor { font-family: var(--fonte-display); font-size: clamp(1.75rem, 3.5vw, 2.75rem); font-weight: 700; line-height: 1; }
+.faixa-stats__rotulo { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .14em; opacity: .9; margin-top: 6px; }
+@media (max-width: 720px) {
+  .faixa-stats .container { grid-template-columns: repeat(2, 1fr); }
+  .faixa-stats__item:nth-child(2) { border-right: 0; }
+  .faixa-stats__item:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.2); }
+}
+
+/* --------------------------------------------------------------------------
+   3. CABEÇALHO DE PÁGINA INTERNA
+   -------------------------------------------------------------------------- */
+.pagina-topo {
+  position: relative;
+  background: var(--grafite);
+  color: var(--branco);
+  padding-block: clamp(3rem, 7vw, 6rem);
+  overflow: hidden;
+}
+.pagina-topo::before {
+  content: "";
+  position: absolute; top: 0; right: -5%; bottom: 0;
+  width: 45%;
+  background:
+    linear-gradient(120deg, transparent 46%, rgba(0,155,74,.30) 46% 54%, transparent 54%),
+    linear-gradient(120deg, transparent 58%, rgba(252,224,1,.24) 58% 66%, transparent 66%),
+    linear-gradient(120deg, transparent 70%, rgba(10,102,177,.30) 70% 78%, transparent 78%);
+  pointer-events: none;
+}
+.pagina-topo__conteudo { position: relative; z-index: 1; }
+.pagina-topo h1 { text-transform: uppercase; margin-bottom: var(--e-3); }
+.pagina-topo p { color: rgba(255,255,255,.75); max-width: 60ch; font-size: 1.0625rem; }
+
+.trilha { display: flex; gap: var(--e-2); align-items: center; font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .1em; color: var(--cinza-40); margin-bottom: var(--e-3); flex-wrap: wrap; }
+.trilha a:hover { color: var(--amarelo); }
+.trilha span[aria-hidden] { opacity: .5; }
+
+/* --------------------------------------------------------------------------
+   4. CARD DE CAMPEONATO / INSCRIÇÃO
+   -------------------------------------------------------------------------- */
+.camp-card { display: grid; grid-template-columns: 300px 1fr auto; gap: 0; align-items: stretch; }
+.camp-card__midia { position: relative; overflow: hidden; background: var(--grafite-80); min-height: 190px; }
+.camp-card__midia img { width: 100%; height: 100%; object-fit: cover; }
+.camp-card__mod {
+  position: absolute; top: var(--e-3); left: var(--e-3);
+  background: var(--grafite); color: #fff;
+  padding: 5px 12px; border-radius: var(--r-pill);
+  font-family: var(--fonte-display); font-size: var(--t-micro);
+  font-weight: 600; text-transform: uppercase; letter-spacing: .1em;
+}
+.camp-card__corpo { padding: var(--e-4) var(--e-5); display: flex; flex-direction: column; justify-content: center; gap: var(--e-2); }
+.camp-card__titulo { font-size: var(--t-h3); margin: 0; }
+.camp-card__infos { display: flex; flex-wrap: wrap; gap: var(--e-2) var(--e-4); font-size: var(--t-peq); color: var(--texto-suave); }
+.camp-card__info { display: flex; align-items: center; gap: 7px; }
+.camp-card__info svg { width: 16px; height: 16px; color: var(--verde); flex: none; }
+.camp-card__lateral {
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--e-3);
+  padding: var(--e-4) var(--e-5);
+  border-left: 1px solid var(--linha-clara);
+  background: var(--claro);
+  min-width: 230px;
+}
+
+/* Contagem regressiva */
+.contador { display: flex; gap: var(--e-2); }
+.contador__bloco { text-align: center; min-width: 52px; }
+.contador__num {
+  display: block;
+  font-family: var(--fonte-display); font-size: 1.5rem; font-weight: 700; line-height: 1;
+  background: var(--grafite); color: #fff;
+  padding: 8px 6px; border-radius: var(--r-2);
+  font-variant-numeric: tabular-nums;
+}
+.contador__rot { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); margin-top: 5px; }
+
+@media (max-width: 900px) {
+  .camp-card { grid-template-columns: 1fr; }
+  .camp-card__lateral { border-left: 0; border-top: 1px solid var(--linha-clara); }
+}
+
+/* --------------------------------------------------------------------------
+   4b. PLACAR — resultado phygital (metade digital + metade física)
+   -------------------------------------------------------------------------- */
+.placares { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--e-3); }
+
+.placar-card {
+  background: var(--branco);
+  border: 1px solid var(--linha-clara);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.placar-card__topo {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--e-2);
+  padding: 10px var(--e-3);
+  background: var(--claro);
+  border-bottom: 1px solid var(--linha-clara);
+  font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave);
+}
+.placar-card__corpo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--e-2); padding: var(--e-4) var(--e-3); }
+.placar-card__time { display: grid; justify-items: center; gap: 8px; text-align: center; min-width: 0; }
+.placar-card__time img { width: 46px; height: 46px; object-fit: contain; }
+.placar-card__time span { font-family: var(--fonte-display); font-weight: 600; font-size: var(--t-peq); line-height: 1.2; }
+
+.placar-card__total {
+  font-family: var(--fonte-display); font-weight: 700;
+  font-size: 2rem; line-height: 1; white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.placar-card__vs { display: grid; justify-items: center; gap: 4px; }
+.placar-card__parciais { font-size: var(--t-micro); color: var(--texto-suave); text-align: center; white-space: nowrap; }
+.placar-card__rodape {
+  display: flex; justify-content: space-between; gap: var(--e-2);
+  padding: 10px var(--e-3); border-top: 1px solid var(--linha-clara);
+  font-size: var(--t-micro); color: var(--texto-suave);
+}
+.placar-card__venceu { color: var(--verde); }
+.placar-card__venceu::after { content: " ▸"; }
+
+/* --------------------------------------------------------------------------
+   5. MODALIDADES
+   -------------------------------------------------------------------------- */
+.mod-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--r-3);
+  background: var(--grafite);
+  color: #fff;
+}
+.mod-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--lento) var(--curva); filter: grayscale(1) contrast(1.05); }
+.mod-card:hover img { transform: scale(1.06); filter: grayscale(0); }
+.mod-card::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(14,17,19,.15) 30%, rgba(14,17,19,.92) 100%);
+}
+.mod-card__conteudo { position: absolute; inset: auto 0 0 0; z-index: 2; padding: var(--e-4); }
+.mod-card__nome { font-family: var(--fonte-display); font-size: var(--t-h3); font-weight: 700; text-transform: uppercase; letter-spacing: -.01em; margin: 0 0 4px; }
+.mod-card__desc { font-size: var(--t-peq); color: rgba(255,255,255,.75); margin: 0; }
+.mod-card__fita { position: absolute; top: 0; left: 0; right: 0; height: 5px; z-index: 2; transform: scaleX(0); transform-origin: left; transition: transform var(--lento) var(--curva); }
+.mod-card:hover .mod-card__fita { transform: scaleX(1); }
+
+/* --------------------------------------------------------------------------
+   6. GALERIA DE EVENTOS
+   -------------------------------------------------------------------------- */
+.filtros { display: flex; gap: var(--e-2); flex-wrap: wrap; margin-bottom: var(--e-5); }
+.filtro {
+  padding: 9px var(--e-4); min-height: 44px;
+  border: 1.5px solid var(--cinza-20); background: transparent;
+  border-radius: var(--r-pill);
+  font-family: var(--fonte-display); font-size: var(--t-peq); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  cursor: pointer;
+  transition: all var(--rapido) var(--curva);
+}
+.filtro:hover { border-color: var(--grafite); }
+.filtro[aria-pressed="true"] { background: var(--grafite); color: #fff; border-color: var(--grafite); }
+
+.galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--e-3); }
+.galeria__item { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: var(--r-2); background: var(--grafite-80); cursor: pointer; }
+.galeria__item img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--lento) var(--curva); }
+.galeria__item:hover img { transform: scale(1.07); }
+.galeria__item figcaption {
+  position: absolute; inset: auto 0 0 0;
+  padding: var(--e-4) var(--e-3) var(--e-3);
+  background: linear-gradient(transparent, rgba(14,17,19,.9));
+  color: #fff; font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .08em;
+}
+.galeria__item--alto { grid-row: span 2; aspect-ratio: 1 / 2; }
+
+/* --------------------------------------------------------------------------
+   7. PARCEIROS
+   -------------------------------------------------------------------------- */
+/* Flex em vez de grid: os itens da última linha crescem para preencher a
+   faixa, em vez de deixar buracos brancos quando a contagem não fecha a grade.
+   O max-width evita que um grupo com um único parceiro vire uma faixa gigante. */
+.parceiros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px;
+  background: var(--linha-clara);
+  border: 1px solid var(--linha-clara);
+  border-radius: var(--r-3);
+  overflow: hidden;
+}
+.parceiro {
+  flex: 1 1 180px;
+  min-width: 170px;
+  max-width: 340px;
+  display: grid; place-items: center;
+  padding: var(--e-5) var(--e-4);
+  background: var(--branco);
+  min-height: 130px;
+  transition: background var(--medio) var(--curva);
+}
+.parceiro img { max-height: 56px; width: auto; object-fit: contain; filter: grayscale(1); opacity: .6; transition: all var(--medio) var(--curva); }
+.parceiro:hover { background: var(--claro); }
+.parceiro:hover img { filter: none; opacity: 1; }
+
+/* --------------------------------------------------------------------------
+   8. BLOG
+   -------------------------------------------------------------------------- */
+.post-card__cat {
+  position: absolute; top: var(--e-3); left: var(--e-3); z-index: 2;
+  background: var(--amarelo); color: var(--grafite);
+  padding: 4px 12px; border-radius: var(--r-pill);
+  font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.post-card__titulo { font-size: 1.25rem; line-height: 1.2; margin-bottom: var(--e-2); }
+.post-card__titulo a:hover { color: var(--verde); }
+.post-meta { display: flex; align-items: center; gap: var(--e-2); font-size: var(--t-micro); color: var(--texto-suave); text-transform: uppercase; letter-spacing: .08em; flex-wrap: wrap; }
+.post-meta .sep { opacity: .4; }
+
+.artigo { max-width: var(--largura-texto); margin-inline: auto; font-size: 1.0625rem; }
+.artigo h2 { margin-top: var(--e-6); }
+.artigo h3 { margin-top: var(--e-5); }
+.artigo img { border-radius: var(--r-3); margin-block: var(--e-5); }
+.artigo blockquote {
+  margin: var(--e-5) 0; padding: var(--e-4) var(--e-5);
+  border-left: 4px solid var(--verde);
+  background: var(--branco);
+  font-size: 1.125rem; font-style: italic;
+}
+.artigo > p:first-of-type::first-letter {
+  float: left; font-family: var(--fonte-display); font-size: 3.6rem; line-height: .82;
+  font-weight: 700; padding: 4px 12px 0 0; color: var(--verde);
+}
+
+/* --------------------------------------------------------------------------
+   9. CTA / NEWSLETTER
+   -------------------------------------------------------------------------- */
+.cta-faixa {
+  position: relative;
+  background: var(--grafite);
+  color: #fff;
+  overflow: hidden;
+}
+.cta-faixa::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 55%, rgba(0,155,74,.22) 55% 66%, rgba(252,224,1,.16) 66% 74%, rgba(10,102,177,.22) 74% 84%, transparent 84%);
+}
+.cta-faixa .container { position: relative; z-index: 1; }
+.cta-faixa__grade { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--e-6); align-items: center; }
+@media (max-width: 900px) { .cta-faixa__grade { grid-template-columns: 1fr; } }
+
+.form-inline { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+.form-inline input { flex: 1 1 220px; background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); color: #fff; }
+.form-inline input::placeholder { color: rgba(255,255,255,.5); }
+.form-inline input:focus { border-color: var(--amarelo); box-shadow: 0 0 0 3px rgba(252,224,1,.2); }
+
+/* --------------------------------------------------------------------------
+   10. RODAPÉ
+   -------------------------------------------------------------------------- */
+.rodape { background: var(--grafite); color: rgba(255,255,255,.7); padding-top: var(--e-8); }
+.rodape__grade { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: var(--e-6); padding-bottom: var(--e-7); }
+.rodape h2 { color: #fff; font-size: var(--t-peq); text-transform: uppercase; letter-spacing: .14em; margin-bottom: var(--e-4); }
+.rodape ul { list-style: none; padding: 0; margin: 0; }
+.rodape li { margin-bottom: 10px; font-size: var(--t-peq); }
+.rodape a:hover { color: var(--amarelo); }
+.rodape__marca img { height: 46px; margin-bottom: var(--e-3); }
+.rodape__sobre { font-size: var(--t-peq); max-width: 38ch; }
+.rodape__base {
+  border-top: 1px solid var(--linha);
+  padding-block: var(--e-4);
+  display: flex; justify-content: space-between; align-items: center; gap: var(--e-3);
+  font-size: var(--t-micro); flex-wrap: wrap;
+}
+.redes { display: flex; gap: var(--e-2); }
+.redes a {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  border: 1px solid var(--linha); border-radius: 50%;
+  transition: all var(--medio) var(--curva);
+}
+.redes a:hover { background: var(--verde); border-color: var(--verde); color: #fff; }
+.redes svg { width: 17px; height: 17px; }
+
+@media (max-width: 900px) { .rodape__grade { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .rodape__grade { grid-template-columns: 1fr; } }
+
+/* --------------------------------------------------------------------------
+   11. CONTATO
+   -------------------------------------------------------------------------- */
+.contato-grade { display: grid; grid-template-columns: 1fr 1.3fr; gap: var(--e-7); align-items: start; }
+@media (max-width: 900px) { .contato-grade { grid-template-columns: 1fr; } }
+.contato-item { display: flex; gap: var(--e-3); padding: var(--e-4) 0; border-bottom: 1px solid var(--linha-clara); }
+.contato-item:last-child { border-bottom: 0; }
+.contato-item__icone {
+  display: grid; place-items: center; width: 46px; height: 46px; flex: none;
+  background: var(--claro); border-radius: var(--r-2); color: var(--verde);
+}
+.contato-item__icone svg { width: 20px; height: 20px; }
+.contato-item h4 { margin: 0 0 2px; font-size: var(--t-peq); text-transform: uppercase; letter-spacing: .1em; }
+.contato-item p { margin: 0; font-size: 1.0625rem; }
+
+/* Linha do tempo — Quem Somos */
+.timeline { position: relative; padding-left: var(--e-6); }
+.timeline::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 3px; background: var(--fita-tripla); }
+.timeline__item { position: relative; padding-bottom: var(--e-6); }
+.timeline__item:last-child { padding-bottom: 0; }
+.timeline__item::before {
+  content: ""; position: absolute; left: calc(-1 * var(--e-6) + 1px); top: 6px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--branco); border: 3px solid var(--verde);
+}
+.timeline__ano { font-family: var(--fonte-display); font-size: var(--t-h3); font-weight: 700; color: var(--verde); line-height: 1; }

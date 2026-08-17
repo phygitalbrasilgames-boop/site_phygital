@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modalidades — Phygital Brasil</title>
+<meta name="description" content="Futebol, basquete, dance e shooter no formato phygital: metade no console, metade na quadra, placar somado. Veja a regra de elenco, o staff permitido e o formato de jogo de cada modalidade.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="assets/css/phygital.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  /* Ajustes locais desta página — compostos sobre o design system */
+  .passo-num {
+    font-family: var(--fonte-display); font-size: 2.25rem; font-weight: 700;
+    line-height: 1; color: var(--verde); display: block; margin-bottom: var(--e-2);
+  }
+  .lista-regra { list-style: none; padding: 0; margin: 0; font-size: var(--t-peq); }
+  .lista-regra li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0; border-top: 1px solid var(--linha-clara);
+  }
+  .lista-regra li:first-child { border-top: 0; padding-top: 0; }
+  .lista-regra svg { width: 16px; height: 16px; color: var(--verde); flex: none; margin-top: 3px; }
+  .lista-regra strong { font-family: var(--fonte-display); }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- ==================== CABEÇALHO ==================== -->
+<header class="cabecalho">
+  <div class="cabecalho__topo">
+    <div class="container">
+      <div class="flex">
+        <a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a>
+        <span aria-hidden="true">·</span>
+        <a href="inscricoes.html">Inscrições abertas</a>
+      </div>
+      <div class="flex">
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="cabecalho__barra">
+      <a class="marca" href="index.html" aria-label="Phygital Brasil — página inicial">
+        <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+      </a>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <div class="nav__item"><a class="nav__link" href="index.html">Home</a></div>
+        <div class="nav__item"><a class="nav__link" href="quem-somos.html">Quem Somos</a></div>
+        <div class="nav__item nav__item--drop nav__item--ativo">
+          <a class="nav__link" href="modalidades.html" aria-haspopup="true" aria-current="page">
+            Modalidades
+            <svg class="nav__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </a>
+          <ul class="submenu" data-lista-modalidades="submenu">
+            <li><a href="mod-futebol.html"><span class="ponto" style="background:#009B4A"></span> Phygital Futebol</a></li>
+            <li><a href="mod-basquete.html"><span class="ponto" style="background:#DF9911"></span> Phygital Basquete</a></li>
+            <li><a href="mod-dance.html"><span class="ponto" style="background:#FCE001"></span> Phygital Dance</a></li>
+            <li><a href="mod-shooter.html"><span class="ponto" style="background:#0A66B1"></span> Phygital Shooter</a></li>
+          </ul>
+        </div>
+        <div class="nav__item"><a class="nav__link" href="inscricoes.html">Inscrições</a></div>
+        <div class="nav__item"><a class="nav__link" href="eventos.html">Eventos</a></div>
+        <div class="nav__item"><a class="nav__link" href="parceiros.html">Parceiros</a></div>
+        <div class="nav__item"><a class="nav__link" href="blog.html">Blog</a></div>
+        <div class="nav__item"><a class="nav__link" href="contato.html">Contato</a></div>
+      </nav>
+
+      <div class="cabecalho__acoes">
+        <a class="btn btn--primario" href="painel/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Acessar Painel
+        </a>
+        <button class="icone-btn menu-toggle" data-menu-toggle aria-expanded="false" aria-label="Abrir menu" aria-controls="menu-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-mobile" id="menu-mobile" aria-label="Navegação principal (mobile)">
+    <a href="index.html">Home</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <details>
+      <summary>Modalidades</summary>
+      <ul data-lista-modalidades="mobile">
+        <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+        <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+        <li><a href="mod-dance.html">Phygital Dance</a></li>
+        <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+      </ul>
+    </details>
+    <a href="inscricoes.html">Inscrições</a>
+    <a href="eventos.html">Eventos</a>
+    <a href="parceiros.html">Parceiros</a>
+    <a href="blog.html">Blog</a>
+    <a href="contato.html">Contato</a>
+    <a class="btn btn--primario btn--bloco mt-4" href="painel/index.html">Acessar Painel</a>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ==================== TOPO DA PÁGINA ==================== -->
+  <section class="pagina-topo">
+    <div class="container pagina-topo__conteudo">
+      <nav class="trilha" aria-label="Trilha de navegação">
+        <a href="index.html">Home</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Modalidades</span>
+      </nav>
+      <p class="eyebrow">Temporada 2026</p>
+      <h1>Modalidades</h1>
+      <p>
+        Quatro disputas oficiais e uma porta aberta para novas modalidades por edital.
+        Em todas elas o confronto tem duas metades — uma no console, outra na quadra, no campo
+        ou na pista — e o placar final é a soma das duas. O que muda de uma para a outra é o
+        tamanho do elenco, o staff permitido e o formato de cada metade.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== COMO FUNCIONA ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">O formato</p>
+        <h2>O mesmo confronto, disputado duas vezes</h2>
+        <p>A regra estrutural é igual para futebol, basquete, dance e shooter. Os detalhes de tempo,
+          pontuação e desempate ficam no regulamento publicado em cada campeonato.</p>
+      </div>
+
+      <div class="grade grade--3">
+        <article class="card card--fita revelar">
+          <div class="card__corpo">
+            <span class="passo-num num">01</span>
+            <h3 class="card__titulo">Metade digital</h3>
+            <p class="txt-peq txt-suave">
+              O confronto abre no console, com os atletas do próprio elenco inscrito nos controles.
+              A arbitragem digital registra o resultado em súmula eletrônica antes da equipe entrar em quadra.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="80">
+          <div class="card__corpo">
+            <span class="passo-num num">02</span>
+            <h3 class="card__titulo">Metade física</h3>
+            <p class="txt-peq txt-suave">
+              Na sequência, sem intervalo longo, o mesmo confronto vai para o campo reduzido, a quadra,
+              a pista ou a arena. Só entra quem está na lista oficial homologada da etapa.
+            </p>
+          </div>
+        </article>
+        <article class="card card--fita revelar" data-atraso="160">
+          <div class="card__corpo">
+            <span class="passo-num num">03</span>
+            <h3 class="card__titulo">Placar somado</h3>
+            <p class="txt-peq txt-suave">
+              Gols, cestas e pontos das duas metades entram na mesma conta. Vencer no digital não
+              garante a vaga: garante vantagem para a segunda metade.
+            </p>
+          </div>
+        </article>
+      </div>
+
+      <div class="aviso mt-5">
+        <p>
+          <strong>Vale para todas as modalidades:</strong> a inscrição é feita pelo responsável do time
+          no Painel do Competidor, entra na lista de inscritos para triagem e só depois é movida para a
+          lista oficial ou para a lista de espera. Cada mudança é comunicada por e-mail.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== GRADE DE MODALIDADES ==================== -->
+  <section class="secao secao--clara">
+    <div class="container">
+      <div class="secao-cabecalho">
+        <div class="secao-titulo">
+          <p class="eyebrow">Escolha a sua</p>
+          <h2>Cinco caminhos para entrar na arena</h2>
+          <p>Cada modalidade tem página própria, com formato de jogo, regras de elenco, ranking e edições anteriores.</p>
+        </div>
+        <a class="link-seta" href="inscricoes.html">Ver inscrições abertas</a>
+      </div>
+
+      <div class="grade grade--auto" id="grade-modalidades"></div>
+    </div>
+  </section>
+
+  <!-- ==================== TABELA COMPARATIVA ==================== -->
+  <section class="secao secao--branca">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Comparativo</p>
+        <h2>Regras de elenco lado a lado</h2>
+        <p>Os números abaixo são os mesmos que o sistema usa para validar o elenco na hora da inscrição.
+          Um time com menos jogadores que o mínimo não consegue enviar a ficha.</p>
+      </div>
+
+      <div id="tabela-modalidades"></div>
+
+      <p class="txt-peq txt-suave mt-3">
+        O staff não joga: entra como comissão técnica, preparação ou mídia, com credencial própria na etapa.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================== CAMPOS OBRIGATÓRIOS ==================== -->
+  <section class="secao secao--clara">
+    <div class="container">
+      <div class="secao-titulo">
+        <p class="eyebrow">Cadastro</p>
+        <h2>O que cada ficha precisa ter</h2>
+        <p>Ficha incompleta é a causa nº 1 de pendência na triagem. Separe estes dados antes de começar.</p>
+      </div>
+
+      <div class="grade grade--3">
+        <article class="card revelar">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <h3 class="card__titulo">Todo atleta</h3>
+            <ul class="lista-regra">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Nome completo e <strong>apelido</strong> de competição</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>E-mail e telefone com DDD</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Data de nascimento</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Foto na proporção 3:4, mínimo 600×800 px</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Perfil no Instagram (@)</span></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card revelar" data-atraso="80">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <h3 class="card__titulo">Toda comissão</h3>
+            <ul class="lista-regra">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Nome completo e função no time</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>E-mail e telefone com DDD</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Data de nascimento</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Foto para a credencial</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg><span>Perfil no Instagram (@)</span></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card revelar" data-atraso="160">
+          <span class="fita"></span>
+          <div class="card__corpo">
+            <h3 class="card__titulo">Campos extras por modalidade</h3>
+            <ul class="lista-regra">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.7L12 17.1 6.1 20.4l1.3-6.7L2.5 9.1l6.6-.8z"/></svg><span><strong>Futebol:</strong> categoria, número de camisa e função em campo</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.7L12 17.1 6.1 20.4l1.3-6.7L2.5 9.1l6.6-.8z"/></svg><span><strong>Basquete:</strong> número de camisa</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.7L12 17.1 6.1 20.4l1.3-6.7L2.5 9.1l6.6-.8z"/></svg><span><strong>Dance:</strong> número de camisa do atleta</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2l2.9 6.3 6.6.8-4.9 4.6 1.3 6.7L12 17.1 6.1 20.4l1.3-6.7L2.5 9.1l6.6-.8z"/></svg><span><strong>Shooter:</strong> Steam64 e link do perfil na Faceit</span></li>
+            </ul>
+            <p class="txt-micro txt-suave mt-3">Categorias do futebol: Sub 16, Sub 17, Sub 18, Amador e Profissional.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="aviso aviso--alerta mt-5">
+        <p>
+          <strong>Prazo de edição:</strong> o responsável altera a ficha do time livremente até a data de
+          encerramento das inscrições do campeonato. Depois disso, qualquer troca de atleta só acontece
+          por meio de chamado aberto no painel.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CTA ==================== -->
+  <section class="cta-faixa secao">
+    <div class="container">
+      <div class="cta-faixa__grade">
+        <div>
+          <p class="eyebrow">Próximo passo</p>
+          <h2 style="color:#fff">Escolheu a modalidade? Agora é montar o elenco</h2>
+          <p style="color:rgba(255,255,255,.75);margin-bottom:0">
+            O cadastro do time fica salvo no painel e serve para todas as etapas da temporada.
+            Você só precisa montar o elenco uma vez.
+          </p>
+        </div>
+        <div class="flex gap-3 envolve">
+          <a class="btn btn--destaque btn--grande" href="inscricoes.html">Ver inscrições abertas</a>
+          <a class="btn btn--contorno-claro btn--grande" href="painel/index.html">Acessar painel</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== RODAPÉ ==================== -->
+<footer class="rodape">
+  <div class="container">
+    <div class="rodape__grade">
+      <div>
+        <div class="rodape__marca">
+          <img src="assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+        </div>
+        <p class="rodape__sobre">
+          Movimento contínuo, origem brasileira. A Phygital Brasil organiza competições que
+          somam o desempenho digital ao desempenho físico em todo o território nacional.
+        </p>
+      </div>
+
+      <div>
+        <h2>Modalidades</h2>
+        <ul data-lista-modalidades="rodape">
+          <li><a href="mod-futebol.html">Phygital Futebol</a></li>
+          <li><a href="mod-basquete.html">Phygital Basquete</a></li>
+          <li><a href="mod-dance.html">Phygital Dance</a></li>
+          <li><a href="mod-shooter.html">Phygital Shooter</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Institucional</h2>
+        <ul>
+          <li><a href="quem-somos.html">Quem somos</a></li>
+          <li><a href="inscricoes.html">Inscrições</a></li>
+          <li><a href="eventos.html">Eventos</a></li>
+          <li><a href="parceiros.html">Parceiros</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="contato.html">Contato</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2>Contato</h2>
+        <ul>
+          <li><a href="mailto:contato@phygitalgamesbr.com.br">contato@phygitalgamesbr.com.br</a></li>
+          <li><a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a></li>
+          <li>São Paulo · SP · Brasil</li>
+        </ul>
+        <div class="redes mt-4">
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12s0-4-.5-5.5C21 5 19.5 5 12 5s-9 0-9.5 1.5C2 8 2 12 2 12s0 4 .5 5.5C3 19 4.5 19 12 19s9 0 9.5-1.5C22 16 22 12 22 12z"/><path d="M10 9l5 3-5 3z"/></svg>
+          </a>
+          <a href="https://twitch.tv" target="_blank" rel="noopener" aria-label="Twitch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 3h16v11l-4 4h-3l-3 3H8v-3H4z"/><path d="M11 8v4M15 8v4"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape__base">
+      <span>© <span data-ano>2026</span> Esportes Phygital Brasil. Todos os direitos reservados.</span>
+      <span>Protótipo de site · identidade conforme Branding Book Edição 01 · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/dados.js"></script>
+<script src="assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   MODALIDADES — grade e tabela comparativa geradas a partir de PB.dados.MODALIDADES
+   ========================================================================== */
+(function () {
+  var D = PB.dados;
+  var M = D.MODALIDADES;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Ordem de exibição e conteúdo editorial que não vive na camada de dados */
+  var ORDEM = ['futebol', 'basquete', 'dance', 'shooter', 'outros'];
+  var EXTRA = {
+    futebol:  { pagina: 'mod-futebol.html',  img: 'assets/img/mock/mod-futebol.svg',
+                formato: 'Partida no console + partida em campo reduzido. Gols das duas metades somados.' },
+    basquete: { pagina: 'mod-basquete.html', img: 'assets/img/mock/mod-basquete.svg',
+                formato: '3x3 no console + 3x3 na quadra. Pontos das duas metades somados.' },
+    dance:    { pagina: 'mod-dance.html',    img: 'assets/img/mock/mod-dance.svg',
+                formato: 'Rotina no jogo de ritmo + apresentação em pista, com júri técnico.' },
+    shooter:  { pagina: 'mod-shooter.html',  img: 'assets/img/mock/mod-shooter.svg',
+                formato: 'Rodadas no servidor oficial + confronto físico presencial de desempate.' },
+    outros:   { pagina: 'mod-outros.html',   img: 'assets/img/mock/mod-outros.svg',
+                formato: 'Formato definido no edital de cada nova etapa.' }
+  };
+
+  /* ---- Leitura dos números da modalidade ---- */
+  function jogadores(m) {
+    if (m.id === 'outros') return 'Conforme edital';
+    if (m.individual) return '1 (atleta individual)';
+    if (m.jogadoresMin === m.jogadoresMax) return m.jogadoresMin + ' (elenco fechado)';
+    return m.jogadoresMin + ' a ' + m.jogadoresMax;
+  }
+  function reservas(m) {
+    if (m.id === 'outros') return 'Até ' + m.reservasMax;
+    return m.reservasMax ? 'Até ' + m.reservasMax : 'Não permite';
+  }
+  function elenco(m) {
+    if (m.id === 'outros') return 'Elenco definido por edital';
+    if (m.individual) return 'Atleta individual · sem reservas';
+    var base = m.jogadoresMin === m.jogadoresMax
+      ? m.jogadoresMin + ' jogadores fixos'
+      : m.jogadoresMin + ' a ' + m.jogadoresMax + ' jogadores';
+    return base + ' · até ' + m.reservasMax + ' reservas';
+  }
+
+  /* ---- Grade de cards ---- */
+  document.getElementById('grade-modalidades').innerHTML = ORDEM.map(function (id, i) {
+    var m = M[id], e = EXTRA[id];
+    return '' +
+    '<a class="mod-card revelar" data-atraso="' + (i * 80) + '" href="' + esc(e.pagina) + '">' +
+      '<span class="mod-card__fita fita"></span>' +
+      '<img src="' + esc(e.img) + '" alt="">' +
+      '<div class="mod-card__conteudo">' +
+        '<h3 class="mod-card__nome">' + esc(m.curto) + '</h3>' +
+        '<p class="mod-card__desc">' + esc(elenco(m)) + '</p>' +
+      '</div>' +
+    '</a>';
+  }).join('');
+
+  /* ---- Tabela comparativa ---- */
+  document.getElementById('tabela-modalidades').innerHTML = '' +
+  '<div class="tabela-wrap">' +
+    '<table>' +
+      '<caption class="sr-only">Comparativo de regras de elenco por modalidade</caption>' +
+      '<thead><tr>' +
+        '<th scope="col">Modalidade</th>' +
+        '<th scope="col">Jogadores</th>' +
+        '<th scope="col">Reservas</th>' +
+        '<th scope="col">Staff</th>' +
+        '<th scope="col">Formato</th>' +
+      '</tr></thead>' +
+      '<tbody>' + ORDEM.map(function (id) {
+        var m = M[id], e = EXTRA[id];
+        return '<tr>' +
+          '<td><div class="celula-time">' +
+            '<span class="ponto" style="width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;background:' + esc(m.cor) + '"></span>' +
+            '<a href="' + esc(e.pagina) + '"><strong>' + esc(m.nome) + '</strong></a>' +
+          '</div></td>' +
+          '<td>' + esc(jogadores(m)) + '</td>' +
+          '<td>' + esc(reservas(m)) + '</td>' +
+          '<td><strong>' + m.staffMax + '</strong> · <span class="txt-suave">' + esc(m.staffRotulo) + '</span></td>' +
+          '<td>' + esc(e.formato) + '</td>' +
+        '</tr>';
+      }).join('') + '</tbody>' +
+    '</table>' +
+  '</div>';
+
+  /* Reobserva os elementos criados dinamicamente */
+  if (typeof IntersectionObserver !== 'undefined') {
+    var obs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var d = parseInt(e.target.getAttribute('data-atraso') || '0', 10);
+        setTimeout(function () { e.target.classList.add('visivel'); }, d);
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.revelar:not(.visivel)').forEach(function (el) { obs.observe(el); });
+  } else {
+    document.querySelectorAll('.revelar').forEach(function (el) { el.classList.add('visivel'); });
+  }
+})();
+</script>
+
+</body>
+</html>

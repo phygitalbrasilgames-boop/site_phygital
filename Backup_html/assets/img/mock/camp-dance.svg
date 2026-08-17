@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500" role="img" aria-label="DANCE CHAMPIONSHIP">
+  <defs>
+    <linearGradient id="gc4v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#009B4A"/><stop offset="1" stop-color="#004A1B"/></linearGradient>
+    <linearGradient id="gc4a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FCE001"/><stop offset="1" stop-color="#DF9911"/></linearGradient>
+    <linearGradient id="gc4z" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3D93D6"/><stop offset="1" stop-color="#0A66B1"/></linearGradient>
+    <linearGradient id="gc4f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1113" stop-opacity=".15"/><stop offset="1" stop-color="#0E1113" stop-opacity=".85"/></linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="#0E1113"/>
+  <g opacity=".55" clip-path="url(#cc4)"><rect x="624" y="-150" width="132" height="800" fill="url(#gc4v)" opacity="0.9" transform="skewX(-14)"/>
+  <rect x="802" y="-150" width="132" height="800" fill="url(#gc4a)" opacity="0.765" transform="skewX(-14)"/>
+  <rect x="980" y="-150" width="132" height="800" fill="url(#gc4z)" opacity="0.9" transform="skewX(-14)"/></g>
+  <clipPath id="cc4"><rect width="1200" height="500"/></clipPath>
+  <rect width="1200" height="500" fill="url(#gc4f)" opacity=".55"/>
+  <rect x="72.0" y="327.5" width="250.0" height="4" fill="url(#gc4v)"/>
+</svg>

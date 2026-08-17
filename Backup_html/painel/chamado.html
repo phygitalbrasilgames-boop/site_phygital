@@ -402,12 +402,11 @@
   renderTimeline(c.status);
 
   /* ---- Caixa de resposta: bloqueada quando encerrado ---- */
-  var btn = document.getElementById('btn-encerrar');
-
   if (encerrado) {
     document.getElementById('resposta-ativa').hidden = true;
     document.getElementById('resposta-bloqueada').hidden = false;
     document.getElementById('ch-protocolo-ref').textContent = c.protocolo;
+    var btn = document.getElementById('btn-encerrar');
     btn.disabled = true;
     btn.removeAttribute('data-confirmar');
     btn.textContent = 'Chamado já encerrado';

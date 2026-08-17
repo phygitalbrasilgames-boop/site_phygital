@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Escudo CF">
+  <path d="M60 6 L108 22 V62 C108 88 86 106 60 114 C34 106 12 88 12 62 V22 Z" fill="#0E1113"/>
+  <path d="M60 6 L108 22 V62 C108 88 86 106 60 114 C34 106 12 88 12 62 V22 Z" fill="none" stroke="#6E7377" stroke-width="4"/>
+  <text x="60" y="74" font-family="Saira, Arial Narrow, Arial, sans-serif" font-size="38" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="0" opacity="1">CF</text>
+</svg>

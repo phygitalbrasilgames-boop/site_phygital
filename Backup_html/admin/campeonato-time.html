@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha do Time — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Ficha completa de um time inscrito: elenco com todos os dados, comissão técnica, responsável pela inscrição e exportação individual.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .doc-adm { border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); overflow: hidden; }
+  .doc-adm__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); padding: 10px var(--e-3); background: var(--claro); flex-wrap: wrap; }
+  .doc-adm__nome { font-family: var(--fonte-display); font-weight: 700; font-size: var(--t-peq); }
+  .doc-adm__linha { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--e-3); align-items: center; padding: 10px var(--e-3); border-top: 1px solid var(--linha-clara); }
+  .doc-adm__meta { font-size: var(--t-micro); color: var(--texto-suave); }
+  @media (max-width: 760px) { .doc-adm__linha { grid-template-columns: minmax(0,1fr); } }
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
+  .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
+  .barra-ocupacao i.cheia { background: var(--fita-amarela); }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .time-cabecalho { display: grid; grid-template-columns: 84px minmax(0,1fr) auto; gap: var(--e-4); align-items: center; }
+  .time-cabecalho img { width: 84px; height: 84px; object-fit: contain; }
+  .revisao { margin: 0; }
+  .revisao > div { display: flex; justify-content: space-between; gap: var(--e-3); padding: 9px 0; border-bottom: 1px dashed var(--linha-clara); font-size: var(--t-peq); }
+  .revisao > div:last-child { border-bottom: 0; }
+  .revisao dt { color: var(--texto-suave); flex: none; }
+  .revisao dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .foto-mini { width: 40px; height: 52px; object-fit: cover; border-radius: var(--r-2); background: var(--claro); }
+  @media (max-width: 860px) { .time-cabecalho { grid-template-columns: 64px minmax(0,1fr); } .time-cabecalho > :last-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Ficha do Time Inscrito</h1>
+        <p class="sub">Todos os dados do time e do elenco cadastrado</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <a class="link-seta mb-4" href="#" id="voltar-camp" style="transform:scaleX(-1);display:inline-flex"><span style="transform:scaleX(-1)">Voltar ao campeonato</span></a>
+
+      <div class="bloco">
+        <div class="bloco__corpo">
+          <div class="time-cabecalho">
+            <img id="time-escudo" src="../assets/img/mock/escudo-1.svg" alt="">
+            <div>
+              <h2 id="time-nome" style="margin:0 0 4px">—</h2>
+              <div class="txt-peq txt-suave" id="time-meta">—</div>
+              <div class="linha-acoes mt-3">
+                <span class="tag tag--verde" id="time-lista">—</span>
+                <span class="tag tag--cinza" id="time-protocolo">—</span>
+              </div>
+            </div>
+            <div class="linha-acoes">
+              <button class="btn btn--primario btn--pequeno" data-abrir-modal="modal-exportar">Exportar este time</button>
+              <button class="btn btn--contorno btn--pequeno" data-abrir-modal="modal-mover">Mover de lista</button>
+              <button class="btn btn--perigo btn--pequeno"
+                data-confirmar="Remover a inscrição deste time cancela a participação e notifica o responsável por e-mail. Deseja remover?"
+                data-confirmar-titulo="Remover inscrição"
+                data-confirmar-ok="Inscrição removida e responsável notificado.">Remover inscrição</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="painel-grade">
+        <div>
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Elenco inscrito</h2><span class="txt-micro txt-suave" id="conta-elenco">—</span></div>
+            <div class="bloco__corpo bloco__corpo--flat">
+              <div class="tabela-wrap" style="border:0;border-radius:0">
+                <table>
+                  <caption class="sr-only">Jogadores inscritos com todos os dados cadastrais</caption>
+                  <thead><tr>
+                    <th scope="col">Foto</th><th scope="col">Nome</th><th scope="col">Apelido</th>
+                    <th scope="col">Nº</th><th scope="col">Função</th><th scope="col">Nascimento</th>
+                    <th scope="col">E-mail</th><th scope="col">Telefone</th><th scope="col">Instagram</th>
+                  </tr></thead>
+                  <tbody id="tabela-elenco"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="bloco">
+            <div class="bloco__topo">
+              <h2>Documentação do elenco</h2>
+              <span class="txt-peq txt-suave" id="resumo-docs">—</span>
+            </div>
+            <div class="bloco__corpo" id="lista-docs"></div>
+          </div>
+
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Comissão técnica</h2></div>
+            <div class="bloco__corpo bloco__corpo--flat">
+              <div class="tabela-wrap" style="border:0;border-radius:0">
+                <table>
+                  <caption class="sr-only">Comissão técnica inscrita</caption>
+                  <thead><tr>
+                    <th scope="col">Nome</th><th scope="col">Função</th><th scope="col">Nascimento</th>
+                    <th scope="col">E-mail</th><th scope="col">Telefone</th><th scope="col">Instagram</th>
+                  </tr></thead>
+                  <tbody id="tabela-staff"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Responsável pela inscrição</h2></div>
+            <div class="bloco__corpo">
+              <dl class="revisao" id="responsavel"></dl>
+              <a class="btn btn--contorno btn--pequeno btn--bloco mt-3" href="chamados.html">Abrir chamado com o responsável</a>
+            </div>
+          </div>
+
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Dados do time</h2></div>
+            <div class="bloco__corpo">
+              <dl class="revisao" id="dados-time"></dl>
+            </div>
+          </div>
+
+          <div class="aviso aviso--alerta">
+            <div>
+              <strong>Sobre a exportação.</strong> A foto de cada jogador sai nomeada com o nome dele.
+              É assim que a organização identifica a quem cada imagem pertence ao montar crachás e
+              material de transmissão.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-mover" role="dialog" aria-modal="true" aria-labelledby="mover-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="mover-titulo" style="font-size:1.375rem">Mover time de lista</h2>
+            <p class="txt-peq txt-suave">O responsável recebe um e-mail automático informando o novo status.</p>
+            <form data-validar data-demo="Time movido de lista. E-mail enviado ao responsável.">
+              <div class="campo">
+                <label for="nova-lista">Nova lista</label>
+                <select id="nova-lista">
+                  <option value="oficial">Lista Oficial — vaga confirmada</option>
+                  <option value="espera">Lista de Espera</option>
+                  <option value="triagem">Lista de Inscritos (triagem)</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="motivo">Observação interna (opcional)</label>
+                <textarea id="motivo" placeholder="Registro para a equipe — não vai no e-mail do responsável."></textarea>
+              </div>
+              <div class="modal__acoes">
+                <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+                <button type="submit" class="btn btn--primario">Mover e notificar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-exportar" role="dialog" aria-modal="true" aria-labelledby="exp-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="exp-titulo" style="font-size:1.375rem">Exportar informações deste time</h2>
+            <p class="txt-peq txt-suave">O download sai em um arquivo <strong>.zip</strong> com esta estrutura:</p>
+
+              <ul class="txt-peq" style="line-height:1.9">
+                <li>Uma <strong>pasta com o nome do time</strong></li>
+                <li>O <strong>logo</strong> nomeado com o nome do time</li>
+                <li>As <strong>fotos dos jogadores</strong>, cada uma nomeada com o nome do jogador</li>
+                <li>Um arquivo <strong>.xlsx</strong> com todos os dados do elenco</li>
+              </ul>
+            <div class="aviso aviso--alerta mt-3">
+              <div>
+                <strong>Por que os nomes importam.</strong> Cada foto recebe o nome do campo
+                “nome” do jogador. É isso que permite identificar a quem a foto pertence na hora
+                de montar crachás, transmissão e material da arena.
+              </div>
+            </div>
+
+            <div class="aviso mt-3" id="excecao-danca" hidden>
+              <div>
+                <strong>Exceção da Dança.</strong> Em campeonatos de dança não há pasta por atleta:
+                a exportação traz as fotos nomeadas corretamente e um único <strong>.xlsx</strong>
+                com uma só página listando todos os atletas inscritos.
+              </div>
+            </div>
+
+            <div class="modal__acoes">
+              <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+              <button type="button" class="btn btn--primario" id="confirmar-exportacao">Gerar arquivo .zip</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="modal-recusa" role="dialog" aria-modal="true" aria-labelledby="rec-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <h2 id="rec-titulo" style="font-size:1.375rem">Recusar documento</h2>
+      <p class="txt-peq txt-suave" id="rec-sub">—</p>
+      <form id="form-recusa" data-validar>
+        <input type="hidden" id="r-jogador"><input type="hidden" id="r-tipo">
+        <div class="campo">
+          <label for="r-motivo">Motivo da recusa <span class="obrigatorio">*</span></label>
+          <textarea id="r-motivo" required placeholder="Ex.: assinatura ilegível — reenviar a via assinada."></textarea>
+          <p class="campo__ajuda">O responsável vê este texto no painel e recebe por e-mail.</p>
+          <p class="campo__erro" hidden>Explique o motivo para o responsável poder corrigir.</p>
+        </div>
+        <div class="modal__acoes">
+          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+          <button type="submit" class="btn btn--perigo">Recusar documento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/exportar.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var $ = function (s) { return document.querySelector(s); };
+
+  var p = new URLSearchParams(location.search);
+  var campId = p.get('camp') || 'cbf-2026';
+  var c = D.campeonato(campId) || D.campeonato('cbf-2026');
+  var t = D.meusTimes().filter(function (x) { return x.modalidade === c.modalidade; })[0] || D.meusTimes()[0];
+  var m = D.modalidade(t.modalidade);
+
+  $('#voltar-camp').href = 'campeonato-gerenciar.html?id=' + campId;
+  $('#time-nome').textContent = t.nome;
+  $('#time-meta').textContent = m.curto + (t.categoria ? ' · ' + t.categoria : '') +
+    ' · criado em ' + F.data(t.criadoEm) + ' · ' + c.nome;
+  $('#time-lista').textContent = 'Lista Oficial';
+  $('#time-protocolo').textContent = 'Protocolo ' + (p.get('time') || '2026-000418');
+  if (c.modalidade === 'dance') $('#excecao-danca').hidden = false;
+
+  var jog = t.jogadores || [];
+  $('#conta-elenco').textContent = jog.length + ' de ' +
+    (m.jogadoresMin === m.jogadoresMax ? m.jogadoresMax : m.jogadoresMin + '–' + m.jogadoresMax) + ' jogadores';
+
+  $('#tabela-elenco').innerHTML = jog.map(function (j, i) {
+    return '<tr>' +
+      '<td><img class="foto-mini" src="../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg" alt="Foto de ' + esc(j.nome) + '"></td>' +
+      '<td><strong>' + esc(j.nome) + '</strong>' + (j.reserva ? ' <span class="tag tag--cinza">Reserva</span>' : '') + '</td>' +
+      '<td>' + esc(j.apelido || '—') + '</td>' +
+      '<td>' + (j.numero || '—') + '</td>' +
+      '<td>' + esc(j.funcao || (j.steam ? 'Steam ' + j.steam : '—')) + '</td>' +
+      '<td>' + esc(F.data(j.nasc)) + '</td>' +
+      '<td>' + esc(j.email) + '</td>' +
+      '<td>' + esc(j.tel) + '</td>' +
+      '<td>' + esc(j.insta || '—') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  $('#tabela-staff').innerHTML = (t.staff || []).map(function (s) {
+    return '<tr>' +
+      '<td><strong>' + esc(s.nome) + '</strong></td>' +
+      '<td>' + esc(s.papel) + '</td>' +
+      '<td>' + esc(F.data(s.nasc)) + '</td>' +
+      '<td>' + esc(s.email) + '</td>' +
+      '<td>' + esc(s.tel) + '</td>' +
+      '<td>' + esc(s.insta || '—') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  function linha(rot, val) {
+    return '<div><dt>' + esc(rot) + '</dt><dd>' + esc(val || '—') + '</dd></div>';
+  }
+
+  var u = D.usuario();
+  $('#responsavel').innerHTML =
+    linha('Nome', u.nome) + linha('E-mail', u.email) + linha('Telefone', u.telefone) +
+    linha('Conta criada em', F.data(u.criadoEm));
+
+  $('#dados-time').innerHTML =
+    linha('Modalidade', m.curto) +
+    (t.categoria ? linha('Categoria', t.categoria) : '') +
+    linha('Criado em', F.data(t.criadoEm)) +
+    linha('Descrição', t.descricao) +
+    linha('Histórico', t.historico);
+
+  $('#confirmar-exportacao').addEventListener('click', function (ev) {
+    var bt = ev.currentTarget;
+    bt.disabled = true;
+    bt.textContent = 'Gerando arquivo…';
+    PB.exportar.time(c, t, 0)
+      .then(function () {
+        PB.fecharModal('modal-exportar');
+        PB.toast('Download iniciado', 'Arquivo .zip de ' + t.nome + ' com logo, fotos e planilha.', 'info');
+      })
+      .catch(function (e) {
+        PB.toast('Falha na exportação', String(e && e.message ? e.message : e), 'erro');
+      })
+      .then(function () {
+        bt.disabled = false;
+        bt.textContent = 'Gerar arquivo .zip';
+      });
+  });
+})();
+</script>
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var pr = new URLSearchParams(location.search);
+  var camp = D.campeonato(pr.get('camp') || 'cbf-2026') || D.campeonato('cbf-2026');
+  var time = D.meusTimes().filter(function (x) { return x.modalidade === camp.modalidade; })[0] || D.meusTimes()[0];
+  if (!time) return;
+
+  function render() {
+    var t = D.time(time.id);
+    var resumo = D.documentacaoDoTime(t);
+    $('#resumo-docs').textContent = resumo.completo
+      ? 'documentação completa'
+      : resumo.ok + ' de ' + resumo.total + ' aprovados · ' + resumo.pendencias.length + ' pendência(s)';
+
+    $('#lista-docs').innerHTML =
+      '<div class="aviso' + (resumo.completo ? ' aviso--sucesso' : ' aviso--alerta') + ' mb-3"><div>' +
+        (resumo.completo
+          ? 'Todos os documentos obrigatórios foram aprovados. O time está liberado para a arena.'
+          : 'Há documentos faltando, vencidos ou recusados. Aprovar aqui libera o atleta; recusar avisa o responsável com o motivo.') +
+      '</div></div>' +
+      (t.jogadores || []).map(function (j, i) {
+        var docs = D.documentosDoJogador(j);
+        var faltam = docs.filter(function (d) { return d.obrigatorio && d.status !== 'aprovado'; }).length;
+        return '' +
+        '<div class="doc-adm">' +
+          '<div class="doc-adm__topo">' +
+            '<span class="doc-adm__nome">' + esc(j.nome) + '</span>' +
+            (faltam ? '<span class="tag tag--amarela">' + faltam + ' pendente(s)</span>'
+                    : '<span class="tag tag--verde">Completo</span>') +
+          '</div>' +
+          docs.map(function (d) {
+            var st = D.STATUS_DOCUMENTO[d.status];
+            var acoes = '';
+            if (d.arquivo && d.status !== 'aprovado') {
+              acoes += '<button class="btn btn--primario btn--pequeno" data-aprovar="' + i + ':' + d.tipo + '">Aprovar</button>';
+            }
+            if (d.arquivo && d.status !== 'recusado') {
+              acoes += '<button class="btn btn--perigo btn--pequeno" data-recusar="' + i + ':' + d.tipo + '">Recusar</button>';
+            }
+            if (!d.arquivo) acoes = '<span class="txt-micro txt-suave">aguardando envio</span>';
+
+            return '<div class="doc-adm__linha">' +
+              '<div>' +
+                '<div style="font-weight:600;font-size:var(--t-peq)">' + esc(d.nome) + '</div>' +
+                '<div class="doc-adm__meta">' + (d.arquivo ? esc(d.arquivo) : 'não enviado') +
+                  (d.validade ? ' · válido até ' + esc(PB.fmt.data(d.validade)) : '') + '</div>' +
+                (d.observacao ? '<div class="doc-adm__meta" style="color:var(--erro)">' + esc(d.observacao) + '</div>' : '') +
+              '</div>' +
+              '<span class="tag ' + st.classe + '">' + st.rotulo + '</span>' +
+              '<div class="linha-acoes">' + acoes + '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }).join('');
+  }
+
+  document.addEventListener('click', function (e) {
+    var ap = e.target.closest('[data-aprovar]');
+    if (ap) {
+      var p = ap.getAttribute('data-aprovar').split(':');
+      var t = D.time(time.id);
+      var doc = (t.jogadores[p[0]].documentos || []).filter(function (x) { return x.tipo === p[1]; })[0];
+      D.gravarDocumento(time.id, parseInt(p[0], 10), {
+        tipo: p[1], arquivo: doc ? doc.arquivo : null,
+        validade: doc ? doc.validade : null, status: 'aprovado', observacao: null
+      });
+      PB.toast('Documento aprovado', 'O responsável foi avisado por e-mail.', 'info');
+      PB.recarregar();
+      return;
+    }
+
+    var rc = e.target.closest('[data-recusar]');
+    if (rc) {
+      var q = rc.getAttribute('data-recusar').split(':');
+      var t2 = D.time(time.id);
+      $('#r-jogador').value = q[0];
+      $('#r-tipo').value = q[1];
+      $('#rec-sub').textContent = t2.jogadores[q[0]].nome + ' · ' + D.TIPOS_DOCUMENTO[q[1]].nome;
+      $('#r-motivo').value = '';
+      PB.abrirModal('modal-recusa');
+    }
+  });
+
+  $('#form-recusa').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var motivo = $('#r-motivo').value.trim();
+    if (!motivo) { $('#r-motivo').focus(); return; }
+    var i = parseInt($('#r-jogador').value, 10);
+    var t = D.time(time.id);
+    var doc = (t.jogadores[i].documentos || []).filter(function (x) { return x.tipo === $('#r-tipo').value; })[0];
+    D.gravarDocumento(time.id, i, {
+      tipo: $('#r-tipo').value,
+      arquivo: doc ? doc.arquivo : null,
+      validade: doc ? doc.validade : null,
+      status: 'recusado', observacao: motivo
+    });
+    PB.fecharModal('modal-recusa');
+    PB.toast('Documento recusado', 'O responsável recebeu o motivo por e-mail.', 'info');
+    PB.recarregar();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>

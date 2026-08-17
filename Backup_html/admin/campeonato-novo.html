@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar Novo Campeonato — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Cadastro completo de um campeonato: banner, modalidade, limites de elenco, datas, local, premiação, termos de aceite e regulamento, com prévia antes de publicar.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
+  .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
+  .barra-ocupacao i.cheia { background: var(--fita-amarela); }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .revisao { margin: 0; }
+  .revisao > div { display: flex; justify-content: space-between; gap: var(--e-3); padding: 10px 0; border-bottom: 1px dashed var(--linha-clara); font-size: var(--t-peq); }
+  .revisao > div:last-child { border-bottom: 0; }
+  .revisao dt { color: var(--texto-suave); flex: none; }
+  .revisao dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html" class="ativo">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Criar Novo Campeonato</h1>
+        <p class="sub">Preencha as informações e revise antes de publicar</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><a class="btn btn--fantasma btn--pequeno" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Voltar</a></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="passos" id="passos">
+        <div class="passo passo--ativo" data-passo="1"><span class="passo__num"><span>1</span></span> Informações do campeonato</div>
+        <span class="passo__linha"></span>
+        <div class="passo" data-passo="2"><span class="passo__num"><span>2</span></span> Revisar e publicar</div>
+      </div>
+
+      <!-- ============ ETAPA 1 ============ -->
+      <form id="form-camp" data-etapa="1" data-validar novalidate>
+
+        <div class="bloco">
+          <div class="bloco__topo"><h2>Identificação</h2></div>
+          <div class="bloco__corpo">
+
+            <div class="campo">
+              <label for="banner">Banner do campeonato <span class="obrigatorio">*</span></label>
+              <div class="upload" data-upload>
+                <span class="upload__titulo">Arraste a arte ou clique para escolher</span>
+                <span class="upload__specs">PNG ou JPG · 1920 × 720 px · até 2 MB</span>
+                <span class="upload__specs" data-upload-nome></span>
+                <img data-upload-preview alt="Pré-visualização do banner" hidden style="max-height:120px;border-radius:var(--r-2);margin-top:8px">
+                <input type="file" id="banner" name="banner" accept="image/png,image/jpeg" class="sr-only" required>
+              </div>
+              <p class="campo__erro" hidden>Envie a arte do campeonato.</p>
+            </div>
+
+            <div class="form-grade">
+              <div class="campo col-2">
+                <label for="nome">Nome do campeonato <span class="obrigatorio">*</span></label>
+                <input type="text" id="nome" name="nome" placeholder="Ex.: Copa Phygital Futebol 2026 — Etapa Nacional" required>
+                <p class="campo__erro" hidden>Informe o nome do campeonato.</p>
+              </div>
+
+              <div class="campo">
+                <label for="modalidade">Modalidade <span class="obrigatorio">*</span></label>
+                <select id="modalidade" name="modalidade" required>
+                  <option value="">Selecione…</option>
+                  <option value="futebol">Futebol</option>
+                  <option value="basquete">Basquete</option>
+                  <option value="shooter">Shooter</option>
+                  <option value="dance">Dança</option>
+                  <option value="outra">Outra Modalidade</option>
+                </select>
+                <p class="campo__erro" hidden>Escolha a modalidade.</p>
+              </div>
+
+              <div class="campo">
+                <label for="qtd">Quantidade de times ou jogadores <span class="obrigatorio">*</span></label>
+                <input type="number" id="qtd" name="qtd" min="2" max="256" placeholder="24" required>
+                <p class="campo__erro" hidden>Informe o número de vagas.</p>
+              </div>
+            </div>
+
+            <!-- Só aparece quando a modalidade é "Outra" -->
+            <div id="bloco-outra" hidden>
+              <div class="aviso mb-3"><div>Modalidade nova: descreva o formato para que o site saiba montar o formulário de inscrição.</div></div>
+              <div class="form-grade">
+                <div class="campo">
+                  <label for="outra-nome">Nome da modalidade <span class="obrigatorio">*</span></label>
+                  <input type="text" id="outra-nome" name="outraNome" placeholder="Ex.: Phygital Vôlei">
+                </div>
+                <div class="campo">
+                  <label for="outra-tipo">Formato</label>
+                  <select id="outra-tipo" name="outraTipo">
+                    <option value="time">Por time</option>
+                    <option value="individual">Individual</option>
+                  </select>
+                </div>
+                <div class="campo" id="outra-jogadores">
+                  <label for="outra-qtd">Jogadores por time</label>
+                  <input type="number" id="outra-qtd" name="outraQtd" min="1" max="30" placeholder="5">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloco">
+          <div class="bloco__topo"><h2>Elenco permitido</h2></div>
+          <div class="bloco__corpo">
+            <p class="txt-peq txt-suave mb-3" id="dica-elenco">Escolha a modalidade para ver os limites sugeridos.</p>
+            <div class="form-grade form-grade--3">
+              <div class="campo">
+                <label for="jmin">Mínimo de jogadores por time <span class="obrigatorio">*</span></label>
+                <input type="number" id="jmin" name="jmin" min="1" max="30" required>
+                <p class="campo__erro" hidden>Informe o mínimo.</p>
+              </div>
+              <div class="campo">
+                <label for="jmax">Máximo de jogadores por time <span class="obrigatorio">*</span></label>
+                <input type="number" id="jmax" name="jmax" min="1" max="30" required>
+                <p class="campo__erro" hidden>Informe o máximo.</p>
+              </div>
+              <div class="campo">
+                <label for="staff">Quantidade de staff permitido</label>
+                <input type="number" id="staff" name="staff" min="0" max="10" value="3">
+              </div>
+              <div class="campo col-3">
+                <label class="check"><input type="checkbox" id="reservas" name="reservas" checked> Permitir jogadores reservas</label>
+                <div id="bloco-reservas">
+                  <label for="rmax">Máximo de reservas</label>
+                  <input type="number" id="rmax" name="rmax" min="0" max="10" value="3" style="max-width:200px">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloco">
+          <div class="bloco__topo"><h2>Datas e local</h2></div>
+          <div class="bloco__corpo">
+            <div class="form-grade">
+              <div class="campo">
+                <label for="data-ini">Data de início <span class="obrigatorio">*</span></label>
+                <input type="date" id="data-ini" name="dataIni" required>
+                <p class="campo__erro" hidden>Informe a data de início.</p>
+              </div>
+              <div class="campo">
+                <label for="data-fim">Data de encerramento</label>
+                <input type="date" id="data-fim" name="dataFim">
+              </div>
+              <div class="campo col-2">
+                <label for="local">Local <span class="obrigatorio">*</span></label>
+                <input type="text" id="local" name="local" placeholder="Ex.: Arena Phygital — São Paulo, SP" required>
+                <p class="campo__erro" hidden>Informe o local.</p>
+              </div>
+              <div class="campo">
+                <label for="insc-ini">Abertura das inscrições <span class="obrigatorio">*</span></label>
+                <input type="date" id="insc-ini" name="inscIni" required>
+                <p class="campo__erro" hidden>Informe a abertura.</p>
+              </div>
+              <div class="campo">
+                <label for="insc-fim">Encerramento das inscrições <span class="obrigatorio">*</span></label>
+                <input type="date" id="insc-fim" name="inscFim" required>
+                <p class="campo__ajuda">Depois desta data o competidor só altera a inscrição abrindo chamado.</p>
+                <p class="campo__erro" hidden>Informe o encerramento.</p>
+              </div>
+              <div class="campo col-2">
+                <label for="descricao">Descrição do campeonato</label>
+                <textarea id="descricao" name="descricao" placeholder="Formato da disputa, critérios de classificação e o que o competidor precisa saber antes de se inscrever."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloco">
+          <div class="bloco__topo"><h2>Premiação</h2></div>
+          <div class="bloco__corpo">
+            <div class="campo">
+              <span class="rotulo">Este campeonato terá premiação?</span>
+              <label class="check"><input type="radio" name="premiacao" value="sim" checked> Sim</label>
+              <label class="check"><input type="radio" name="premiacao" value="nao"> Não</label>
+            </div>
+
+            <div id="bloco-premio">
+              <div class="campo">
+                <span class="rotulo">Tipo de premiação</span>
+                <label class="check"><input type="radio" name="tipoPremio" value="dinheiro" checked> Em dinheiro</label>
+                <label class="check"><input type="radio" name="tipoPremio" value="outro"> Outro tipo de premiação</label>
+              </div>
+
+              <div id="premio-dinheiro">
+                <div class="form-grade">
+                  <div class="campo">
+                    <label for="premio-total">Valor total da premiação</label>
+                    <input type="number" id="premio-total" name="premioTotal" min="0" step="100" placeholder="60000">
+                  </div>
+                  <div class="campo">
+                    <label for="premio-ate">Premia até qual colocação?</label>
+                    <select id="premio-ate" name="premioAte"></select>
+                    <p class="campo__ajuda" id="ajuda-premio-ate">As opções seguem a quantidade de times ou jogadores informada acima.</p>
+                  </div>
+                </div>
+                <div id="premio-colocacoes" class="form-grade form-grade--3"></div>
+                <div id="premio-soma" class="aviso mt-3" hidden><div></div></div>
+              </div>
+
+              <div id="premio-outro" hidden>
+                <div class="campo">
+                  <label for="premio-desc">Descreva a premiação</label>
+                  <textarea id="premio-desc" name="premioDesc" placeholder="Ex.: kit completo de material esportivo + vaga garantida na etapa nacional."></textarea>
+                </div>
+              </div>
+
+              <hr>
+
+              <div class="campo">
+                <span class="rotulo">Medalhas e troféus</span>
+                <p class="campo__ajuda" style="margin-top:0">Independem da premiação em dinheiro: um campeonato pode ter só medalha, só troféu, os dois ou nenhum.</p>
+                <label class="check"><input type="checkbox" id="tem-medalha"> Haverá medalhas</label>
+                <div class="campo" id="bloco-medalha" hidden style="margin:0 0 var(--e-3) 32px">
+                  <label for="medalha-ate">Medalha até qual colocação?</label>
+                  <select id="medalha-ate" name="medalhaAte"></select>
+                </div>
+                <label class="check"><input type="checkbox" id="tem-trofeu"> Haverá troféus</label>
+                <div class="campo" id="bloco-trofeu" hidden style="margin:0 0 0 32px">
+                  <label for="trofeu-ate">Troféu até qual colocação?</label>
+                  <select id="trofeu-ate" name="trofeuAte"></select>
+                </div>
+              </div>
+            </div>
+
+            <div id="bloco-sem-premio" hidden>
+              <div class="campo">
+                <label for="sem-premio-obs">Observação sobre a ausência de premiação</label>
+                <textarea id="sem-premio-obs" name="semPremioObs" placeholder="Ex.: etapa classificatória sem premiação em dinheiro; os classificados avançam para a etapa nacional."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloco">
+          <div class="bloco__topo"><h2>Termos e regulamento</h2></div>
+          <div class="bloco__corpo">
+            <div class="aviso aviso--alerta mb-3">
+              <div>
+                <strong>Item obrigatório.</strong> Estes termos aparecem no ato da inscrição e o
+                responsável precisa aceitá-los para concluir. Sem termos preenchidos o campeonato
+                não pode ser publicado.
+              </div>
+            </div>
+            <div class="campo">
+              <label for="termos">Termos de aceite do campeonato <span class="obrigatorio">*</span></label>
+              <textarea id="termos" name="termos" style="min-height:180px" required placeholder="Ao inscrever o time, o responsável declara que todos os atletas possuem autorização de uso de imagem e estão aptos fisicamente à disputa…"></textarea>
+              <p class="campo__erro" hidden>Escreva os termos de aceite.</p>
+            </div>
+
+            <div class="campo">
+              <label for="regulamento">Upload do regulamento (PDF)</label>
+              <div class="upload" data-upload>
+                <span class="upload__titulo">Arraste o regulamento ou clique para escolher</span>
+                <span class="upload__specs">PDF · até 10 MB</span>
+                <span class="upload__specs" data-upload-nome></span>
+                <input type="file" id="regulamento" name="regulamento" accept="application/pdf" class="sr-only">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-fim mb-6">
+          <a class="btn btn--fantasma" href="campeonatos.html">Cancelar</a>
+          <button type="submit" class="btn btn--primario">Revisar campeonato</button>
+        </div>
+      </form>
+
+      <!-- ============ ETAPA 2 — REVISÃO ============ -->
+      <div data-etapa="2" hidden>
+        <div class="aviso mb-4">
+          <div>Confira tudo antes de publicar. Depois de publicado, o campeonato aparece no site e as inscrições abrem na data definida.</div>
+        </div>
+
+        <div class="painel-grade">
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Informações do campeonato</h2></div>
+            <div class="bloco__corpo"><dl class="revisao" id="revisao"></dl></div>
+          </div>
+
+          <div class="bloco">
+            <div class="bloco__topo"><h2>Como aparecerá no site</h2></div>
+            <div class="bloco__corpo">
+              <article class="card card--fita" id="previa-card"></article>
+              <p class="txt-micro txt-suave mt-3">Prévia do card exibido na página de Inscrições e na home.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-fim mb-6">
+          <button type="button" class="btn btn--contorno" id="voltar-edicao">Voltar para edição</button>
+          <button type="button" class="btn btn--primario" id="publicar">Publicar campeonato</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* ---- Modalidade "Outra" abre campos extras e sugere limites de elenco ---- */
+  var mod = $('#modalidade');
+  mod.addEventListener('change', function () {
+    var v = mod.value;
+    $('#bloco-outra').hidden = v !== 'outra';
+    var m = D.MODALIDADES[v];
+    if (m) {
+      $('#jmin').value = m.jogadoresMin;
+      $('#jmax').value = m.jogadoresMax;
+      $('#staff').value = m.staffMax;
+      $('#rmax').value = m.reservasMax;
+      $('#reservas').checked = m.reservasMax > 0;
+      $('#bloco-reservas').hidden = m.reservasMax === 0;
+      $('#dica-elenco').textContent =
+        'Padrão da modalidade ' + m.curto + ': ' +
+        (m.jogadoresMin === m.jogadoresMax
+          ? 'exatamente ' + m.jogadoresMax + ' jogador(es)'
+          : 'de ' + m.jogadoresMin + ' a ' + m.jogadoresMax + ' jogadores') +
+        (m.reservasMax ? ', até ' + m.reservasMax + ' reservas' : ', sem reservas') +
+        ' · ' + m.staffRotulo + '. Você pode ajustar para esta edição.';
+    } else {
+      $('#dica-elenco').textContent = 'Defina os limites de elenco desta modalidade.';
+    }
+  });
+
+  $('#outra-tipo').addEventListener('change', function () {
+    $('#outra-jogadores').hidden = this.value === 'individual';
+  });
+
+  $('#reservas').addEventListener('change', function () {
+    $('#bloco-reservas').hidden = !this.checked;
+  });
+
+  /* ---- Premiação ---- */
+  function togglePremiacao() {
+    var tem = document.querySelector('input[name="premiacao"]:checked').value === 'sim';
+    $('#bloco-premio').hidden = !tem;
+    $('#bloco-sem-premio').hidden = tem;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="premiacao"]'), function (r) {
+    r.addEventListener('change', togglePremiacao);
+  });
+
+  function toggleTipoPremio() {
+    var dinheiro = document.querySelector('input[name="tipoPremio"]:checked').value === 'dinheiro';
+    $('#premio-dinheiro').hidden = !dinheiro;
+    $('#premio-outro').hidden = dinheiro;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="tipoPremio"]'), function (r) {
+    r.addEventListener('change', toggleTipoPremio);
+  });
+
+  /* Campos de valor por colocação, gerados conforme o número escolhido */
+  function gerarColocacoes() {
+    var v = $('#premio-ate').value;
+    var n = v === 'todos' ? (parseInt($('#qtd').value, 10) || 1) : (parseInt(v, 10) || 1);
+    if (n > 24) {   /* campo por colocação vira inviável: usa valor único por participante */
+      $('#premio-colocacoes').innerHTML =
+        '<div class="campo col-3"><label for="col-igual">Valor por participante (R$)</label>' +
+        '<input type="number" id="col-igual" class="valor-colocacao" min="0" step="50" placeholder="0">' +
+        '<p class="campo__ajuda">' + n + ' participantes premiados com o mesmo valor.</p></div>';
+      Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el) {
+        el.addEventListener('input', conferirSoma);
+      });
+      conferirSoma();
+      return;
+    }
+    var html = '';
+    for (var i = 1; i <= n; i++) {
+      html += '<div class="campo"><label for="col-' + i + '">' + i + 'º lugar (R$)</label>' +
+              '<input type="number" id="col-' + i + '" class="valor-colocacao" min="0" step="100" placeholder="0"></div>';
+    }
+    $('#premio-colocacoes').innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el) {
+      el.addEventListener('input', conferirSoma);
+    });
+    conferirSoma();
+  }
+
+  function conferirSoma() {
+    var total = parseFloat($('#premio-total').value) || 0;
+    var soma = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el) {
+      soma += parseFloat(el.value) || 0;
+    });
+    var caixa = $('#premio-soma');
+    if (!total && !soma) { caixa.hidden = true; return; }
+    caixa.hidden = false;
+    var diff = total - soma;
+    caixa.className = 'aviso mt-3' + (Math.abs(diff) < 0.01 ? ' aviso--sucesso' : ' aviso--alerta');
+    caixa.querySelector('div').innerHTML = Math.abs(diff) < 0.01
+      ? '<strong>Valores conferem.</strong> A soma das colocações é igual ao total de ' + F.moeda(total) + '.'
+      : '<strong>Soma diferente do total.</strong> Colocações somam ' + F.moeda(soma) +
+        ' e o total informado é ' + F.moeda(total) + ' — diferença de ' + F.moeda(Math.abs(diff)) + '.';
+  }
+
+  /* As opções de colocação saem da quantidade de times/jogadores do campeonato,
+     mais a opção "todos" para quando o campeonato premia o campo inteiro. */
+  function opcoesColocacao(sel, incluirTodos) {
+    var total = parseInt($('#qtd').value, 10) || 0;
+    var atual = sel.value;
+    var max = total > 0 ? Math.min(total, 64) : 8;
+    var html = '';
+    for (var i = 1; i <= max; i++) {
+      html += '<option value="' + i + '">' + i + 'º lugar</option>';
+    }
+    if (incluirTodos && total > 0) {
+      html += '<option value="todos">Todos os ' + total + ' participantes</option>';
+    }
+    sel.innerHTML = html;
+    if (atual && sel.querySelector('option[value="' + atual + '"]')) sel.value = atual;
+    else sel.value = String(Math.min(3, max));
+  }
+
+  function atualizarColocacoes() {
+    opcoesColocacao($('#premio-ate'), true);
+    opcoesColocacao($('#medalha-ate'), true);
+    opcoesColocacao($('#trofeu-ate'), true);
+    var total = parseInt($('#qtd').value, 10) || 0;
+    $('#ajuda-premio-ate').textContent = total
+      ? 'Opções de 1º a ' + Math.min(total, 64) + 'º, conforme as ' + total + ' vagas do campeonato.'
+      : 'Informe a quantidade de times ou jogadores para liberar as colocações.';
+    gerarColocacoes();
+  }
+
+  $('#qtd').addEventListener('input', atualizarColocacoes);
+  $('#premio-ate').addEventListener('change', gerarColocacoes);
+  $('#premio-total').addEventListener('input', conferirSoma);
+
+  $('#tem-medalha').addEventListener('change', function () { $('#bloco-medalha').hidden = !this.checked; });
+  $('#tem-trofeu').addEventListener('change', function () { $('#bloco-trofeu').hidden = !this.checked; });
+
+  atualizarColocacoes();
+  togglePremiacao();
+  toggleTipoPremio();
+
+  /* ---- Modo edição: ?id=… traz o campeonato existente para o formulário ----
+     Sem isto a tela de "editar informações" abria em branco, como se fosse
+     a criação de um campeonato novo. */
+  var editandoId = new URLSearchParams(location.search).get('id');
+  if (editandoId) {
+    var c = D.campeonato(editandoId);
+    if (!c) {
+      PB.toast('Campeonato não encontrado', 'O identificador informado não existe.', 'erro');
+    } else {
+      document.querySelector('h1').textContent = 'Editar Campeonato';
+      document.querySelector('.painel__topo .sub').textContent = c.nome;
+      document.querySelector('#form-camp button[type="submit"]').textContent = 'Revisar alterações';
+
+      $('#nome').value = c.nome || '';
+      $('#modalidade').value = c.modalidade || '';
+      $('#qtd').value = c.vagas || '';
+      mod.dispatchEvent(new Event('change'));
+
+      $('#jmin').value = c.jogadoresMin || '';
+      $('#jmax').value = c.jogadoresMax || '';
+      $('#staff').value = c.staffMax || '';
+      $('#reservas').checked = c.reservas !== false;
+      $('#bloco-reservas').hidden = !$('#reservas').checked;
+
+      $('#data-ini').value = c.data || '';
+      $('#data-fim').value = c.dataFim || '';
+      $('#local').value = c.local || '';
+      $('#insc-ini').value = c.aberturaInscricoes || '';
+      $('#insc-fim').value = c.encerramentoInscricoes || '';
+      $('#descricao').value = c.descricao || '';
+      $('#termos').value = c.termos || '';
+
+      atualizarColocacoes();
+
+      var prem = c.premiacao;
+      if (!prem) {
+        document.querySelector('input[name="premiacao"][value="nao"]').checked = true;
+      } else {
+        document.querySelector('input[name="premiacao"][value="sim"]').checked = true;
+        if (prem.tipo === 'dinheiro') {
+          document.querySelector('input[name="tipoPremio"][value="dinheiro"]').checked = true;
+          $('#premio-total').value = prem.total || '';
+          var cols = prem.colocacoes || [];
+          if (cols.length) {
+            $('#premio-ate').value = String(cols.length);
+            gerarColocacoes();
+            cols.forEach(function (x) {
+              var campo = $('#col-' + x.pos);
+              if (campo) campo.value = x.valor;
+            });
+            conferirSoma();
+          }
+        } else {
+          document.querySelector('input[name="tipoPremio"][value="outro"]').checked = true;
+          $('#premio-desc').value = prem.descricao || '';
+        }
+      }
+      togglePremiacao();
+      toggleTipoPremio();
+
+      if (c.medalhaAte) { $('#tem-medalha').checked = true; $('#bloco-medalha').hidden = false; $('#medalha-ate').value = c.medalhaAte; }
+      if (c.trofeuAte)  { $('#tem-trofeu').checked  = true; $('#bloco-trofeu').hidden  = false; $('#trofeu-ate').value  = c.trofeuAte; }
+
+      /* Banner e regulamento já enviados: mostra o que está gravado */
+      if (c.banner) {
+        var prev = document.querySelector('#banner').closest('.upload').querySelector('[data-upload-preview]');
+        if (prev) { prev.src = '../' + c.banner; prev.hidden = false; }
+        document.querySelector('#banner').closest('.upload').querySelector('[data-upload-nome]').textContent =
+          'Banner atual — envie outro arquivo apenas se quiser trocar.';
+        $('#banner').removeAttribute('required');
+      }
+      if (c.regulamento) {
+        document.querySelector('#regulamento').closest('.upload').querySelector('[data-upload-nome]').textContent =
+          'Atual: ' + c.regulamento;
+      }
+    }
+  }
+
+  /* ---- Publicar grava de verdade e recarrega ---- */
+  $('#publicar').addEventListener('click', function () {
+    PB.confirmar(
+      editandoId ? 'Salvar alterações' : 'Publicar campeonato',
+      editandoId
+        ? 'As alterações passam a valer no site imediatamente. Deseja salvar?'
+        : 'Publicar deixa o campeonato visível no site e abre as inscrições na data definida. Deseja publicar?',
+      function () {
+        var v = function (id) { return $('#' + id).value; };
+        var temPremio = document.querySelector('input[name="premiacao"]:checked').value === 'sim';
+        var tipoPremio = document.querySelector('input[name="tipoPremio"]:checked').value;
+        var colocacoes = [];
+        Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el, i) {
+          if (el.value) colocacoes.push({ pos: i + 1, valor: parseFloat(el.value) });
+        });
+
+        var anterior = editandoId ? D.campeonato(editandoId) : null;
+        var item = {
+          id: editandoId || ('camp-' + Date.now()),
+          nome: v('nome'),
+          modalidade: mod.value === 'outra' ? 'outros' : mod.value,
+          banner: anterior ? anterior.banner : 'assets/img/mock/camp-futebol.svg',
+          vagas: parseInt(v('qtd'), 10) || 0,
+          jogadoresMin: parseInt(v('jmin'), 10) || 0,
+          jogadoresMax: parseInt(v('jmax'), 10) || 0,
+          reservas: $('#reservas').checked,
+          staffMax: parseInt(v('staff'), 10) || 0,
+          data: v('data-ini'), dataFim: v('data-fim'), local: v('local'),
+          aberturaInscricoes: v('insc-ini'), encerramentoInscricoes: v('insc-fim'),
+          descricao: v('descricao'), termos: v('termos'),
+          premiacao: temPremio
+            ? (tipoPremio === 'dinheiro'
+                ? { tipo: 'dinheiro', total: parseFloat(v('premio-total')) || 0, colocacoes: colocacoes }
+                : { tipo: 'outro', descricao: v('premio-desc') })
+            : null,
+          medalhaAte: $('#tem-medalha').checked ? $('#medalha-ate').value : null,
+          trofeuAte: $('#tem-trofeu').checked ? $('#trofeu-ate').value : null,
+          status: anterior ? anterior.status : 'inscricoes',
+          inscritos: anterior ? anterior.inscritos : 0,
+          oficial: anterior ? anterior.oficial : 0,
+          espera: anterior ? anterior.espera : 0
+        };
+
+        D.gravar('campeonatos', item);
+        D.registrar('campeonato', item.nome,
+                    editandoId ? 'editou as informações' : 'publicou o campeonato',
+                    item.vagas + ' vagas · inscrições até ' + item.encerramentoInscricoes);
+        PB.toast(editandoId ? 'Campeonato atualizado' : 'Campeonato publicado',
+                 item.nome + ' foi salvo.', 'info');
+        setTimeout(function () { location.href = 'campeonatos.html'; }, 1000);
+      });
+  });
+
+  /* ---- Etapas ---- */
+  function irPara(n) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-etapa]'), function (el) {
+      el.hidden = el.getAttribute('data-etapa') !== String(n);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#passos .passo'), function (p) {
+      var i = parseInt(p.getAttribute('data-passo'), 10);
+      p.classList.toggle('passo--ativo', i === n);
+      p.classList.toggle('passo--feito', i < n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  $('#form-camp').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var faltando = null;
+    Array.prototype.forEach.call(this.querySelectorAll('[required]'), function (campo) {
+      if (campo.offsetParent === null && campo.type !== 'file') return;  /* campo oculto não é exigido */
+      var ok = campo.type === 'file' ? true : String(campo.value).trim() !== '';
+      var wrap = campo.closest('.campo');
+      if (wrap) wrap.classList.toggle('campo--erro', !ok);
+      var er = wrap && wrap.querySelector('.campo__erro');
+      if (er) er.hidden = ok;
+      if (!ok && !faltando) faltando = campo;
+    });
+    if (faltando) {
+      faltando.focus();
+      faltando.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      PB.toast('Faltam informações', 'Complete os campos destacados para revisar o campeonato.', 'alerta');
+      return;
+    }
+    montarRevisao();
+    irPara(2);
+  });
+
+  $('#voltar-edicao').addEventListener('click', function () { irPara(1); });
+
+  function linha(rot, val) {
+    return '<div><dt>' + esc(rot) + '</dt><dd>' + esc(val || '—') + '</dd></div>';
+  }
+
+  function montarRevisao() {
+    var v = function (id) { return $('#' + id).value; };
+    var mSel = mod.options[mod.selectedIndex].textContent;
+    var temPremio = document.querySelector('input[name="premiacao"]:checked').value === 'sim';
+    var tipoPremio = document.querySelector('input[name="tipoPremio"]:checked').value;
+
+    var premioTexto = 'Sem premiação';
+    if (temPremio && tipoPremio === 'dinheiro') {
+      var partes = [];
+      Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el, i) {
+        if (el.value) partes.push((i + 1) + 'º: ' + F.moeda(el.value));
+      });
+      premioTexto = F.moeda(v('premio-total')) + (partes.length ? ' — ' + partes.join(' · ') : '');
+    } else if (temPremio) {
+      premioTexto = v('premio-desc') || 'Premiação não monetária';
+    }
+
+    $('#revisao').innerHTML =
+      linha('Nome', v('nome')) +
+      linha('Modalidade', mod.value === 'outra' ? v('outra-nome') + ' (nova modalidade)' : mSel) +
+      linha('Vagas', v('qtd')) +
+      linha('Elenco', v('jmin') + ' a ' + v('jmax') + ' jogadores' +
+        ($('#reservas').checked ? ' · até ' + v('rmax') + ' reservas' : ' · sem reservas')) +
+      linha('Staff permitido', v('staff')) +
+      linha('Período', F.data(v('data-ini')) + (v('data-fim') ? ' a ' + F.data(v('data-fim')) : '')) +
+      linha('Local', v('local')) +
+      linha('Inscrições', F.data(v('insc-ini')) + ' até ' + F.data(v('insc-fim'))) +
+      linha('Premiação', premioTexto) +
+      linha('Termos de aceite', v('termos') ? 'Preenchidos (' + v('termos').length + ' caracteres)' : '—') +
+      linha('Regulamento', $('#regulamento').files.length ? $('#regulamento').files[0].name : 'Não enviado');
+
+    var arq = $('#banner').files[0];
+    var img = arq ? URL.createObjectURL(arq) : '../assets/img/mock/camp-futebol.svg';
+    $('#previa-card').innerHTML =
+      '<div class="card__midia"><img src="' + img + '" alt=""></div>' +
+      '<div class="card__corpo">' +
+        '<span class="tag tag--verde">Inscrições abertas</span>' +
+        '<h3 class="card__titulo mt-2">' + esc(v('nome')) + '</h3>' +
+        '<p class="txt-peq txt-suave">' + esc(v('descricao') || 'Sem descrição informada.') + '</p>' +
+        '<div class="card__meta mt-3">' + esc(F.data(v('data-ini'))) + ' · ' + esc(v('local')) + '</div>' +
+      '</div>';
+  }
+})();
+</script>
+</body>
+</html>

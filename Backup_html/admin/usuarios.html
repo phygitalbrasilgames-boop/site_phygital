@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usuários — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Usuários com acesso ao painel administrativo, níveis de permissão e cadastro de novos acessos.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
+  .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
+  .barra-ocupacao i.cheia { background: var(--fita-amarela); }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html" class="ativo">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Usuários</h1>
+        <p class="sub">Quem tem acesso ao painel e com qual permissão</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><button class="btn btn--primario btn--pequeno" data-abrir-modal="modal-usuario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Cadastrar Novo Usuário</button></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="bloco">
+        <div class="bloco__topo"><h2>Usuários com acesso ao painel</h2><span class="txt-peq txt-suave" id="conta-usuarios">—</span></div>
+        <div class="bloco__corpo bloco__corpo--flat">
+          <div class="tabela-wrap" style="border:0;border-radius:0">
+            <table>
+              <caption class="sr-only">Usuários administrativos cadastrados</caption>
+              <thead><tr>
+                <th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Telefone</th>
+                <th scope="col">Nível de acesso</th><th scope="col">Criado em</th><th scope="col"></th>
+              </tr></thead>
+              <tbody id="tabela-usuarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <div class="bloco__topo"><h2>O que cada nível pode fazer</h2></div>
+        <div class="bloco__corpo bloco__corpo--flat">
+          <div class="tabela-wrap" style="border:0;border-radius:0">
+            <table>
+              <caption class="sr-only">Permissões por nível de acesso</caption>
+              <thead><tr>
+                <th scope="col">Permissão</th><th scope="col">Master</th>
+                <th scope="col">Gestor de Campeonato</th><th scope="col">Operação</th>
+              </tr></thead>
+              <tbody>
+                <tr><td>Ver campeonatos e inscrições</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+                <tr><td>Exportar informações</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+                <tr><td>Enviar e-mail</td><td>Sim</td><td>Sim</td><td>Não</td></tr>
+                <tr><td>Mover times entre listas</td><td>Sim</td><td>Não</td><td>Sim</td></tr>
+                <tr><td>Responder e encerrar chamados</td><td>Sim</td><td>Não</td><td>Sim</td></tr>
+                <tr><td>Criar e editar campeonatos</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+                <tr><td>Apurar e encerrar campeonato</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+                <tr><td>Publicar no blog e trocar banners</td><td>Sim</td><td>Não</td><td>Sim</td></tr>
+                <tr><td>Configurar SMTP e gerenciar usuários</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="aviso">
+        <div>
+          <strong>Primeiro acesso de um novo usuário.</strong> Ele entra com a senha temporária,
+          é obrigado a criar uma nova senha (digitada duas vezes) e, em seguida, confirma um código
+          enviado ao e-mail cadastrado. Só depois disso o painel é liberado.
+          <a href="../painel/primeiro-acesso.html" target="_blank" rel="noopener">Ver a tela de primeiro acesso</a>.
+        </div>
+      </div>
+
+      <div class="modal" id="modal-usuario" role="dialog" aria-modal="true" aria-labelledby="usuario-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="usuario-titulo" style="font-size:1.375rem">Cadastrar novo usuário</h2>
+            <form data-validar data-demo="Usuário criado. A senha temporária foi enviada por e-mail.">
+              <div class="campo">
+                <label for="u-nome">Nome do usuário <span class="obrigatorio">*</span></label>
+                <input type="text" id="u-nome" required>
+                <p class="campo__erro" hidden>Informe o nome.</p>
+              </div>
+              <div class="campo">
+                <label for="u-email">E-mail <span class="obrigatorio">*</span></label>
+                <input type="email" id="u-email" required>
+                <p class="campo__erro" hidden>Informe um e-mail válido.</p>
+              </div>
+              <div class="campo">
+                <label for="u-tel">Telefone</label>
+                <input type="tel" id="u-tel" data-mascara="telefone" placeholder="(11) 90000-0000">
+              </div>
+              <div class="campo">
+                <label for="u-senha">Senha temporária <span class="obrigatorio">*</span></label>
+                <div class="flex gap-2">
+                  <input type="text" id="u-senha" required>
+                  <button type="button" class="btn btn--contorno btn--pequeno" id="gerar-senha">Gerar</button>
+                </div>
+                <p class="campo__ajuda">O usuário será obrigado a trocar esta senha no primeiro acesso.</p>
+                <p class="campo__erro" hidden>Informe ou gere a senha temporária.</p>
+              </div>
+              <div class="campo">
+                <label for="u-nivel">Nível de acesso</label>
+                <select id="u-nivel">
+                  <option value="master">Master — acesso total</option>
+                  <option value="gestor" selected>Gestor de Campeonato — consulta, exportação e e-mail</option>
+                  <option value="operacao">Operação — listas, chamados e conteúdo</option>
+                </select>
+              </div>
+              <div class="modal__acoes">
+                <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+                <button type="submit" class="btn btn--primario">Cadastrar usuário</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados, F = PB.fmt;
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var NIVEIS = {
+    master: { rotulo: 'Master', classe: 'tag--verde' },
+    gestor: { rotulo: 'Gestor de Campeonato', classe: 'tag--azul' },
+    operacao: { rotulo: 'Operação', classe: 'tag--cinza' }
+  };
+
+  var usuarios = D.adminUsuarios();
+
+  function render() {
+    document.getElementById('conta-usuarios').textContent =
+      usuarios.length + (usuarios.length === 1 ? ' usuário' : ' usuários');
+    document.getElementById('tabela-usuarios').innerHTML = usuarios.map(function (u, i) {
+      var n = NIVEIS[u.nivel] || NIVEIS.operacao;
+      var sozinhoMaster = u.nivel === 'master' &&
+        usuarios.filter(function (x) { return x.nivel === 'master'; }).length === 1;
+      return '<tr>' +
+        '<td><div class="flex-centro gap-3"><span class="avatar avatar--amarelo">' + esc(F.iniciais(u.nome)) + '</span><strong>' + esc(u.nome) + '</strong></div></td>' +
+        '<td>' + esc(u.email) + '</td>' +
+        '<td>' + esc(u.telefone) + '</td>' +
+        '<td><span class="tag ' + n.classe + '">' + esc(n.rotulo) + '</span></td>' +
+        '<td>' + esc(F.data(u.criadoEm)) + '</td>' +
+        '<td><div class="linha-acoes">' +
+          '<button class="btn btn--fantasma btn--pequeno" data-ver="' + i + '">Ver</button>' +
+          (sozinhoMaster
+            ? '<button class="btn btn--fantasma btn--pequeno" aria-disabled="true" disabled title="É o único Master do sistema">Remover</button>'
+            : '<button class="btn btn--perigo btn--pequeno" data-remover="' + i + '">Remover</button>') +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('tabela-usuarios').addEventListener('click', function (e) {
+    var ver = e.target.closest('[data-ver]');
+    if (ver) {
+      var u = usuarios[parseInt(ver.getAttribute('data-ver'), 10)];
+      var n = NIVEIS[u.nivel] || NIVEIS.operacao;
+      PB.toast(u.nome, u.email + ' · ' + n.rotulo + ' · desde ' + F.data(u.criadoEm), 'info');
+      return;
+    }
+    var rem = e.target.closest('[data-remover]');
+    if (!rem) return;
+    var i = parseInt(rem.getAttribute('data-remover'), 10);
+    PB.confirmar('Remover usuário',
+      esc(usuarios[i].nome) + ' perde o acesso ao painel imediatamente. O cadastro vai para o Histórico e pode ser restaurado. Deseja remover?',
+      function () {
+        D.registrar('usuario', usuarios[i].nome, 'removeu o acesso', usuarios[i].email + ' · nível ' + usuarios[i].nivel);
+        D.arquivar('adminUsuarios', usuarios[i].id);
+        PB.toast('Usuário removido', 'O acesso foi revogado. O cadastro está no Histórico.', 'info');
+        PB.recarregar();
+      });
+  });
+
+  document.getElementById('gerar-senha').addEventListener('click', function () {
+    var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    var s = '';
+    var vals = new Uint32Array(12);
+    (window.crypto || window.msCrypto).getRandomValues(vals);
+    for (var i = 0; i < 12; i++) s += abc[vals[i] % abc.length];
+    document.getElementById('u-senha').value = s;
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carregando o painel — Phygital Brasil</title>
+<meta name="description" content="Tela de carregamento do Painel do Competidor da Phygital Brasil. Em instantes você é levado para a tela de acesso.">
+<meta name="theme-color" content="#0E1113">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes desta página — compostos sobre o design system */
+  body { background: var(--grafite); color: #fff; }
+  .splash__marca { gap: var(--e-4); text-align: center; }
+  .splash__tipo {
+    font-family: var(--fonte-display); font-size: var(--t-micro); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .22em; color: var(--amarelo);
+    margin: 0;
+  }
+  .splash__texto { color: rgba(255,255,255,.62); font-size: var(--t-peq); margin: 6px 0 0; max-width: 40ch; }
+  .splash__acoes { display: grid; justify-items: center; gap: var(--e-2); }
+  .splash__voltar { font-size: var(--t-micro); color: rgba(255,255,255,.55); letter-spacing: .06em; text-transform: uppercase; font-family: var(--fonte-display); }
+  .splash__voltar:hover { color: #fff; }
+  .splash noscript { display: block; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<main id="conteudo">
+
+  <div class="splash" data-splash="login.html" data-espera="2000">
+    <div class="splash__marca">
+
+      <img src="../assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+
+      <div>
+        <h1 class="splash__tipo">Painel do Competidor</h1>
+        <p class="splash__texto">Preparando o acesso à temporada 2026. Você será levado para a tela de entrada.</p>
+      </div>
+
+      <div class="splash__barra" role="progressbar" aria-label="Carregando o painel" aria-busy="true"><i></i></div>
+
+      <div class="splash__acoes">
+        <a class="btn btn--destaque" href="login.html">Entrar agora</a>
+        <a class="splash__voltar" href="../index.html">Voltar ao site</a>
+      </div>
+
+      <noscript>
+        <p class="splash__texto">
+          O redirecionamento automático depende de JavaScript. Use o botão <strong>Entrar agora</strong>
+          para abrir a tela de acesso.
+        </p>
+      </noscript>
+
+    </div>
+  </div>
+
+</main>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+
+</body>
+</html>

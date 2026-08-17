@@ -1,0 +1,33 @@
+# Banco de dados local — cada ambiente tem o seu, semeado por `npm run semear`.
+# Nunca versionar: contém hash de senha e dados de teste.
+dados/
+*.db
+*.db-wal
+*.db-shm
+
+# Nunca deveria existir (o projeto é sem dependências), mas se alguém rodar
+# npm install por engano, não vai para o repositório.
+node_modules/
+
+# Variáveis de ambiente com segredo (senhas de semeadura, senha do SMTP).
+.env
+.env.*
+!.env.exemplo
+
+# Anotações locais de credencial. O repositório é público: nada de senha aqui.
+Login.txt
+login.txt
+senhas*.txt
+credenciais*.txt
+
+# Saída da exportação de campeonato, gerada pelo navegador.
+/Copa Phygital*/
+/Copa Phygital*.zip
+
+# Lixo de sistema operacional e editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/

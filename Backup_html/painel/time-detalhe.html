@@ -640,15 +640,11 @@
       PB.toast('Exportação gerada', 'Ficha de ' + time.nome + ' com elenco, comissão e inscrições (protótipo — o arquivo não é baixado).', 'info');
     });
 
-    /* O botão de excluir não existe em toda variação desta tela — segue a
-       convenção do projeto de não fazer nada quando a marcação está ausente. */
     var btExcluir = $('[data-excluir]');
-    if (btExcluir) {
-      btExcluir.setAttribute('data-confirmar',
-        'O time ' + time.nome + ' tem ' + plural(js.length, 'atleta', 'atletas') + ' e ' +
-        plural(inscricoes.length, 'inscrição vinculada', 'inscrições vinculadas') +
-        '. Excluir apaga o elenco, a comissão e cancela as inscrições em triagem. Esta ação não pode ser desfeita.');
-    }
+    btExcluir.setAttribute('data-confirmar',
+      'O time ' + time.nome + ' tem ' + plural(js.length, 'atleta', 'atletas') + ' e ' +
+      plural(inscricoes.length, 'inscrição vinculada', 'inscrições vinculadas') +
+      '. Excluir apaga o elenco, a comissão e cancela as inscrições em triagem. Esta ação não pode ser desfeita.');
   }
 
   if (document.readyState === 'loading') PB.aoIniciar = iniciarPagina;

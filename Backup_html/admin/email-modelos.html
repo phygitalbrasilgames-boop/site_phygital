@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelos de E-mail — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Todos os e-mails automáticos do site: conta criada, código de verificação, confirmação de inscrição, mudanças de lista, chamados e alertas do administrador.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
+  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .grupo-modelos { margin-bottom: var(--e-5); }
+  .grupo-modelos > h3 { font-size: var(--t-peq); text-transform: uppercase; letter-spacing: .12em; color: var(--texto-suave); margin-bottom: var(--e-2); }
+  .modelo-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--e-3); align-items: center; padding: var(--e-3); border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); background: var(--branco); }
+  .modelo-item__nome { font-family: var(--fonte-display); font-weight: 700; }
+  .modelo-item__assunto { font-size: var(--t-micro); color: var(--texto-suave); overflow-wrap: anywhere; }
+  .var-grupo { margin-bottom: var(--e-3); }
+  .var-grupo > strong { display: block; font-size: var(--t-micro); text-transform: uppercase; letter-spacing: .1em; color: var(--texto-suave); margin-bottom: 6px; }
+  .var-chip { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px 4px 0; padding: 5px 10px; border: 1px solid var(--cinza-20); border-radius: var(--r-pill); background: var(--branco); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; cursor: pointer; min-height: 32px; }
+  .var-chip:hover { border-color: var(--verde); background: rgba(0,155,74,.06); }
+  .barra-formato { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+  .barra-formato button { min-width: 40px; min-height: 40px; border: 1px solid var(--cinza-20); background: var(--branco); border-radius: var(--r-2); cursor: pointer; font-family: var(--fonte-display); font-size: var(--t-peq); }
+  .barra-formato button:hover { border-color: var(--grafite); background: var(--claro); }
+  .barra-formato button[aria-pressed="true"] { background: var(--grafite); color: #fff; border-color: var(--grafite); }
+  .barra-sep { width: 1px; align-self: stretch; background: var(--cinza-20); margin: 4px; }
+  .editor { min-height: 200px; max-height: 42vh; overflow-y: auto; padding: var(--e-4); background: var(--branco); border: 1.5px solid var(--cinza-20); border-radius: var(--r-2); line-height: 1.7; }
+  .editor:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(0,155,74,.16); }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
+          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
+          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub">
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html" class="ativo">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Modelos de E-mail</h1>
+        <p class="sub">Textos dos alertas automáticos do sistema</p>
+      </div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><a class="btn btn--contorno btn--pequeno" href="email.html">Disparar e-mail</a></div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="aviso mb-4">
+        <div>
+          <strong>Todo alerta automático do site sai de um destes modelos.</strong>
+          Eles são disparados pelo SMTP configurado em
+          <a href="email.html">Disparo de E-mail → Configurações</a>. Editar um modelo muda o texto
+          de todos os envios daquele tipo, a partir do próximo disparo.
+        </div>
+      </div>
+
+      <div class="painel-grade">
+        <div>
+          <div class="bloco">
+            <div class="bloco__topo">
+              <h2>Modelos</h2>
+              <span class="txt-peq txt-suave" id="conta-modelos">—</span>
+            </div>
+            <div class="bloco__corpo" id="lista-modelos"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="bloco" style="position:sticky;top:96px">
+            <div class="bloco__topo"><h2>Variáveis disponíveis</h2></div>
+            <div class="bloco__corpo">
+              <p class="txt-peq txt-suave">
+                Clique para copiar. Escreva a variável no assunto ou no corpo — ela é trocada
+                pelo valor real no momento do envio.
+              </p>
+              <div id="lista-variaveis" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-modelo" role="dialog" aria-modal="true" aria-labelledby="mod-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document" style="width:min(780px,100%)">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="mod-titulo" style="font-size:1.375rem">Editar modelo</h2>
+            <p class="txt-peq txt-suave" id="mod-quando">—</p>
+
+            <form id="form-modelo" data-validar>
+              <input type="hidden" id="m-id">
+
+              <div class="campo">
+                <label for="m-assunto">Assunto <span class="obrigatorio">*</span></label>
+                <input type="text" id="m-assunto" required>
+                <p class="campo__erro" hidden>Informe o assunto.</p>
+              </div>
+
+              <div class="campo">
+                <label for="m-corpo">Corpo do e-mail <span class="obrigatorio">*</span></label>
+                <div class="barra-formato" role="toolbar" aria-label="Formatação">
+                  <button type="button" data-cmd="bold" title="Negrito" aria-pressed="false"><strong>N</strong></button>
+                  <button type="button" data-cmd="italic" title="Itálico" aria-pressed="false"><em>I</em></button>
+                  <button type="button" data-cmd="underline" title="Sublinhado" aria-pressed="false"><u>S</u></button>
+                  <span class="barra-sep" aria-hidden="true"></span>
+                  <button type="button" data-bloco="h2" title="Título">H</button>
+                  <button type="button" data-bloco="p" title="Parágrafo">¶</button>
+                  <button type="button" data-cmd="insertUnorderedList" title="Lista">•</button>
+                  <button type="button" data-cmd="removeFormat" title="Limpar formatação">✕</button>
+                </div>
+                <div id="m-corpo" class="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Corpo do modelo"></div>
+                <p class="campo__erro" hidden>Escreva o corpo do e-mail.</p>
+              </div>
+
+              <details class="mb-4">
+                <summary style="cursor:pointer;font-weight:600;padding:var(--e-2) 0">Inserir variável</summary>
+                <div id="vars-modal" class="mt-2"></div>
+              </details>
+
+              <div class="modal__acoes">
+                <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+                <button type="button" class="btn btn--contorno" id="restaurar-modelo">Restaurar padrão</button>
+                <button type="submit" class="btn btn--primario">Salvar modelo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal-previa" role="dialog" aria-modal="true" aria-labelledby="prev-titulo" aria-hidden="true">
+        <div class="modal__caixa" role="document" style="width:min(700px,100%)">
+          <span class="fita"></span>
+          <div class="modal__corpo">
+            <h2 id="prev-titulo" style="font-size:1.375rem">Pré-visualização</h2>
+            <p class="txt-peq txt-suave">Com as variáveis preenchidas por dados de exemplo.</p>
+            <div id="previa-conteudo" class="mt-3"></div>
+            <div class="modal__acoes">
+              <button type="button" class="btn btn--fantasma" data-fechar-modal>Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var PADRAO = JSON.parse(JSON.stringify(D.tudo().modelosEmail || []));
+
+  function modelos() { return D.tudo().modelosEmail || []; }
+
+  function render() {
+    var lista = modelos();
+    $('#conta-modelos').textContent = lista.length + ' modelos ativos';
+
+    var grupos = {};
+    lista.forEach(function (m) { (grupos[m.grupo] = grupos[m.grupo] || []).push(m); });
+
+    $('#lista-modelos').innerHTML = Object.keys(grupos).map(function (g) {
+      return '<div class="grupo-modelos"><h3>' + esc(g) + '</h3>' +
+        grupos[g].map(function (m) {
+          return '<div class="modelo-item">' +
+            '<div>' +
+              '<div class="modelo-item__nome">' + esc(m.nome) +
+                (m.para === 'admin' ? ' <span class="tag tag--amarela">Administrador</span>' : '') + '</div>' +
+              '<div class="modelo-item__assunto">' + esc(m.assunto) + '</div>' +
+              '<div class="txt-micro txt-suave mt-2">' + esc(m.quando) + '</div>' +
+            '</div>' +
+            '<div class="linha-acoes">' +
+              '<button class="btn btn--fantasma btn--pequeno" data-previa="' + esc(m.id) + '">Ver</button>' +
+              '<button class="btn btn--contorno btn--pequeno" data-editar="' + esc(m.id) + '">Editar</button>' +
+            '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  /* ---- Variáveis ---- */
+  function chipsHtml() {
+    return (D.tudo().variaveisEmail || []).map(function (g) {
+      return '<div class="var-grupo"><strong>' + esc(g.grupo) + '</strong>' +
+        g.itens.map(function (v) {
+          return '<button type="button" class="var-chip" data-var="' + esc(v.chave) + '" title="' + esc(v.desc) + '">' +
+                 esc(v.chave) + '</button>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+  $('#lista-variaveis').innerHTML = chipsHtml();
+  $('#vars-modal').innerHTML = chipsHtml();
+
+  /* ---- Editor ---- */
+  var editor = $('#m-corpo');
+  function comandar(cmd, valor) {
+    editor.focus();
+    document.execCommand(cmd, false, valor || null);
+    estados();
+  }
+  function estados() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cmd]'), function (b) {
+      var c = b.getAttribute('data-cmd');
+      if (c === 'removeFormat') return;
+      try { b.setAttribute('aria-pressed', String(document.queryCommandState(c))); } catch (e) {}
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cmd]'), function (b) {
+    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    b.addEventListener('click', function () { comandar(b.getAttribute('data-cmd')); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-bloco]'), function (b) {
+    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    b.addEventListener('click', function () { comandar('formatBlock', '<' + b.getAttribute('data-bloco') + '>'); });
+  });
+
+  /* Dados de exemplo para a pré-visualização */
+  var EXEMPLO = {
+    'usuario.nome': 'Diego Martins', 'usuario.email': 'diego@exemplo.com', 'usuario.telefone': '(11) 98877-6655',
+    'time.nome': 'Tigres Phygital', 'time.modalidade': 'Futebol', 'time.jogadores': '7',
+    'campeonato.nome': 'Copa Phygital Futebol 2026 — Etapa Nacional',
+    'campeonato.data': '19/09/2026', 'campeonato.local': 'Arena Phygital — São Paulo, SP',
+    'campeonato.encerramento': '05/09/2026', 'campeonato.vagas': '24',
+    'campeonato.inscritos': '18', 'campeonato.oficial': '12', 'campeonato.espera': '4',
+    'inscricao.protocolo': '2026-000418', 'inscricao.status': 'Em triagem',
+    'chamado.protocolo': '2026-000091', 'chamado.assunto': 'Troca de jogador', 'chamado.status': 'Respondido',
+    'codigo': '482913', 'data': '15/08/2026 10:24', 'smtp.servidor': 'mail.phygitalgamesbr.com.br'
+  };
+
+  function preencher(txt) {
+    return String(txt || '').replace(/\{\{([^}]+)\}\}/g, function (todo, chave) {
+      var v = EXEMPLO[chave.trim()];
+      return v !== undefined ? v : todo;
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var v = e.target.closest('[data-var]');
+    if (v) {
+      var chave = v.getAttribute('data-var');
+      if (document.activeElement === editor || editor.contains(document.activeElement)) {
+        comandar('insertText', chave);
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(chave);
+        PB.toast('Copiado', chave + ' foi para a área de transferência.', 'info');
+      }
+      return;
+    }
+
+    var ed = e.target.closest('[data-editar]');
+    if (ed) {
+      var m = modelos().filter(function (x) { return x.id === ed.getAttribute('data-editar'); })[0];
+      $('#mod-titulo').textContent = m.nome;
+      $('#mod-quando').textContent = m.quando;
+      $('#m-id').value = m.id;
+      $('#m-assunto').value = m.assunto;
+      editor.innerHTML = m.corpo;
+      PB.abrirModal('modal-modelo');
+      return;
+    }
+
+    var pv = e.target.closest('[data-previa]');
+    if (pv) {
+      var mp = modelos().filter(function (x) { return x.id === pv.getAttribute('data-previa'); })[0];
+      $('#previa-conteudo').innerHTML =
+        '<div class="email-preview"><div class="email-preview__corpo">' +
+          '<div class="email-preview__topo"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></div>' +
+          '<div class="email-preview__conteudo">' +
+            '<h2>' + esc(preencher(mp.assunto)) + '</h2>' +
+            preencher(mp.corpo) +
+          '</div>' +
+          '<div class="email-preview__rodape"><strong>Esportes Phygital Brasil</strong><br>' +
+            'contato@phygitalgamesbr.com.br · São Paulo, SP</div>' +
+        '</div></div>';
+      PB.abrirModal('modal-previa');
+    }
+  });
+
+  $('#restaurar-modelo').addEventListener('click', function () {
+    var id = $('#m-id').value;
+    var orig = PADRAO.filter(function (x) { return x.id === id; })[0];
+    if (!orig) return;
+    PB.confirmar('Restaurar modelo padrão',
+      'O texto atual será substituído pelo modelo original do sistema. Deseja continuar?',
+      function () {
+        $('#m-assunto').value = orig.assunto;
+        editor.innerHTML = orig.corpo;
+        PB.toast('Modelo restaurado', 'Salve para aplicar.', 'info');
+      });
+  });
+
+  $('#form-modelo').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var assunto = $('#m-assunto').value.trim();
+    if (!assunto) { $('#m-assunto').focus(); return; }
+    var id = $('#m-id').value;
+    var d = D.tudo();
+    d.modelosEmail.forEach(function (m) {
+      if (m.id !== id) return;
+      m.assunto = assunto;
+      m.corpo = editor.innerHTML;
+    });
+    D.salvar();
+    PB.fecharModal('modal-modelo');
+    PB.toast('Modelo salvo', 'Os próximos envios deste tipo usam o texto novo.', 'info');
+    PB.recarregar();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

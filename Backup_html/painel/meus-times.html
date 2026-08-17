@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meus Times — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Todos os times que você administra na Phygital Brasil: elenco, modalidade, categoria e situação do plantel segundo as regras de cada modalidade.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Item da lista de times — compõe .time-item (painel.css) com o miolo em grade */
+  .time-lista { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .time-item { align-items: flex-start; text-align: left; padding: var(--e-4); }
+  .time-item__corpo { display: grid; gap: 6px; flex: 1; min-width: 0; }
+  .time-item__detalhe { font-size: var(--t-peq); color: var(--texto-suave); }
+  .time-item__rodape { display: flex; align-items: center; gap: var(--e-2); flex-wrap: wrap; }
+  .time-item__rodape .vagas { flex: 1 1 160px; }
+  .time-item__rodape .tag { flex: none; }
+  .vagas__rotulo { font-size: var(--t-micro); color: var(--texto-suave); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .time-item__seta { width: 18px; height: 18px; flex: none; color: var(--cinza-40); align-self: center; }
+  .time-item:hover .time-item__seta { color: var(--verde); }
+
+  .painel__topo { flex-wrap: wrap; }
+  .aba .conta { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="meus-times.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Meus Times</h1>
+        <p class="sub" id="sub-topo">Times que você administra na temporada 2026</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--primario" href="time-novo.html" id="btn-novo-time">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Cadastrar novo Time
+        </a>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="aviso mb-4" id="aviso-regras">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>
+          <strong>Cada modalidade tem um mínimo de atletas.</strong>
+          A barra de cada time mostra se o elenco já atende à regra: futebol exige de 6 a 8 jogadores
+          (até 3 reservas), basquete de 3 a 4 (até 2), shooter exatamente 5 (até 3) e dance é individual.
+          Você edita o elenco livremente até a data de encerramento das inscrições de cada campeonato.
+        </span>
+      </div>
+
+      <section aria-labelledby="titulo-times">
+        <h2 id="titulo-times" class="sr-only">Lista dos meus times</h2>
+        <div id="area-times"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL DO COMPETIDOR — MEUS TIMES
+   Renderiza antes do DOMContentLoaded para que as abas (data-abas) e o
+   .revelar sejam ligados por phygital.js normalmente.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function plural(n, um, muitos) { return n + ' ' + (n === 1 ? um : muitos); }
+
+  /* Escudo do time: arquivo próprio quando existir, senão um dos escudos padrão */
+  var ESCUDOS = { t1: 1, t2: 9 };
+  function escudo(t, i) {
+    if (t.escudo) return /^assets\//.test(t.escudo) ? '../' + t.escudo : t.escudo;
+    return '../assets/img/mock/escudo-' + (ESCUDOS[t.id] || ((i % 12) + 1)) + '.svg';
+  }
+
+  /* Situação do elenco segundo PB.dados.MODALIDADES + validarElenco */
+  function elenco(t) {
+    var m = D.modalidade(t.modalidade);
+    var jogadores = t.jogadores || [];
+    var res = jogadores.filter(function (j) { return j.reserva; }).length;
+    var tit = jogadores.length - res;
+    return {
+      m: m, tit: tit, res: res, total: jogadores.length,
+      staff: (t.staff || []).length,
+      val: D.validarElenco(t.modalidade, tit, res),
+      pct: Math.max(6, Math.min(100, Math.round((tit / m.jogadoresMin) * 100)))
+    };
+  }
+
+  var SETA = '<svg class="time-item__seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
+  function itemTime(t, i) {
+    var e = elenco(t);
+    var completo = e.val.valido;
+    var faixaJogadores = e.m.jogadoresMin === e.m.jogadoresMax
+      ? 'exatos ' + e.m.jogadoresMax
+      : e.m.jogadoresMin + ' a ' + e.m.jogadoresMax;
+
+    var detalhe = plural(e.total, 'jogador cadastrado', 'jogadores cadastrados') +
+      ' · ' + e.tit + ' titular' + (e.tit === 1 ? '' : 'es') +
+      (e.m.reservasMax > 0 ? ' · ' + e.res + ' de ' + e.m.reservasMax + ' reservas' : ' · sem reservas') +
+      ' · ' + plural(e.staff, 'no staff', 'no staff');
+
+    return '' +
+    '<a class="time-item revelar" data-atraso="' + (i * 70) + '" href="time-detalhe.html?id=' + esc(t.id) + '">' +
+      '<img class="time-item__escudo" src="' + esc(escudo(t, i)) + '" alt="Escudo do ' + esc(t.nome) + '">' +
+      '<span class="time-item__corpo">' +
+        '<span class="time-item__nome">' + esc(t.nome) + '</span>' +
+        '<span class="time-item__meta">' + esc(e.m.curto) + (t.categoria ? ' · ' + esc(t.categoria) : '') +
+          ' · desde ' + esc(String(t.criadoEm).split('-')[0]) + '</span>' +
+        '<span class="time-item__detalhe">' + esc(detalhe) + '</span>' +
+        '<span class="time-item__rodape">' +
+          '<span class="vagas">' +
+            '<span class="vagas__barra"><i class="' + (completo ? '' : 'incompleto') + '" style="width:' + e.pct + '%"></i></span>' +
+            '<span class="vagas__rotulo">' + e.tit + '/' + e.m.jogadoresMin + '</span>' +
+          '</span>' +
+          (completo
+            ? '<span class="tag tag--verde">Elenco completo</span>'
+            : '<span class="tag tag--amarela">Faltam ' + Math.max(0, e.m.jogadoresMin - e.tit) + '</span>') +
+        '</span>' +
+        '<span class="txt-micro txt-suave">Regra da modalidade: ' + esc(faixaJogadores) + ' jogadores' +
+          (e.m.reservasMax > 0 ? ' · até ' + e.m.reservasMax + ' reservas' : '') +
+          ' · ' + esc(e.m.staffRotulo) + '</span>' +
+      '</span>' +
+      SETA +
+    '</a>';
+  }
+
+  function render() {
+    var times = D.meusTimes();
+    var area = document.getElementById('area-times');
+    var botao = document.getElementById('btn-novo-time');
+    var sub = document.getElementById('sub-topo');
+
+    /* ---- Estado vazio: nenhum time cadastrado ---- */
+    if (!times.length) {
+      /* .esconder tem !important: [hidden] sozinho perde para o display dos
+         componentes (.btn é inline-flex, .aviso é flex). */
+      botao.hidden = true; botao.classList.add('esconder');
+      var aviso = document.getElementById('aviso-regras');
+      aviso.hidden = true; aviso.classList.add('esconder');
+      sub.textContent = 'Nenhum time cadastrado ainda';
+      area.innerHTML = '' +
+      '<div class="vazio">' +
+        '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
+          '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' +
+          '<path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' +
+        '</svg>' +
+        '<h3>Você ainda não tem times cadastrados</h3>' +
+        '<p>O time é o que permite inscrever seu elenco nos campeonatos. Escolha a modalidade, ' +
+          'preencha os dados do time e cadastre jogadores e staff — leva poucos minutos e pode ser ' +
+          'concluído aos poucos.</p>' +
+        '<a class="btn btn--primario btn--grande" href="time-novo.html">Cadastrar Time</a>' +
+        '<p class="txt-micro txt-suave">Cada modalidade tem regras próprias de elenco e um formulário diferente.</p>' +
+      '</div>';
+      return;
+    }
+
+    /* ---- Abas por modalidade ---- */
+    sub.textContent = plural(times.length, 'time cadastrado', 'times cadastrados') + ' · toque em um time para ver o elenco';
+
+    var ordem = ['futebol', 'basquete', 'shooter', 'dance', 'outros'];
+    var mods = ordem.filter(function (id) {
+      return times.some(function (t) { return t.modalidade === id; });
+    });
+
+    var grupos = [{ id: 'todos', rotulo: 'Todos', lista: times }].concat(mods.map(function (id) {
+      return {
+        id: id,
+        rotulo: D.modalidade(id).curto,
+        lista: times.filter(function (t) { return t.modalidade === id; })
+      };
+    }));
+
+    var abas = grupos.map(function (g, i) {
+      return '<button class="aba" role="tab" id="aba-' + esc(g.id) + '" aria-controls="painel-' + esc(g.id) + '" ' +
+        'aria-selected="' + (i === 0 ? 'true' : 'false') + '">' + esc(g.rotulo) +
+        ' <span class="conta">' + g.lista.length + '</span></button>';
+    }).join('');
+
+    var paineis = grupos.map(function (g, i) {
+      return '<div id="painel-' + esc(g.id) + '" role="tabpanel" aria-labelledby="aba-' + esc(g.id) + '" tabindex="0"' +
+        (i === 0 ? '' : ' hidden') + '>' +
+        '<div class="time-lista">' + g.lista.map(itemTime).join('') + '</div>' +
+        '</div>';
+    }).join('');
+
+    area.innerHTML = '' +
+    '<div data-abas>' +
+      '<div class="abas" role="tablist" aria-label="Filtrar times por modalidade">' + abas + '</div>' +
+      '<div class="mt-4">' + paineis + '</div>' +
+    '</div>';
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>

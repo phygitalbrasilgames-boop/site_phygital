@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minhas Inscrições — Painel do Competidor · Phygital Brasil</title>
+<meta name="description" content="Acompanhe as inscrições dos seus times nos campeonatos da Phygital Brasil: protocolo, status na lista, prazo de alteração e abertura de chamado.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .caixa-termos {
+    max-height: 160px; overflow-y: auto;
+    padding: var(--e-3); margin-bottom: var(--e-2);
+    background: var(--claro); border: 1px solid var(--linha-clara);
+    border-radius: var(--r-2);
+    font-size: var(--t-peq); line-height: 1.6;
+  }
+  /* Ajustes locais desta tela — compostos sobre o design system */
+  /* .vazio e .stats declaram display, que vence o atributo hidden do HTML */
+  [hidden] { display: none !important; }
+
+  .insc { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+  .insc__midia { position: relative; background: var(--grafite-80); min-height: 100%; }
+  .insc__midia img { width: 100%; height: 100%; min-height: 190px; object-fit: cover; }
+  .insc__mod {
+    position: absolute; top: var(--e-3); left: var(--e-3);
+    background: rgba(14,17,19,.86); color: #fff;
+    font-family: var(--fonte-display); font-size: 10px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: var(--r-pill);
+  }
+  .insc__protocolo {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(14,17,19,.88); color: #fff;
+    padding: 9px var(--e-3);
+    font-size: var(--t-micro); letter-spacing: .06em;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--e-2);
+  }
+  .insc__protocolo strong { font-family: var(--fonte-display); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+
+  .insc__conteudo { padding: var(--e-4); min-width: 0; display: grid; gap: var(--e-3); align-content: start; }
+  .insc__cab { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--e-3); flex-wrap: wrap; }
+  .insc__titulo { font-size: 1.1875rem; margin: 0; }
+  .insc__time { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .insc__time img { width: 30px; height: 30px; flex: none; border-radius: var(--r-2); background: var(--claro); object-fit: contain; }
+  .insc__time span { font-size: var(--t-peq); }
+  .insc__time strong { font-family: var(--fonte-display); }
+
+  .dados-grade {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    gap: var(--e-3); border-top: 1px solid var(--linha-clara); padding-top: var(--e-3);
+  }
+  .dado__rot {
+    display: block; font-family: var(--fonte-display); font-size: 10px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--texto-suave); margin-bottom: 3px;
+  }
+  .dado__val { font-size: .9375rem; font-weight: 600; line-height: 1.35; }
+  .dado__nota { font-size: var(--t-micro); color: var(--texto-suave); font-weight: 400; }
+
+  .insc__acoes {
+    grid-column: 1 / -1;
+    display: flex; flex-wrap: wrap; gap: var(--e-2);
+    padding: var(--e-3) var(--e-4);
+    border-top: 1px solid var(--linha-clara);
+    background: var(--claro);
+  }
+  .insc__acoes .cresce { margin-left: auto; }
+  .insc--travada .insc__midia img { filter: grayscale(.55); }
+
+  .lista-elenco { display: grid; gap: 8px; margin-top: var(--e-3); }
+  .elenco-item {
+    display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--e-3);
+    align-items: center; padding: 8px; border: 1px solid var(--linha-clara); border-radius: var(--r-3);
+  }
+  .elenco-item img { width: 44px; height: 44px; object-fit: cover; border-radius: var(--r-2); background: var(--claro); }
+  .elenco-item__nome { font-family: var(--fonte-display); font-weight: 600; font-size: .9375rem; line-height: 1.2; }
+  .elenco-item__meta { font-size: var(--t-micro); color: var(--texto-suave); }
+
+  @media (max-width: 900px) {
+    .insc { grid-template-columns: minmax(0, 1fr); }
+    .insc__midia img { min-height: 0; aspect-ratio: 12 / 5; }
+    .insc__acoes .cresce { margin-left: 0; }
+  }
+  /* Em telas estreitas os botões do topo passam para a linha de baixo */
+  @media (max-width: 720px) {
+    .painel__topo { flex-wrap: wrap; row-gap: var(--e-2); }
+    .painel__topo .flex-fim { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+    .insc__acoes .btn { flex: 1 1 auto; white-space: normal; text-align: center; line-height: 1.2; padding: 8px var(--e-3); }
+    .insc__conteudo { overflow-wrap: anywhere; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="inscricoes.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar">DM</span>
+      <div><div class="nome">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Minhas inscrições</h1>
+        <p class="sub">Todos os campeonatos em que seus times estão inscritos</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="chamados.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Meus chamados
+        </a>
+        <button class="btn btn--primario btn--pequeno" data-abrir-modal="modal-inscrever">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Nova inscrição
+        </button>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- Resumo -->
+      <div class="stats" id="resumo" hidden>
+        <div class="stat stat--verde">
+          <div class="stat__rotulo">Inscrições ativas</div>
+          <div class="stat__valor" id="s-ativas">0</div>
+          <div class="stat__nota" id="s-ativas-nota">—</div>
+        </div>
+        <div class="stat stat--azul">
+          <div class="stat__rotulo">Na lista oficial</div>
+          <div class="stat__valor" id="s-oficial">0</div>
+          <div class="stat__nota" id="s-oficial-nota">—</div>
+        </div>
+        <div class="stat stat--amarela">
+          <div class="stat__rotulo">Em triagem</div>
+          <div class="stat__valor" id="s-triagem">0</div>
+          <div class="stat__nota" id="s-triagem-nota">—</div>
+        </div>
+        <div class="stat stat--cinza">
+          <div class="stat__rotulo">Prazo mais próximo</div>
+          <div class="stat__valor" id="s-prazo">—</div>
+          <div class="stat__nota" id="s-prazo-nota">—</div>
+        </div>
+      </div>
+
+      <!-- Regra do prazo — o porquê das ações bloqueadas -->
+      <div class="aviso aviso--alerta mb-4" id="regra-prazo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <div>
+          <strong>Você altera a inscrição livremente até a data de encerramento das inscrições.</strong>
+          Depois desse prazo o painel bloqueia alterações de dados e de elenco: qualquer mudança passa a ser
+          analisada pela organização por meio de um <a href="chamados.html" style="color:var(--verde);font-weight:600;text-decoration:underline">chamado</a>.
+          A inscrição confirmada não é garantia de vaga — a organização move o time da triagem para a Lista Oficial ou para a Lista de Espera.
+        </div>
+      </div>
+
+      <!-- Abas -->
+      <div class="bloco" data-abas id="painel-abas" hidden>
+        <div class="abas" role="tablist" aria-label="Situação das inscrições">
+          <button class="aba" role="tab" id="aba-ativas" aria-controls="p-ativas" aria-selected="true">Ativas <span class="conta" id="conta-ativas">0</span></button>
+          <button class="aba" role="tab" id="aba-encerradas" aria-controls="p-encerradas" aria-selected="false">Encerradas <span class="conta" id="conta-encerradas">0</span></button>
+          <button class="aba" role="tab" id="aba-canceladas" aria-controls="p-canceladas" aria-selected="false">Canceladas <span class="conta" id="conta-canceladas">0</span></button>
+        </div>
+        <div class="bloco__corpo">
+          <div id="p-ativas" role="tabpanel" aria-labelledby="aba-ativas" tabindex="0"></div>
+          <div id="p-encerradas" role="tabpanel" aria-labelledby="aba-encerradas" tabindex="0" hidden></div>
+          <div id="p-canceladas" role="tabpanel" aria-labelledby="aba-canceladas" tabindex="0" hidden></div>
+        </div>
+      </div>
+
+      <!-- Estado vazio geral -->
+      <div class="vazio" id="vazio-geral" hidden>
+        <svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>
+        <h2>Você ainda não inscreveu nenhum time</h2>
+        <p>Escolha um campeonato com inscrições abertas, selecione o time e envie o elenco. A confirmação chega por e-mail com número de protocolo.</p>
+        <a class="btn btn--primario" href="../inscricoes.html">Ver campeonatos abertos</a>
+      </div>
+
+      <p class="txt-micro txt-suave mt-4" id="legenda">
+        Situações possíveis: <span class="tag tag--amarela">Em triagem</span>
+        <span class="tag tag--verde">Lista oficial</span>
+        <span class="tag tag--azul">Lista de espera</span>
+        <span class="tag tag--erro">Cancelada</span>
+      </p>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== MODAL — ALTERAR INFORMAÇÕES ==================== -->
+<div class="modal" id="modal-editar" role="dialog" aria-modal="true" aria-labelledby="editar-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <p class="eyebrow" id="editar-camp">Campeonato</p>
+      <h2 id="editar-titulo" style="font-size:1.375rem">Alterar informações da inscrição</h2>
+      <p class="txt-peq txt-suave" id="editar-sub">Alterações registradas antes do encerramento das inscrições não precisam de chamado.</p>
+
+      <form data-validar data-demo="Alterações da inscrição registradas (protótipo). Um e-mail de confirmação seria disparado pelo SMTP oficial.">
+        <div class="campo" id="campo-categoria">
+          <label for="ed-categoria">Categoria do time neste campeonato <span class="obrigatorio">*</span></label>
+          <select id="ed-categoria" name="categoria" required></select>
+          <p class="campo__erro" hidden>Selecione a categoria em que o time vai competir.</p>
+        </div>
+
+        <div class="form-grade">
+          <div class="campo">
+            <label for="ed-responsavel">Responsável presente no evento <span class="obrigatorio">*</span></label>
+            <input type="text" id="ed-responsavel" name="responsavel" required>
+            <p class="campo__erro" hidden>Informe quem responde pelo time no dia da competição.</p>
+          </div>
+          <div class="campo">
+            <label for="ed-telefone">Telefone de contato <span class="obrigatorio">*</span></label>
+            <input type="tel" id="ed-telefone" name="telefone" data-mascara="telefone" required>
+            <p class="campo__erro" hidden>Informe um telefone com DDD.</p>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="ed-obs">Observações para a organização</label>
+          <textarea id="ed-obs" name="observacoes" placeholder="Ex.: o time chega na véspera e precisa de acesso à arena para reconhecimento."></textarea>
+          <p class="campo__ajuda">Fica registrado no histórico da inscrição e é lido pela equipe de inscrições.</p>
+        </div>
+
+        <div class="campo">
+          <label class="check">
+            <input type="checkbox" name="termos" required>
+            <span>Confirmo que todos os atletas têm autorização de uso de imagem e estão aptos fisicamente à disputa, conforme os termos do campeonato.</span>
+          </label>
+          <p class="campo__erro" hidden>É preciso confirmar os termos para salvar.</p>
+        </div>
+
+        <div class="modal__acoes">
+          <button class="btn btn--fantasma" type="button" data-fechar-modal>Cancelar</button>
+          <button class="btn btn--primario" type="submit">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL — ALTERAR / REMOVER JOGADORES ==================== -->
+<div class="modal" id="modal-elenco" role="dialog" aria-modal="true" aria-labelledby="elenco-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document" style="width:min(680px,100%)">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <p class="eyebrow" id="elenco-camp">Elenco inscrito</p>
+      <h2 id="elenco-titulo" style="font-size:1.375rem">Alterar ou remover jogadores</h2>
+      <p class="txt-peq txt-suave" id="elenco-regra">—</p>
+
+      <div class="lista-elenco" id="elenco-lista"></div>
+      <div id="elenco-validacao" class="mt-3"></div>
+
+      <form data-validar data-demo="Elenco da inscrição atualizado (protótipo). A organização recebe a lista revisada por e-mail.">
+        <div class="campo mt-4">
+          <label class="check">
+            <input type="checkbox" name="confirma" required>
+            <span>Confirmo que este é o elenco que vai representar o time na competição.</span>
+          </label>
+          <p class="campo__erro" hidden>Confirme o elenco antes de salvar.</p>
+        </div>
+        <div class="modal__acoes">
+          <a class="btn btn--fantasma btn--pequeno" id="elenco-link-time" href="meus-times.html">Gerenciar elenco completo</a>
+          <button class="btn btn--fantasma" type="button" data-fechar-modal>Fechar</button>
+          <button class="btn btn--primario" type="submit">Salvar elenco</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-inscrever" role="dialog" aria-modal="true" aria-labelledby="insc-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <h2 id="insc-titulo" style="font-size:1.375rem">Inscrever time em um campeonato</h2>
+
+      <div class="aviso aviso--alerta">
+        <div>
+          Toda inscrição entra na <strong>Lista de Inscritos</strong> e passa por triagem da
+          organização. A confirmação por e-mail traz o número de protocolo, mas
+          <strong>não garante vaga</strong> — só o administrador move o time para a Lista Oficial.
+        </div>
+      </div>
+
+      <form id="form-inscrever" data-validar class="mt-4">
+        <div class="campo">
+          <label for="ins-camp">Campeonato <span class="obrigatorio">*</span></label>
+          <select id="ins-camp" required></select>
+          <p class="campo__erro" hidden>Escolha o campeonato.</p>
+        </div>
+        <div class="campo">
+          <label for="ins-time">Time <span class="obrigatorio">*</span></label>
+          <select id="ins-time" required></select>
+          <p class="campo__erro" hidden>Escolha o time.</p>
+          <p class="campo__ajuda" id="ins-aviso-mod"></p>
+        </div>
+        <div class="campo">
+          <span class="rotulo">Termos do campeonato</span>
+          <div id="ins-termos-texto" class="caixa-termos">—</div>
+          <p class="campo__ajuda" id="ins-regulamento"></p>
+          <label class="check">
+            <input type="checkbox" id="ins-termos" required>
+            Li e aceito os termos deste campeonato
+          </label>
+          <p class="campo__erro" hidden>É obrigatório aceitar os termos para se inscrever.</p>
+        </div>
+        <div class="modal__acoes">
+          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
+          <button type="submit" class="btn btn--primario">Enviar inscrição</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL — MINHAS INSCRIÇÕES
+   Cruza PB.dados.minhasInscricoes() com PB.dados.campeonato() e PB.dados.time().
+   Regra central: enquanto a data de encerramento das inscrições não passar,
+   o responsável altera tudo pelo painel. Depois dela, as ações de alteração
+   ficam desabilitadas (aria-disabled) e só resta abrir chamado.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function plural(n, singular, plural2) { return n + ' ' + (n === 1 ? singular : plural2); }
+
+  /* Os caminhos de imagem em dados.js são relativos à raiz do site */
+  function img(p) {
+    if (!p) return '';
+    return /^(https?:|\.\.\/)/.test(p) ? p : '../' + p;
+  }
+
+  /* Escudos coerentes com os confrontos apurados em PB.dados.resultados() */
+  var ESCUDO_TIME = { t1: 1, t2: 9 };
+
+  /* Histórico do protótipo: registros já concluídos que não estão na semente
+     de minhasInscricoes(). dados.js é compartilhado e não pode ser alterado. */
+  var HISTORICO = [
+    { id: 'h1', campeonato: 'cbf-2025', time: 't1', protocolo: '2025-000117', status: 'oficial', data: '2025-07-22' },
+    { id: 'h2', campeonato: 'cbs-2026', time: 't2', protocolo: '2026-000463', status: 'cancelada', data: '2026-08-05',
+      canceladaEm: '2026-08-08',
+      motivo: 'Cancelada pelo responsável por elenco incompleto. O time foi reinscrito em 11/08/2026 sob o protocolo 2026-000512.' }
+  ];
+
+  var EXPLICA = {
+    triagem: 'Inscrição recebida e na Lista de Inscritos. A organização ainda vai conferir elenco e documentação — este status não é garantia de vaga.',
+    oficial: 'Time confirmado na Lista Oficial do campeonato. Compareça com exatamente o elenco inscrito.',
+    espera: 'Time na Lista de Espera. Você é chamado por e-mail assim que houver desistência na Lista Oficial.',
+    cancelada: 'Inscrição cancelada. Enquanto as inscrições estiverem abertas, o time pode ser inscrito novamente.'
+  };
+
+  /* ---- Montagem dos itens ------------------------------------------------ */
+  var itens = D.minhasInscricoes().concat(HISTORICO).map(function (i) {
+    var c = D.campeonato(i.campeonato);
+    if (!c) return null;
+    var t = D.time(i.time);
+    var m = D.modalidade(c.modalidade);
+    var dias = F.diasAte(c.encerramentoInscricoes);
+    var prazoVencido = dias < 0;                       /* comparação com a data de hoje */
+    var campEncerrado = c.status === 'encerrado';
+    var cancelada = i.status === 'cancelada';
+    var travada = prazoVencido || campEncerrado || cancelada;
+
+    var motivo;
+    if (cancelada) {
+      motivo = 'Esta inscrição foi cancelada em ' + F.data(i.canceladaEm || i.data) +
+               '. Não há dados a alterar. ' + (i.motivo || '');
+    } else if (campEncerrado) {
+      motivo = 'O campeonato já foi realizado e apurado. As inscrições encerraram em ' +
+               F.data(c.encerramentoInscricoes) + ' e o histórico não é mais editável.';
+    } else if (prazoVencido) {
+      motivo = 'As inscrições deste campeonato encerraram em ' + F.data(c.encerramentoInscricoes) +
+               ' (há ' + Math.abs(dias) + ' dia' + (Math.abs(dias) === 1 ? '' : 's') +
+               '). A partir dessa data o painel não altera dados nem elenco: peça a mudança à organização por chamado.';
+    } else {
+      motivo = '';
+    }
+
+    var grupo = cancelada ? 'canceladas' : (campEncerrado ? 'encerradas' : 'ativas');
+
+    return { i: i, c: c, t: t, m: m, dias: dias, travada: travada, cancelada: cancelada,
+             campEncerrado: campEncerrado, motivo: motivo, grupo: grupo };
+  }).filter(Boolean);
+
+  /* Mais recentes primeiro */
+  itens.sort(function (a, b) { return a.i.data < b.i.data ? 1 : -1; });
+
+  var grupos = {
+    ativas: itens.filter(function (x) { return x.grupo === 'ativas'; }),
+    encerradas: itens.filter(function (x) { return x.grupo === 'encerradas'; }),
+    canceladas: itens.filter(function (x) { return x.grupo === 'canceladas'; })
+  };
+
+  /* ---- Blocos ------------------------------------------------------------ */
+  function elencoResumo(x) {
+    if (!x.t) return '<span class="dado__val">Time não encontrado</span>';
+    var tit = x.t.jogadores.filter(function (j) { return !j.reserva; }).length;
+    var res = x.t.jogadores.filter(function (j) { return j.reserva; }).length;
+    var txt = tit + (x.m.individual ? ' atleta' : ' titular' + (tit === 1 ? '' : 'es'));
+    if (res) txt += ' · ' + res + ' reserva' + (res === 1 ? '' : 's');
+    if (x.t.staff && x.t.staff.length) txt += ' · ' + x.t.staff.length + ' na comissão';
+    return txt;
+  }
+
+  function acoes(x) {
+    var id = esc(x.i.id);
+    var alvoChamado = 'chamados.html?novo=1&inscricao=' + encodeURIComponent(x.i.id) +
+                      '&campeonato=' + encodeURIComponent(x.c.id);
+    var chamado = '<a class="btn btn--pequeno ' + (x.travada ? 'btn--primario' : 'btn--contorno') + '" href="' + esc(alvoChamado) + '">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+      'Abrir chamado para esta inscrição</a>';
+
+    if (x.travada) {
+      var descr = ' aria-disabled="true" aria-describedby="motivo-' + id + '" data-bloqueado="' + id + '"';
+      return [
+        '<button type="button" class="btn btn--contorno btn--pequeno"' + descr + '>Alterar informações</button>',
+        '<button type="button" class="btn btn--contorno btn--pequeno"' + descr + '>Alterar/remover jogadores</button>',
+        chamado,
+        (x.cancelada
+          ? '<a class="btn btn--fantasma btn--pequeno cresce" href="../inscricoes.html#' + esc(x.c.id) + '">Inscrever o time novamente</a>'
+          : '<button type="button" class="btn btn--perigo btn--pequeno cresce"' + descr + '>Cancelar inscrição</button>')
+      ].join('');
+    }
+
+    return [
+      '<button type="button" class="btn btn--contorno btn--pequeno" data-editar="' + id + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>' +
+        'Alterar informações</button>',
+      '<button type="button" class="btn btn--contorno btn--pequeno" data-elenco="' + id + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/></svg>' +
+        'Alterar/remover jogadores</button>',
+      chamado,
+      '<button type="button" class="btn btn--perigo btn--pequeno cresce" data-cancelar="' + esc(x.i.id) + '">' +
+        'Cancelar inscrição</button>'
+    ].join('');
+  }
+
+  function bloco(x) {
+    var st = D.STATUS_INSCRICAO[x.i.status] || D.STATUS_INSCRICAO.triagem;
+    var escudo = ESCUDO_TIME[x.i.time] || 1;
+    var prazoTxt, prazoNota;
+
+    if (x.cancelada) {
+      prazoTxt = 'Encerrada';
+      prazoNota = 'Cancelada em ' + F.data(x.i.canceladaEm || x.i.data);
+    } else if (x.dias < 0) {
+      prazoTxt = F.data(x.c.encerramentoInscricoes);
+      prazoNota = 'Prazo vencido — alterações só por chamado';
+    } else {
+      prazoTxt = 'Até ' + F.data(x.c.encerramentoInscricoes);
+      prazoNota = x.dias === 0 ? 'Último dia para alterar' : 'Faltam ' + x.dias + ' dia' + (x.dias === 1 ? '' : 's') + ' para alterar';
+    }
+
+    return '' +
+    '<article class="bloco insc revelar' + (x.travada ? ' insc--travada' : '') + '" id="insc-' + esc(x.i.id) + '">' +
+      '<div class="insc__midia">' +
+        '<img src="' + esc(img(x.c.banner)) + '" alt="">' +
+        '<span class="insc__mod">' + esc(x.m.curto) + '</span>' +
+        '<span class="insc__protocolo">Protocolo <strong>' + esc(x.i.protocolo) + '</strong></span>' +
+      '</div>' +
+
+      '<div class="insc__conteudo">' +
+        '<div class="insc__cab">' +
+          '<div>' +
+            '<h3 class="insc__titulo">' + esc(x.c.nome) + '</h3>' +
+            '<div class="insc__time">' +
+              '<img src="../assets/img/mock/escudo-' + escudo + '.svg" alt="">' +
+              '<span>Time inscrito: ' +
+              (x.t
+                ? '<a href="time-detalhe.html?id=' + esc(x.t.id) + '"><strong style="text-decoration:underline">' + esc(x.t.nome) + '</strong></a>'
+                : '<strong>—</strong>') +
+              (x.t && x.t.categoria ? ' <span class="txt-suave">· ' + esc(x.t.categoria) + '</span>' : '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="tag ' + esc(st.classe) + '">' + esc(st.rotulo) + '</span>' +
+        '</div>' +
+
+        '<p class="txt-peq txt-suave" style="margin:0">' + esc(EXPLICA[x.i.status] || '') + '</p>' +
+
+        '<div class="dados-grade">' +
+          '<div><span class="dado__rot">Elenco inscrito</span><span class="dado__val">' + esc(elencoResumo(x)) + '</span></div>' +
+          '<div><span class="dado__rot">Data da inscrição</span><span class="dado__val">' + esc(F.data(x.i.data)) + '</span></div>' +
+          '<div><span class="dado__rot">Período do campeonato</span><span class="dado__val">' + esc(F.periodo(x.c.data, x.c.dataFim)) +
+            '<span class="dado__nota"><br>' + esc(x.c.local) + '</span></span></div>' +
+          '<div><span class="dado__rot">Prazo de alteração</span><span class="dado__val">' + esc(prazoTxt) +
+            '<span class="dado__nota"><br>' + esc(prazoNota) + '</span></span></div>' +
+          '<div><span class="dado__rot">Situação da lista</span><span class="dado__val">' + x.c.oficial + ' de ' + x.c.vagas +
+            '<span class="dado__nota"><br>' + x.c.inscritos + ' inscritos · ' + x.c.espera + ' em espera</span></span></div>' +
+        '</div>' +
+
+        (x.motivo
+          ? '<div class="aviso aviso--alerta" id="motivo-' + esc(x.i.id) + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:18px;height:18px;flex:none;margin-top:2px"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>' +
+              '<div><strong>Alterações bloqueadas.</strong> ' + esc(x.motivo) + '</div>' +
+            '</div>'
+          : '') +
+
+        (x.campEncerrado && x.c.classificacao
+          ? '<p class="txt-peq" style="margin:0"><strong class="display">Resultado da edição:</strong> ' +
+            x.c.classificacao.map(function (p) { return p.pos + 'º ' + esc(p.nome) + ' (' + esc(p.uf) + ')'; }).join(' · ') +
+            ' — <a href="ranking.html?mod=' + esc(x.c.modalidade) + '" style="color:var(--verde);font-weight:600">ver no ranking</a></p>'
+          : '') +
+
+        '<p class="txt-micro txt-suave" style="margin:0">' +
+          '<a href="../inscricoes.html#' + esc(x.c.id) + '" style="text-decoration:underline">Ver a página pública deste campeonato</a>' +
+        '</p>' +
+      '</div>' +
+
+      '<div class="insc__acoes">' + acoes(x) + '</div>' +
+    '</article>';
+  }
+
+  function vazioDe(chave) {
+    var textos = {
+      ativas: ['Nenhuma inscrição ativa no momento',
+               'Assim que você inscrever um time em um campeonato com inscrições abertas, ele aparece aqui com protocolo e status.',
+               '../inscricoes.html', 'Ver campeonatos abertos'],
+      encerradas: ['Nenhum campeonato encerrado ainda',
+               'Quando um campeonato que você disputou for apurado, a inscrição fica arquivada aqui com o resultado da edição.',
+               'ranking.html', 'Ver o ranking nacional'],
+      canceladas: ['Nenhuma inscrição cancelada',
+               'Inscrições canceladas por você ou pela organização ficam registradas aqui, com a data e o motivo do cancelamento.',
+               '../inscricoes.html', 'Ver campeonatos abertos']
+    }[chave];
+
+    return '<div class="vazio">' +
+      '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
+      '<h3>' + textos[0] + '</h3><p>' + textos[1] + '</p>' +
+      '<a class="btn btn--primario btn--pequeno" href="' + textos[2] + '">' + textos[3] + '</a></div>';
+  }
+
+  var TITULO_PAINEL = {
+    ativas: 'Inscrições ativas',
+    encerradas: 'Inscrições em campeonatos já encerrados',
+    canceladas: 'Inscrições canceladas'
+  };
+
+  function pintar(chave) {
+    var lista = grupos[chave];
+    document.getElementById('p-' + chave).innerHTML =
+      '<h2 class="sr-only">' + TITULO_PAINEL[chave] + '</h2>' +
+      (lista.length ? lista.map(bloco).join('') : vazioDe(chave));
+    document.getElementById('conta-' + chave).textContent = lista.length;
+  }
+
+  /* ---- Resumo ------------------------------------------------------------ */
+  function resumo() {
+    var ativas = grupos.ativas;
+    var oficial = ativas.filter(function (x) { return x.i.status === 'oficial'; });
+    var triagem = ativas.filter(function (x) { return x.i.status === 'triagem'; });
+    var abertas = ativas.filter(function (x) { return x.dias >= 0; })
+                        .sort(function (a, b) { return a.dias - b.dias; });
+
+    document.getElementById('s-ativas').textContent = ativas.length;
+    document.getElementById('s-ativas-nota').textContent =
+      ativas.length ? 'em ' + ativas.length + ' campeonato' + (ativas.length === 1 ? '' : 's') + ' da temporada' : 'nenhuma no momento';
+
+    document.getElementById('s-oficial').textContent = oficial.length;
+    document.getElementById('s-oficial-nota').textContent =
+      oficial.length ? oficial.map(function (x) { return x.t ? x.t.nome : ''; }).join(' · ') : 'nenhuma vaga confirmada';
+
+    document.getElementById('s-triagem').textContent = triagem.length;
+    document.getElementById('s-triagem-nota').textContent =
+      triagem.length ? 'aguardando a conferência da organização' : 'nada pendente de triagem';
+
+    if (abertas.length) {
+      var p = abertas[0];
+      document.getElementById('s-prazo').textContent = p.dias === 0 ? 'Hoje' : p.dias + (p.dias === 1 ? ' dia' : ' dias');
+      document.getElementById('s-prazo-nota').textContent = p.c.nome + ' · até ' + F.data(p.c.encerramentoInscricoes);
+    } else {
+      document.getElementById('s-prazo').textContent = '—';
+      document.getElementById('s-prazo-nota').textContent = 'nenhum prazo de alteração em aberto';
+    }
+  }
+
+  /* ---- Modais ------------------------------------------------------------ */
+  function acharPorId(id) {
+    return itens.filter(function (x) { return x.i.id === id; })[0] || null;
+  }
+
+  function abrirEditar(x) {
+    document.getElementById('editar-camp').textContent = x.c.nome;
+    document.getElementById('editar-sub').textContent =
+      'Protocolo ' + x.i.protocolo + ' · ' + (x.t ? x.t.nome : '') +
+      ' · alterações liberadas até ' + F.data(x.c.encerramentoInscricoes) + '.';
+
+    var campoCat = document.getElementById('campo-categoria');
+    var sel = document.getElementById('ed-categoria');
+    if (x.m.temCategoria && x.m.categorias.length) {
+      campoCat.hidden = false;
+      sel.setAttribute('required', 'required');
+      sel.innerHTML = x.m.categorias.map(function (k) {
+        return '<option value="' + esc(k) + '"' + (x.t && x.t.categoria === k ? ' selected' : '') + '>' + esc(k) + '</option>';
+      }).join('');
+    } else {
+      campoCat.hidden = true;
+      sel.removeAttribute('required');
+      sel.innerHTML = '';
+    }
+
+    var u = D.usuario();
+    document.getElementById('ed-responsavel').value = u.nome;
+    document.getElementById('ed-telefone').value = u.telefone;
+    document.getElementById('ed-obs').value = '';
+    PB.abrirModal('modal-editar');
+  }
+
+  function abrirElenco(x) {
+    document.getElementById('elenco-camp').textContent = x.c.nome;
+    document.getElementById('elenco-link-time').href =
+      x.t ? 'time-detalhe.html?id=' + encodeURIComponent(x.t.id) : 'meus-times.html';
+    document.getElementById('elenco-regra').textContent =
+      x.m.curto + ': ' + (x.m.jogadoresMin === x.m.jogadoresMax
+        ? 'exatamente ' + plural(x.m.jogadoresMax, 'jogador', 'jogadores')
+        : 'de ' + x.m.jogadoresMin + ' a ' + x.m.jogadoresMax + ' jogadores') +
+      (x.m.reservasMax ? ' · até ' + x.m.reservasMax + ' reservas' : ' · sem reservas') +
+      ' · ' + x.m.staffRotulo + '. Alterações liberadas até ' + F.data(x.c.encerramentoInscricoes) + '.';
+
+    var jog = x.t ? x.t.jogadores : [];
+    if (!jog.length) {
+      document.getElementById('elenco-lista').innerHTML =
+        '<div class="aviso aviso--alerta"><div><strong>Nenhum jogador encontrado para este time.</strong> ' +
+        'Cadastre o elenco em Meus Times antes de revisar a inscrição.</div></div>';
+      document.getElementById('elenco-validacao').innerHTML = '';
+      PB.abrirModal('modal-elenco');
+      return;
+    }
+    document.getElementById('elenco-lista').innerHTML = jog.map(function (j, k) {
+      var meta = [];
+      if (j.numero) meta.push('Camisa ' + j.numero);
+      if (j.funcao) meta.push(j.funcao);
+      if (j.steam) meta.push('Steam64 ' + j.steam);
+      if (j.apelido) meta.push('“' + j.apelido + '”');
+      return '<div class="elenco-item">' +
+        '<img src="../assets/img/mock/jogador-' + ((k % 8) + 1) + '.svg" alt="">' +
+        '<div><div class="elenco-item__nome">' + esc(j.nome) +
+          (j.reserva ? ' <span class="tag tag--cinza">Reserva</span>' : '') + '</div>' +
+          '<div class="elenco-item__meta">' + esc(meta.join(' · ')) + '</div></div>' +
+        '<button type="button" class="btn btn--perigo btn--pequeno"' +
+          ' data-confirmar="Remover ' + esc(j.nome) + ' do elenco inscrito em ' + esc(x.c.nome) + '?"' +
+          ' data-confirmar-titulo="Remover jogador da inscrição"' +
+          ' data-confirmar-ok="Jogador removido do elenco da inscrição (protótipo).">Remover</button>' +
+      '</div>';
+    }).join('');
+
+    var tit = jog.filter(function (j) { return !j.reserva; }).length;
+    var res = jog.filter(function (j) { return j.reserva; }).length;
+    var v = D.validarElenco(x.m.id, tit, res);
+    document.getElementById('elenco-validacao').innerHTML = v.valido
+      ? '<div class="aviso aviso--sucesso"><div><strong>Elenco válido.</strong> ' +
+        plural(tit, 'titular', 'titulares') + ' e ' + plural(res, 'reserva', 'reservas') +
+        ' — dentro das regras de ' + esc(x.m.curto) + '.</div></div>'
+      : '<div class="aviso aviso--erro"><div><strong>Elenco fora das regras.</strong> ' +
+        esc(v.erros.join(' ')) + '</div></div>';
+
+    PB.abrirModal('modal-elenco');
+  }
+
+  /* ---- Eventos ----------------------------------------------------------- */
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest) return;
+
+    var bloqueado = e.target.closest('[data-bloqueado]');
+    if (bloqueado) {
+      e.preventDefault();
+      var alvo = acharPorId(bloqueado.getAttribute('data-bloqueado'));
+      PB.toast('Alteração bloqueada', alvo ? alvo.motivo : 'Prazo de alteração encerrado.', 'alerta');
+      return;
+    }
+
+    var ed = e.target.closest('[data-editar]');
+    if (ed) { var xe = acharPorId(ed.getAttribute('data-editar')); if (xe) abrirEditar(xe); return; }
+
+    var el = e.target.closest('[data-elenco]');
+    if (el) { var xl = acharPorId(el.getAttribute('data-elenco')); if (xl) abrirElenco(xl); return; }
+  });
+
+  /* ---- Início ------------------------------------------------------------ */
+  if (!itens.length) {
+    document.getElementById('vazio-geral').hidden = false;
+    document.getElementById('regra-prazo').hidden = true;
+    document.getElementById('legenda').hidden = true;
+  } else {
+    document.getElementById('resumo').hidden = false;
+    document.getElementById('painel-abas').hidden = false;
+    pintar('ativas');
+    pintar('encerradas');
+    pintar('canceladas');
+    resumo();
+  }
+})();
+</script>
+
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var abertos = D.inscricoesAbertas();
+  var times = D.meusTimes();
+
+  $('#ins-camp').innerHTML = abertos.length
+    ? abertos.map(function (c) {
+        return '<option value="' + esc(c.id) + '" data-mod="' + esc(c.modalidade) + '">' + esc(c.nome) + '</option>';
+      }).join('')
+    : '<option value="">Nenhum campeonato com inscrições abertas</option>';
+
+  function atualizarTimes() {
+    var opt = $('#ins-camp').selectedOptions[0];
+    var mod = opt ? opt.getAttribute('data-mod') : null;
+    var compativeis = times.filter(function (t) { return t.modalidade === mod; });
+
+    $('#ins-time').innerHTML = compativeis.length
+      ? compativeis.map(function (t) {
+          return '<option value="' + esc(t.id) + '">' + esc(t.nome) + '</option>';
+        }).join('')
+      : '<option value="">Nenhum time de ' + esc(mod || '—') + ' cadastrado</option>';
+
+    $('#ins-aviso-mod').textContent = compativeis.length
+      ? 'Só aparecem times da mesma modalidade do campeonato.'
+      : 'Cadastre um time desta modalidade em Meus Times antes de se inscrever.';
+  }
+
+  function atualizarTermos() {
+    var c = D.campeonato($('#ins-camp').value);
+    $('#ins-termos-texto').textContent = c && c.termos
+      ? c.termos
+      : 'Este campeonato ainda não teve os termos publicados pela organização.';
+    $('#ins-regulamento').innerHTML = c && c.regulamento
+      ? 'Regulamento completo: <strong>' + esc(c.regulamento) + '</strong>'
+      : '';
+    /* Trocar de campeonato invalida o aceite anterior */
+    $('#ins-termos').checked = false;
+  }
+
+  $('#ins-camp').addEventListener('change', function () { atualizarTimes(); atualizarTermos(); });
+  atualizarTimes();
+  atualizarTermos();
+
+  /* Cancelar inscrição: vai para o Histórico, de onde a organização restaura */
+  document.addEventListener('click', function (ev) {
+    var bt = ev.target.closest('[data-cancelar]');
+    if (!bt) return;
+    var id = bt.getAttribute('data-cancelar');
+    var insc = D.minhasInscricoes().filter(function (i) { return i.id === id; })[0];
+    if (!insc) return;
+    var camp = D.campeonato(insc.campeonato);
+    PB.confirmar('Cancelar inscrição',
+      'A inscrição em “' + (camp ? camp.nome : 'campeonato') + '” sai da sua lista e a vaga volta para a ' +
+      'organização. O registro vai para o Histórico e pode ser restaurado. Deseja cancelar?',
+      function () {
+        D.arquivar('minhasInscricoes', id, 'id', 'cancelada pelo responsável');
+        if (camp && camp.inscritos) { camp.inscritos -= 1; D.gravar('campeonatos', camp); }
+        PB.toast('Inscrição cancelada', 'Você receberia o e-mail de baixa da inscrição.', 'info');
+        PB.recarregar();
+      });
+  });
+
+  $('#form-inscrever').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var camp = $('#ins-camp').value, time = $('#ins-time').value;
+    if (!camp || !time) {
+      PB.toast('Faltam dados', 'Escolha um campeonato e um time compatível.', 'alerta');
+      return;
+    }
+    if (!$('#ins-termos').checked) {
+      PB.toast('Aceite os termos', 'É obrigatório aceitar os termos do campeonato.', 'alerta');
+      return;
+    }
+
+    var r = D.inscrever(camp, time);
+    if (!r.ok) { PB.toast('Não foi possível inscrever', r.erro, 'erro'); return; }
+
+    PB.fecharModal('modal-inscrever');
+    PB.toast('Inscrição recebida',
+      'Protocolo ' + r.protocolo + ' · o time entrou na Lista de Inscritos e aguarda triagem.', 'info');
+    PB.recarregar();
+  });
+})();
+</script>
+
+</body>
+</html>

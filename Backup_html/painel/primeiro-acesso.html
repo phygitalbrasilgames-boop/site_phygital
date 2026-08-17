@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Primeiro acesso — Phygital Brasil</title>
+<meta name="description" content="Primeiro acesso ao painel: troque a senha temporária por uma senha própria e confirme o código enviado ao seu e-mail.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  .regras-senha { list-style: none; padding: 0; margin: var(--e-2) 0 0; font-size: var(--t-peq); }
+  .regras-senha li { display: flex; align-items: center; gap: 8px; padding: 3px 0; color: var(--texto-suave); }
+  .regras-senha li::before { content: "○"; font-size: 11px; }
+  .regras-senha li.ok { color: var(--verde); }
+  .regras-senha li.ok::before { content: "●"; }
+  .campo-senha { position: relative; }
+  .ver-senha { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; cursor: pointer; color: var(--cinza); }
+  .ver-senha svg { width: 19px; height: 19px; }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<main class="auth" id="conteudo">
+
+  <div class="auth__lateral">
+    <img class="logo" src="../assets/img/logo/logo-colorido.png" alt="Esportes Phygital Brasil">
+    <p class="auth__frase">Um acesso, <span>uma senha só sua</span></p>
+    <p class="txt-micro" style="color:rgba(255,255,255,.6)">
+      A senha temporária serve apenas para esta primeira entrada.
+    </p>
+  </div>
+
+  <div class="auth__painel">
+    <div class="auth__caixa">
+
+      <div class="passos" id="passos">
+        <div class="passo passo--ativo" data-passo="1"><span class="passo__num"><span>1</span></span> Nova senha</div>
+        <span class="passo__linha"></span>
+        <div class="passo" data-passo="2"><span class="passo__num"><span>2</span></span> Confirmação</div>
+        <span class="passo__linha"></span>
+        <div class="passo" data-passo="3"><span class="passo__num"><span>3</span></span> Pronto</div>
+      </div>
+
+      <!-- ETAPA 1 — TROCAR A SENHA -->
+      <section data-etapa="1">
+        <h1>Crie sua senha de acesso</h1>
+        <p>
+          Este é o seu primeiro acesso. Por segurança, a senha temporária que você recebeu por
+          e-mail precisa ser trocada agora — ela deixa de funcionar depois disso.
+        </p>
+
+        <form id="form-senha" data-validar>
+          <div class="campo">
+            <label for="temporaria">Senha temporária recebida <span class="obrigatorio">*</span></label>
+            <div class="campo-senha">
+              <input type="password" id="temporaria" autocomplete="current-password" required>
+              <button type="button" class="ver-senha" data-ver-senha="temporaria" aria-pressed="false" aria-label="Mostrar senha">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <p class="campo__erro" hidden>Informe a senha temporária que você recebeu.</p>
+          </div>
+
+          <div class="campo">
+            <label for="nova">Nova senha <span class="obrigatorio">*</span></label>
+            <div class="campo-senha">
+              <input type="password" id="nova" data-senha autocomplete="new-password" required>
+              <button type="button" class="ver-senha" data-ver-senha="nova" aria-pressed="false" aria-label="Mostrar senha">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <ul class="regras-senha" id="regras">
+              <li data-regra="tamanho">Pelo menos 8 caracteres</li>
+              <li data-regra="maiuscula">Uma letra maiúscula</li>
+              <li data-regra="numero">Um número</li>
+              <li data-regra="especial">Um símbolo (@ # $ ! …)</li>
+              <li data-regra="diferente">Diferente da senha temporária</li>
+            </ul>
+            <p class="campo__erro" hidden>A senha não atende às regras acima.</p>
+          </div>
+
+          <div class="campo">
+            <label for="repetir">Repita a nova senha <span class="obrigatorio">*</span></label>
+            <input type="password" id="repetir" data-senha-confirma autocomplete="new-password" required>
+            <p class="campo__erro" hidden>As senhas não conferem.</p>
+          </div>
+
+          <button class="btn btn--primario btn--bloco" type="submit">Salvar nova senha</button>
+        </form>
+      </section>
+
+      <!-- ETAPA 2 — CÓDIGO POR E-MAIL -->
+      <section data-etapa="2" hidden>
+        <h2 style="font-size:var(--t-h2)">Confirme o código</h2>
+        <p>
+          Enviamos um código de 6 dígitos para <strong id="email-destino">seu e-mail cadastrado</strong>.
+          Digite-o para liberar o acesso ao painel.
+        </p>
+
+        <div class="otp mt-4">
+          <label class="sr-only" for="c1">Dígito 1</label><input type="text" id="c1">
+          <label class="sr-only" for="c2">Dígito 2</label><input type="text" id="c2">
+          <label class="sr-only" for="c3">Dígito 3</label><input type="text" id="c3">
+          <label class="sr-only" for="c4">Dígito 4</label><input type="text" id="c4">
+          <label class="sr-only" for="c5">Dígito 5</label><input type="text" id="c5">
+          <label class="sr-only" for="c6">Dígito 6</label><input type="text" id="c6">
+        </div>
+
+        <button class="btn btn--primario btn--bloco mt-5" id="confirmar-codigo">Confirmar e entrar</button>
+
+        <p class="auth__rodape">
+          Não recebeu? <button type="button" class="btn btn--fantasma btn--pequeno" id="reenviar">Reenviar código</button>
+          <span id="contador-reenvio" class="txt-micro"></span>
+        </p>
+      </section>
+
+      <!-- ETAPA 3 — CONCLUÍDO -->
+      <section data-etapa="3" hidden>
+        <h2 style="font-size:var(--t-h2)">Tudo pronto</h2>
+        <p>
+          Sua senha foi criada e o acesso está liberado. A partir de agora entre pela tela de login
+          normal, com o seu e-mail e a senha que você acabou de definir.
+        </p>
+        <div class="aviso aviso--sucesso mt-4">
+          <div>
+            <strong>Guarde bem esta senha.</strong> Se esquecer, use o "Esqueci minha senha" na tela
+            de login — o código de recuperação chega no mesmo e-mail.
+          </div>
+        </div>
+        <a class="btn btn--primario btn--bloco mt-5" id="ir-painel" href="../admin/index.html">Ir para o painel</a>
+      </section>
+
+      <p class="auth__rodape">
+        Problemas no acesso?
+        <a href="mailto:inscricoes@phygitalgamesbr.com.br">inscricoes@phygitalgamesbr.com.br</a>
+      </p>
+
+    </div>
+  </div>
+
+</main>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+(function () {
+  var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* O e-mail vem por ?email= (link do convite) ou cai no admin padrão */
+  var email = new URLSearchParams(location.search).get('email') ||
+              (D.adminUsuarios()[0] || {}).email || 'seu e-mail cadastrado';
+  $('#email-destino').textContent = email;
+
+  function irPara(n) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-etapa]'), function (s) {
+      s.hidden = s.getAttribute('data-etapa') !== String(n);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#passos .passo'), function (p) {
+      var i = parseInt(p.getAttribute('data-passo'), 10);
+      p.classList.toggle('passo--ativo', i === n);
+      p.classList.toggle('passo--feito', i < n);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---- Regras de senha conferidas ao vivo ---- */
+  var REGRAS = {
+    tamanho:    function (v) { return v.length >= 8; },
+    maiuscula:  function (v) { return /[A-ZÀ-Ý]/.test(v); },
+    numero:     function (v) { return /[0-9]/.test(v); },
+    especial:   function (v) { return /[^A-Za-zÀ-ý0-9]/.test(v); },
+    diferente:  function (v) { return v.length > 0 && v !== $('#temporaria').value; }
+  };
+
+  function conferirRegras() {
+    var v = $('#nova').value;
+    var todasOk = true;
+    Object.keys(REGRAS).forEach(function (k) {
+      var ok = REGRAS[k](v);
+      if (!ok) todasOk = false;
+      var li = document.querySelector('[data-regra="' + k + '"]');
+      if (li) li.classList.toggle('ok', ok);
+    });
+    return todasOk;
+  }
+
+  $('#nova').addEventListener('input', conferirRegras);
+  $('#temporaria').addEventListener('input', conferirRegras);
+
+  $('#form-senha').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    if (!$('#temporaria').value.trim()) {
+      $('#temporaria').closest('.campo').classList.add('campo--erro');
+      $('#temporaria').closest('.campo').querySelector('.campo__erro').hidden = false;
+      $('#temporaria').focus();
+      return;
+    }
+    if (!conferirRegras()) {
+      $('#nova').closest('.campo').classList.add('campo--erro');
+      $('#nova').closest('.campo').querySelector('.campo__erro').hidden = false;
+      $('#nova').focus();
+      return;
+    }
+    if ($('#nova').value !== $('#repetir').value) {
+      $('#repetir').closest('.campo').classList.add('campo--erro');
+      $('#repetir').closest('.campo').querySelector('.campo__erro').hidden = false;
+      $('#repetir').focus();
+      return;
+    }
+
+    PB.toast('Senha criada', 'Enviamos um código de confirmação para ' + email + '.', 'info');
+    irPara(2);
+    setTimeout(function () { $('#c1').focus(); }, 300);
+    iniciarContagem();
+  });
+
+  /* ---- Reenvio com contagem ---- */
+  var timer = null;
+  function iniciarContagem() {
+    var restante = 60;
+    $('#reenviar').disabled = true;
+    clearInterval(timer);
+    timer = setInterval(function () {
+      restante--;
+      $('#contador-reenvio').textContent = restante > 0 ? '(aguarde ' + restante + 's)' : '';
+      if (restante <= 0) { clearInterval(timer); $('#reenviar').disabled = false; }
+    }, 1000);
+  }
+
+  $('#reenviar').addEventListener('click', function () {
+    PB.toast('Código reenviado', 'Confira a caixa de entrada e o spam de ' + email + '.', 'info');
+    iniciarContagem();
+  });
+
+  $('#confirmar-codigo').addEventListener('click', function () {
+    var completo = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'].every(function (id) { return $('#' + id).value; });
+    if (!completo) {
+      PB.toast('Código incompleto', 'Digite os 6 dígitos recebidos por e-mail.', 'alerta');
+      $('#c1').focus();
+      return;
+    }
+    clearInterval(timer);
+    PB.toast('Acesso liberado', 'Sua senha definitiva está ativa.', 'info');
+    irPara(3);
+  });
+})();
+</script>
+
+</body>
+</html>

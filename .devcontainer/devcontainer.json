@@ -1,0 +1,45 @@
+{
+  // Ambiente do GitHub Codespaces.
+  //
+  // É o que dá o "link do GitHub" com o backend rodando de verdade: o Codespaces
+  // encaminha a porta 3000 e gera uma URL pública
+  // https://<nome-do-codespace>-3000.app.github.dev
+  //
+  // O GitHub Pages não serve para isso — ele só entrega arquivos estáticos, sem
+  // processo Node e sem banco.
+  "name": "Site Phygital — Node + SQLite",
+
+  // Node 24: o módulo node:sqlite usado pelo projeto exige 22.5 ou mais.
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+
+  "forwardPorts": [3000],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "Site Phygital",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  // O projeto não tem dependências: não há npm install a fazer. Só preparamos o
+  // banco para o site não abrir vazio.
+  "postCreateCommand": "npm run recriar",
+
+  "postAttachCommand": {
+    "servidor": "npm start"
+  },
+
+  "remoteEnv": {
+    "PHYGITAL_MODO": "dev",
+    "PHYGITAL_PORTA": "3000"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"],
+      "settings": {
+        "files.eol": "\n"
+      }
+    }
+  }
+}

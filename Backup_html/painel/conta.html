@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conta — Painel do Competidor — Phygital Brasil</title>
+<meta name="description" content="Dados cadastrais, senha, sessões ativas e preferências de e-mail do responsável de time no Painel do Competidor da Phygital Brasil.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* Ajustes locais desta tela — compõem os componentes já existentes */
+
+  /* .campo__erro é display:flex no phygital.css e vence o atributo [hidden]:
+     sem esta linha a mensagem de erro aparece antes de qualquer validação. */
+  .campo__erro[hidden] { display: none; }
+
+  .campo--senha { position: relative; }
+  .campo--senha input { padding-right: 52px; }
+  .ver-senha {
+    position: absolute; right: 4px; top: 28px;
+    width: 44px; height: 48px;
+    display: grid; place-items: center;
+    background: none; border: 0; cursor: pointer; color: var(--cinza);
+  }
+  .ver-senha svg { width: 20px; height: 20px; }
+
+  .sub-titulo { font-size: 1.0625rem; margin: 0 0 var(--e-2); }
+  .conta-fim { display: flex; align-items: center; justify-content: space-between; gap: var(--e-4); flex-wrap: wrap; }
+  .link-risco {
+    background: none; border: 0; padding: 10px 2px; min-height: 44px;
+    font-family: var(--fonte-texto); font-size: var(--t-peq);
+    color: var(--erro); text-decoration: underline; cursor: pointer;
+  }
+  .link-risco:hover { color: #8f2416; }
+  .sessao-atual { white-space: nowrap; }
+
+  /* Em telas estreitas o selo do topo desce para a segunda linha */
+  @media (max-width: 640px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo">Painel do Competidor</p>
+    </div>
+    <nav class="menu" aria-label="Menu do painel">
+      <div class="menu__item"><a class="menu__link" href="inicio.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a></div>
+      <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
+      <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="conta.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar" id="avatar-usuario">DM</span>
+      <div><div class="nome" id="nome-usuario">Diego Martins</div><div class="papel">Responsável de time</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1>Conta</h1>
+        <p class="sub">Dados cadastrais, segurança e preferências de e-mail</p>
+      </div>
+      <div class="flex-fim">
+        <span class="tag tag--verde" id="tag-conta">Conta ativa</span>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <!-- Regra central desta tela -->
+      <div class="aviso mb-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none;color:var(--info)"><path d="M12 3l8 4v5c0 4.5-3.2 8.5-8 10-4.8-1.5-8-5.5-8-10V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div>
+          <strong>Nenhuma alteração é salva na hora.</strong>
+          Toda mudança de dado cadastral ou de senha só passa a valer depois que você digita o
+          <strong>código de 6 dígitos enviado por e-mail</strong>. E há uma regra a mais para o endereço de e-mail:
+          <strong>quando você troca o e-mail, o código vai para o endereço antigo</strong>, nunca para o novo —
+          é assim que garantimos que quem pediu a troca é mesmo o dono da conta. O endereço novo só recebe
+          mensagens depois de confirmado.
+        </div>
+      </div>
+
+      <!-- ============ DADOS CADASTRAIS ============ -->
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2>Dados cadastrais</h2>
+          <span class="txt-micro txt-suave">Usados nos e-mails de inscrição e nos chamados</span>
+        </div>
+        <div class="bloco__corpo">
+          <form id="form-dados" class="form-grade" data-validar>
+
+            <div class="campo col-2">
+              <label for="ct-nome">Nome completo <span class="obrigatorio">*</span></label>
+              <input type="text" id="ct-nome" name="nome" autocomplete="name" required>
+              <p class="campo__erro" hidden>Informe seu nome completo, como consta no documento.</p>
+              <p class="campo__ajuda">É o nome que aparece como responsável nas inscrições dos seus times.</p>
+            </div>
+
+            <div class="campo">
+              <label for="ct-email">E-mail <span class="obrigatorio">*</span></label>
+              <input type="email" id="ct-email" name="email" autocomplete="email" required>
+              <p class="campo__erro" hidden>Informe um e-mail válido, no formato nome@dominio.com.</p>
+              <p class="campo__ajuda">É o seu login e o destino de todas as notificações do sistema.</p>
+            </div>
+
+            <div class="campo">
+              <label for="ct-tel">Telefone <span class="obrigatorio">*</span></label>
+              <input type="tel" id="ct-tel" name="telefone" autocomplete="tel" data-mascara="telefone"
+                     placeholder="(11) 90000-0000" required>
+              <p class="campo__erro" hidden>Informe um telefone com DDD.</p>
+              <p class="campo__ajuda">Usado só pela organização em dias de competição.</p>
+            </div>
+
+            <div class="campo">
+              <label for="ct-nasc">Data de nascimento <span class="obrigatorio">*</span></label>
+              <input type="date" id="ct-nasc" name="nascimento" required>
+              <p class="campo__erro" hidden>Informe sua data de nascimento.</p>
+              <p class="campo__ajuda">Necessária para validar categorias por faixa etária (Sub 16, Sub 17 e Sub 18).</p>
+            </div>
+
+            <div class="campo">
+              <span class="rotulo">Conta criada em</span>
+              <p class="txt-peq txt-suave" style="margin-top:12px" id="ct-criada">—</p>
+            </div>
+
+            <div class="col-2 flex-fim envolve" style="padding-bottom:var(--e-2)">
+              <span class="txt-micro txt-suave" style="margin-right:auto">
+                Ao salvar, enviamos o código de confirmação e mantemos os dados antigos até você confirmar.
+              </span>
+              <button class="btn btn--fantasma" type="reset">Desfazer alterações</button>
+              <button class="btn btn--primario" type="submit">Salvar alterações</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ SEGURANÇA ============ -->
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2>Segurança</h2>
+          <span class="txt-micro txt-suave">Senha e dispositivos conectados</span>
+        </div>
+        <div class="bloco__corpo">
+
+          <h3 class="sub-titulo">Alterar senha</h3>
+          <p class="txt-peq txt-suave mb-4">
+            Use no mínimo 8 caracteres, combinando letras e números. Ao confirmar a troca, todas as outras
+            sessões são desconectadas automaticamente.
+          </p>
+
+          <form id="form-senha" class="form-grade--3 form-grade" data-validar>
+            <div class="campo campo--senha">
+              <label for="sg-atual">Senha atual <span class="obrigatorio">*</span></label>
+              <input type="password" id="sg-atual" name="senha-atual" autocomplete="current-password" required>
+              <button class="ver-senha" type="button" data-ver-senha="sg-atual" aria-label="Mostrar senha" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <p class="campo__erro" hidden>Digite a senha que você usa hoje.</p>
+            </div>
+
+            <div class="campo campo--senha">
+              <label for="sg-nova">Nova senha <span class="obrigatorio">*</span></label>
+              <input type="password" id="sg-nova" name="senha-nova" autocomplete="new-password" minlength="8" data-senha required>
+              <button class="ver-senha" type="button" data-ver-senha="sg-nova" aria-label="Mostrar senha" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <p class="campo__erro" hidden>A nova senha precisa ter pelo menos 8 caracteres.</p>
+            </div>
+
+            <div class="campo campo--senha">
+              <label for="sg-repetir">Repetir a nova senha <span class="obrigatorio">*</span></label>
+              <input type="password" id="sg-repetir" name="senha-repetir" autocomplete="new-password" data-senha-confirma required>
+              <button class="ver-senha" type="button" data-ver-senha="sg-repetir" aria-label="Mostrar senha" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <p class="campo__erro" hidden>As senhas não conferem.</p>
+            </div>
+
+            <div class="col-3 flex-fim" style="padding-bottom:var(--e-4)">
+              <button class="btn btn--contorno" type="submit">Alterar senha</button>
+            </div>
+          </form>
+
+          <hr>
+
+          <h3 class="sub-titulo">Sessões ativas</h3>
+          <p class="txt-peq txt-suave mb-4">
+            Estes são os dispositivos com a sua conta conectada. Não reconhece algum? Encerre a sessão e
+            troque a senha em seguida.
+          </p>
+
+          <div class="tabela-wrap">
+            <table>
+              <caption class="sr-only">Dispositivos com sessão ativa na sua conta</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Dispositivo</th>
+                  <th scope="col">Local aproximado</th>
+                  <th scope="col">Último acesso</th>
+                  <th scope="col"><span class="sr-only">Ação</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Chrome 126 · macOS</strong><br><span class="txt-micro txt-suave sessao-atual">Sessão atual</span></td>
+                  <td>São Paulo, SP</td>
+                  <td>Hoje, 08:42</td>
+                  <td><span class="tag tag--verde">Este dispositivo</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Safari · iPhone</strong><br><span class="txt-micro txt-suave">Aplicativo móvel</span></td>
+                  <td>São Paulo, SP</td>
+                  <td>Ontem, 21:07</td>
+                  <td>
+                    <button class="btn btn--fantasma btn--pequeno" type="button"
+                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
+                            data-confirmar-titulo="Encerrar a sessão do iPhone?"
+                            data-confirmar-ok="Sessão do iPhone encerrada.">Encerrar</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Chrome · Windows 11</strong><br><span class="txt-micro txt-suave">Computador do clube</span></td>
+                  <td>Campinas, SP</td>
+                  <td>28/07/2026, 14:12</td>
+                  <td>
+                    <button class="btn btn--fantasma btn--pequeno" type="button"
+                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
+                            data-confirmar-titulo="Encerrar a sessão do Windows?"
+                            data-confirmar-ok="Sessão do computador de Campinas encerrada.">Encerrar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex-fim mt-3">
+            <button class="btn btn--perigo btn--pequeno" type="button"
+                    data-confirmar="Todos os outros dispositivos serão desconectados agora. Esta sessão continua aberta."
+                    data-confirmar-titulo="Encerrar todas as outras sessões?"
+                    data-confirmar-ok="Todas as outras sessões foram encerradas.">
+              Encerrar todas as outras sessões
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ NOTIFICAÇÕES ============ -->
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2>Notificações por e-mail</h2>
+          <span class="txt-micro txt-suave">Enviadas para <span data-email-usuario>diego@digitalsolvers.com</span></span>
+        </div>
+        <div class="bloco__corpo">
+          <form id="form-notificacoes" data-validar data-demo="Preferências de e-mail atualizadas.">
+            <fieldset style="border:0;padding:0;margin:0;background:transparent">
+              <legend class="sr-only">Quais e-mails você quer receber</legend>
+
+              <label class="check">
+                <input type="checkbox" name="n-inscricao" checked disabled>
+                <span>
+                  <strong class="display">Confirmação de inscrição e protocolo</strong><br>
+                  <span class="txt-micro txt-suave">Obrigatório. É o comprovante de que a inscrição entrou na lista de triagem — e traz o número de protocolo. Não pode ser desativado.</span>
+                </span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="n-status" checked>
+                <span>
+                  <strong class="display">Mudança de status da inscrição</strong><br>
+                  <span class="txt-micro txt-suave">Quando a organização move o time da triagem para a lista oficial ou para a lista de espera.</span>
+                </span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="n-chamados" checked>
+                <span>
+                  <strong class="display">Andamento dos chamados</strong><br>
+                  <span class="txt-micro txt-suave">Abertura, resposta da organização, mudança de status e encerramento de cada protocolo.</span>
+                </span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="n-campeonatos" checked>
+                <span>
+                  <strong class="display">Abertura de novos campeonatos</strong><br>
+                  <span class="txt-micro txt-suave">Aviso no dia em que um campeonato abre inscrições e lembrete quando o prazo está terminando.</span>
+                </span>
+              </label>
+
+              <label class="check">
+                <input type="checkbox" name="n-novidades">
+                <span>
+                  <strong class="display">Novidades e bastidores</strong><br>
+                  <span class="txt-micro txt-suave">Conteúdo do blog, resultados de outras modalidades e ações dos patrocinadores. Nada disso é obrigatório para competir.</span>
+                </span>
+              </label>
+            </fieldset>
+
+            <div class="flex-fim mt-4">
+              <span class="txt-micro txt-suave" style="margin-right:auto">
+                Preferências de envio não são dados cadastrais: salvam direto, sem código de confirmação.
+              </span>
+              <button class="btn btn--contorno" type="submit">Salvar preferências</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ SAIR / EXCLUIR ============ -->
+      <div class="bloco">
+        <div class="bloco__corpo">
+          <div class="conta-fim">
+            <div>
+              <h2 class="sub-titulo">Sair da conta</h2>
+              <p class="txt-peq txt-suave">
+                Encerra a sessão apenas neste dispositivo. Seus times, inscrições e chamados continuam salvos.
+              </p>
+            </div>
+            <button class="btn btn--contorno" type="button"
+                    data-confirmar="Você será desconectado deste dispositivo e voltará para a tela de acesso."
+                    data-confirmar-titulo="Sair da conta?"
+                    data-confirmar-ok="Sessão encerrada neste dispositivo."
+                    data-ir-para="login.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              Sair
+            </button>
+          </div>
+
+          <hr>
+
+          <p class="txt-micro txt-suave">
+            <button class="link-risco" type="button"
+                    data-confirmar="A exclusão apaga seus dados cadastrais, times, inscrições e o histórico de chamados. Inscrições já confirmadas em campeonatos em andamento não são canceladas automaticamente — fale com a organização antes. Esta ação é irreversível."
+                    data-confirmar-titulo="Excluir minha conta?"
+                    data-confirmar-ok="Pedido de exclusão registrado. Você recebe a confirmação por e-mail em até 48 horas.">
+              Excluir minha conta
+            </button>
+            · A exclusão é definitiva e leva até 48 horas para ser processada.
+          </p>
+        </div>
+      </div>
+
+      <p class="txt-micro txt-suave mt-3">
+        Protótipo de interface. Nenhum código é realmente enviado por e-mail — no modal de confirmação,
+        qualquer sequência de 6 dígitos é aceita.
+      </p>
+
+    </main>
+  </div>
+</div>
+
+<!-- ==================== MODAL — CÓDIGO POR E-MAIL ==================== -->
+<div class="modal" id="modal-codigo" role="dialog" aria-modal="true" aria-labelledby="modal-codigo-titulo" aria-hidden="true">
+  <div class="modal__caixa" role="document">
+    <span class="fita"></span>
+    <div class="modal__corpo">
+      <p class="eyebrow">Confirmação por e-mail</p>
+      <h2 id="modal-codigo-titulo" style="font-size:1.5rem">Digite o código que enviamos</h2>
+      <p class="txt-peq txt-suave" id="codigo-destino">
+        Enviamos um código de 6 dígitos para o e-mail da conta.
+      </p>
+
+      <div class="aviso aviso--alerta mb-4" id="codigo-aviso-email" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px;flex:none"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <div id="codigo-aviso-texto"></div>
+      </div>
+
+      <form id="form-codigo" data-validar>
+        <div class="campo">
+          <span class="rotulo" id="rot-codigo">Código de 6 dígitos</span>
+          <div class="otp" role="group" aria-labelledby="rot-codigo">
+            <input type="text" aria-label="Dígito 1" required>
+            <input type="text" aria-label="Dígito 2">
+            <input type="text" aria-label="Dígito 3">
+            <input type="text" aria-label="Dígito 4">
+            <input type="text" aria-label="Dígito 5">
+            <input type="text" aria-label="Dígito 6">
+          </div>
+          <p class="campo__erro" hidden>Digite os 6 dígitos do código recebido.</p>
+          <p class="campo__ajuda txt-centro">
+            O código vale por 10 minutos. Não achou? Confira a caixa de spam.
+          </p>
+          <p class="txt-centro" style="margin:var(--e-2) 0 0">
+            <button class="btn btn--fantasma btn--pequeno" type="button" id="btn-reenviar">Reenviar código</button>
+          </p>
+        </div>
+
+        <div class="modal__acoes">
+          <button class="btn btn--fantasma" type="button" data-fechar-modal>Cancelar</button>
+          <button class="btn btn--primario" type="submit">Confirmar alteração</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   PAINEL — CONTA
+   Dados cadastrais, senha, sessões e notificações.
+   Regra do briefing: nenhuma alteração vale sem código enviado por e-mail;
+   se o e-mail mudar, o código vai para o endereço ANTIGO.
+   ========================================================================== */
+(function () {
+  var D = PB.dados, F = PB.fmt;
+
+  var u = D.usuario();
+  var emailAtual = u.email;
+
+  /* ---- Preenche a tela com os dados do usuário ---- */
+  document.getElementById('ct-nome').value = u.nome || '';
+  document.getElementById('ct-email').value = u.email || '';
+  document.getElementById('ct-tel').value = u.telefone || '';
+  document.getElementById('ct-nasc').value = u.nasc || '';
+  document.getElementById('ct-criada').textContent =
+    u.criadoEm ? F.dataExtenso(u.criadoEm) : 'Data não registrada';
+  document.getElementById('tag-conta').textContent = 'Responsável de time';
+
+  function atualizarIdentidade(nome, email) {
+    document.getElementById('nome-usuario').textContent = nome;
+    document.getElementById('avatar-usuario').textContent = F.iniciais(nome);
+    document.querySelectorAll('[data-email-usuario]').forEach(function (el) {
+      el.textContent = email;
+    });
+  }
+  atualizarIdentidade(u.nome, u.email);
+
+  /* ---- Modal de código ---- */
+  var pendente = null;   /* { tipo: 'dados' | 'senha', destino, mudouEmail, novoEmail, nome } */
+
+  var destinoEl = document.getElementById('codigo-destino');
+  var avisoEl = document.getElementById('codigo-aviso-email');
+  var avisoTextoEl = document.getElementById('codigo-aviso-texto');
+
+  function pedirCodigo(dados) {
+    pendente = dados;
+
+    destinoEl.innerHTML = 'Enviamos um código de 6 dígitos para <strong class="display"></strong>. ' +
+      'A alteração só é aplicada depois que você digitar esse código.';
+    destinoEl.querySelector('strong').textContent = dados.destino;
+
+    if (dados.mudouEmail) {
+      avisoEl.hidden = false;
+      avisoTextoEl.innerHTML =
+        '<strong>Você pediu para trocar o e-mail da conta.</strong> ' +
+        'Por segurança, o código foi enviado para o endereço <strong class="antigo"></strong> — ' +
+        'o endereço <em>antigo</em>, que ainda é o e-mail oficial da conta. ' +
+        'O novo endereço, <strong class="novo"></strong>, só passa a receber as notificações da Phygital ' +
+        'depois que a troca for confirmada aqui.';
+      avisoTextoEl.querySelector('.antigo').textContent = emailAtual;
+      avisoTextoEl.querySelector('.novo').textContent = dados.novoEmail;
+    } else {
+      avisoEl.hidden = true;
+    }
+
+    document.querySelectorAll('#form-codigo .otp input').forEach(function (i) { i.value = ''; });
+    var wrap = document.querySelector('#form-codigo .campo');
+    wrap.classList.remove('campo--erro');
+    wrap.querySelector('.campo__erro').hidden = true;
+
+    PB.abrirModal('modal-codigo');
+  }
+
+  /* ---- Handlers registrados depois da validação do phygital.js ---- */
+  PB.aoIniciar = function () {
+
+    /* Dados cadastrais */
+    var formDados = document.getElementById('form-dados');
+    formDados.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+
+      var nome = document.getElementById('ct-nome').value.trim();
+      var email = document.getElementById('ct-email').value.trim();
+      var mudouEmail = email.toLowerCase() !== emailAtual.toLowerCase();
+
+      pedirCodigo({
+        tipo: 'dados',
+        nome: nome,
+        novoEmail: email,
+        mudouEmail: mudouEmail,
+        destino: mudouEmail ? emailAtual : email
+      });
+    });
+
+    formDados.addEventListener('reset', function () {
+      setTimeout(function () {
+        document.getElementById('ct-nome').value = u.nome || '';
+        document.getElementById('ct-email').value = emailAtual;
+        document.getElementById('ct-tel').value = u.telefone || '';
+        document.getElementById('ct-nasc').value = u.nasc || '';
+        PB.toast('Alterações desfeitas', 'Os campos voltaram aos dados salvos na conta.', 'info');
+      }, 0);
+    });
+
+    /* Troca de senha */
+    var formSenha = document.getElementById('form-senha');
+    formSenha.addEventListener('submit', function (e) {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+      pedirCodigo({ tipo: 'senha', destino: emailAtual, mudouEmail: false });
+    });
+
+    /* Confirmação do código */
+    var formCodigo = document.getElementById('form-codigo');
+    formCodigo.addEventListener('submit', function (e) {
+      var campos = Array.prototype.slice.call(formCodigo.querySelectorAll('.otp input'));
+      var wrap = formCodigo.querySelector('.campo');
+      var erro = wrap.querySelector('.campo__erro');
+      var faltando = campos.filter(function (i) { return !i.value; });
+
+      if (faltando.length) {
+        e.preventDefault();
+        wrap.classList.add('campo--erro');
+        erro.hidden = false;
+        faltando[0].focus();
+        return;
+      }
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+
+      wrap.classList.remove('campo--erro');
+      erro.hidden = true;
+      PB.fecharModal('modal-codigo');
+
+      if (!pendente) return;
+
+      if (pendente.tipo === 'senha') {
+        formSenha.reset();
+        PB.toast('Senha alterada',
+          'A nova senha já está valendo e as outras sessões foram desconectadas.', 'info');
+      } else {
+        var trocouEmail = pendente.mudouEmail;
+        var avisoAntigo = emailAtual;
+        emailAtual = pendente.novoEmail;
+        u.nome = pendente.nome;
+        atualizarIdentidade(pendente.nome, emailAtual);
+
+        PB.toast('Dados atualizados',
+          trocouEmail
+            ? 'O e-mail da conta agora é ' + emailAtual + '. Um aviso da troca foi enviado para ' + avisoAntigo + '.'
+            : 'Seus dados cadastrais foram salvos.',
+          'info');
+      }
+      pendente = null;
+    });
+
+    /* Reenviar código */
+    document.getElementById('btn-reenviar').addEventListener('click', function () {
+      if (!pendente) return;
+      PB.toast('Código reenviado',
+        'Um novo código de 6 dígitos foi enviado para ' + pendente.destino + '. O anterior deixou de valer.', 'info');
+    });
+  };
+})();
+</script>
+
+</body>
+</html>
