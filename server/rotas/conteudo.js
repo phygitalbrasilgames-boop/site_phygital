@@ -351,6 +351,10 @@ function validarBannerSite(corpo, { novo, atual }) {
   if (informado(corpo, 'semTexto')) d.semTexto = booleano(corpo.semTexto);
   if (informado(corpo, 'ativo')) d.ativo = booleano(corpo.ativo);
   if (informado(corpo, 'titulo')) d.titulo = texto(corpo.titulo, 'Título', { max: 200 });
+  /* admin/banners-site.html tira e devolve o banner à rotação gravando este
+     campo no próprio objeto, em vez de usar DELETE. Sem deixá-lo passar por
+     aqui, "Remover da rotação" e "Restaurar" respondiam 200 sem efeito. */
+  if (informado(corpo, 'arquivado')) d.arquivado = booleano(corpo.arquivado);
 
   /* Estado final = o que já existe + o que veio agora. As checagens cruzadas
      abaixo dependem dele: um PUT que só troca a mídia precisa ser barrado se o
@@ -381,22 +385,34 @@ function validarBannerSite(corpo, { novo, atual }) {
 
 /**
  * Duas peças do hero na mesma posição deixam a ordem do slider dependente do
- * id, que o operador não controla. Para trocar de lugar existe a rota de
- * reordenação, que renumera a lista inteira em vez de brigar por uma posição.
+ * id, que o operador não controla. Então a posição continua sendo única — mas
+ * pedir uma posição ocupada TROCA os dois de lugar em vez de ser recusado.
+ *
+ * Recusar quebrava as setas ▲▼ de admin/banners-site.html, que expressam a
+ * troca como dois PUT sequenciais: o primeiro sempre colidia com o vizinho e
+ * derrubava a operação inteira. Com a troca, o primeiro PUT já deixa a lista
+ * correta e o segundo vira repetição inofensiva.
+ *
+ * Roda dentro da transação de quem chama, então nunca fica um estado com dois
+ * banners na mesma posição.
  */
 function exigirOrdemLivre(ordem, idAtual) {
-  const ocupada = db.um(
-    `SELECT id, titulo FROM banners_site
+  const ocupante = db.um(
+    `SELECT id, ordem FROM banners_site
       WHERE ordem = ? AND arquivado_em IS NULL AND id <> ?`,
     ordem, idAtual || ''
   );
-  if (ocupada) {
-    throw erro409(
-      `A posição ${ordem} já é do banner "${ocupada.titulo || ocupada.id}". ` +
-      'Use a reordenação para mover os banners de lugar.',
-      { conflito: ocupada.id }
-    );
-  }
+  if (!ocupante) return;
+
+  const meu = idAtual
+    ? db.um('SELECT ordem FROM banners_site WHERE id = ?', idAtual)
+    : null;
+
+  /* Banner novo não tem posição anterior para ceder: empurra o ocupante para o
+     fim, que é o único destino que não colide com mais ninguém. */
+  const destino = meu ? meu.ordem : proximaOrdem('banners_site');
+
+  db.executar('UPDATE banners_site SET ordem = ? WHERE id = ?', destino, ocupante.id);
 }
 
 /* --------------------------------------------------------------------------

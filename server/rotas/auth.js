@@ -182,7 +182,14 @@ function enviarModelo(modeloId, { destino, contexto, essencial = false }) {
   const base = modelo && !desligado ? modelo : (RESERVA[modeloId] || modelo);
   if (!base) return null;
 
-  const assunto = renderizar(base.assunto, contexto, { escapar: false });
+  /* Quebra de linha no assunto é injeção de cabeçalho: o nome vem do cadastro,
+     e um nome como "Foo\r\nBcc: alguem@..." acrescentaria um cabeçalho quando o
+     conector SMTP real entrar. email.js já higieniza no caminho dele; este
+     caminho paralelo precisa fazer o mesmo. */
+  const assunto = String(renderizar(base.assunto, contexto, { escapar: false }) || '')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
   const corpo = renderizar(base.corpo, contexto);
   const id = crypto.randomUUID();
 
@@ -218,7 +225,12 @@ const avisarSenhaAlterada = (conta) => enviarModelo('senha-alterada', {
 
 /** Aplica a política de ../auth.js e devolve o par hash/sal já pronto. */
 function prepararSenha(nova, conta) {
-  const erros = auth.avaliarSenha(nova, { email: conta.email, nome: conta.nome });
+  /* conta é opcional: em /redefinir-senha o formato é conferido antes de saber
+     se a conta existe, para que a resposta não denuncie a existência dela. */
+  const erros = auth.avaliarSenha(nova, {
+    email: conta ? conta.email : null,
+    nome: conta ? conta.nome : null
+  });
   if (erros.length) throw erro400('A senha escolhida não atende aos requisitos.', { erros });
   return auth.criarSenha(nova);
 }
@@ -452,11 +464,23 @@ function registrar(rotas) {
     freio(ctx, 'redefinir-senha');
 
     const conta = contaPorEmail(normalizarEmail(corpo.email));
-    if (!conta) throw erro400('Nenhum código pendente. Peça um novo.');
 
+    /* O formato da senha é conferido primeiro, e SEM depender da conta existir:
+       assim uma senha fraca devolve a mesma resposta para e-mail com e sem
+       conta. Antes, a ordem inversa transformava a rota num detector de contas
+       — bastava mandar senha fraca com um código qualquer, porque e-mail
+       cadastrado respondia "a senha não atende aos requisitos" e e-mail
+       desconhecido respondia "nenhum código pendente", anulando a neutralidade
+       que /recuperar-senha foi feita para ter.
+
+       Conferir o formato antes também evita queimar o código do usuário
+       legítimo que apenas digitou uma senha curta demais. */
     const credencial = prepararSenha(corpo.senha, conta);
 
-    const r = auth.conferirCodigo(conta.id, 'recuperar-senha', corpo.codigo);
+    /* Conta inexistente responde exatamente como conta sem código pendente. */
+    const r = conta
+      ? auth.conferirCodigo(conta.id, 'recuperar-senha', corpo.codigo)
+      : { ok: false, erro: 'Nenhum código pendente. Peça um novo.' };
     if (!r.ok) throw erro400(r.erro);
 
     db.transacao(() => {

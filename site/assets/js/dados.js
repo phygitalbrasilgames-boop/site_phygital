@@ -1,8 +1,38 @@
 /* ==========================================================================
-   PHYGITAL BRASIL — CAMADA DE DADOS (protótipo)
-   Dados de demonstração + persistência em localStorage.
-   Quando o back-end existir, troque as funções de PB.api por chamadas HTTP:
-   a assinatura de cada função foi desenhada para ser um contrato estável.
+   PHYGITAL BRASIL — CAMADA DE DADOS
+
+   Um arquivo, dois modos, decididos sozinho no carregamento:
+
+     modo 'api'    há um back-end em /api. Uma chamada a /api/bootstrap enche o
+                   cache em memória e as leituras passam a servir dados reais.
+                   As escritas vão para a API.
+     modo 'local'  não há back-end (GitHub Pages, file://, python -m http.server).
+                   Vale a semente de demonstração + localStorage, exatamente
+                   como antes desta migração. Nada muda nesse caminho.
+
+   O contrato de PB.dados.* é o mesmo nos dois modos: mesma assinatura, mesmo
+   tipo de retorno, leitura SÍNCRONA. É o que permite que as ~50 páginas do
+   site continuem intocadas.
+
+   --------------------------------------------------------------------------
+   POR QUE XMLHttpRequest SÍNCRONO
+
+   Escolha consciente, não descuido. O script de cada página roda inline
+   durante o parse do HTML e chama PB.dados.campeonatos(), PB.dados.time(id) e
+   afins na mesma linha em que monta a tela. Tornar a leitura assíncrona
+   exigiria reescrever as ~50 páginas — que é justamente o que esta migração
+   não pode fazer.
+
+   O custo é conhecido: o XHR síncrono trava a thread principal enquanto o
+   servidor responde e os navegadores avisam no console que ele está
+   depreciado. Como as duas chamadas são locais, no mesmo host que serviu a
+   página, e acontecem uma única vez por carga, o bloqueio é de poucos
+   milissegundos.
+
+   A rota de saída está pronta abaixo: PB.api.* é o mesmo back-end em fetch,
+   devolvendo Promises. Toda página nova deve usar PB.api.*; conforme as
+   páginas antigas forem migrando para ele, este arquivo perde o XHR síncrono
+   sem que o resto do front-end perceba.
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -10,25 +40,41 @@
   var CHAVE = 'phygital.dados.v2';
   var CHAVE_SESSAO = 'phygital.sessao.v1';
 
+  /* A API mora na raiz do mesmo host que serviu a página, então o caminho é
+     absoluto: vale igual para /index.html, /painel/*.html e /admin/*.html. */
+  var BASE = '/api';
+
+  var _modo = 'local';
+  var _cache = null;
+  var _conta = null;      /* conta da sessão, como o servidor a enxerga */
+  var _espelho = null;    /* foto do cache logo após a última sincronização */
+  var _arquivados = null; /* memória curta do histórico (modo api) */
+
   /* ---------------------------------------------------------------------
-     CONTAS DE ACESSO (protótipo)
-     Quando o back-end existir estas credenciais saem daqui: a autenticação
-     passa a ser feita no servidor e o cliente guarda apenas o token.
+     CONTAS DE ACESSO (só modo local)
+
+     No modo api este array fica VAZIO: quem valida credencial é o servidor e
+     nenhum e-mail ou senha precisa existir dentro deste arquivo.
+
+     Estas são contas FICTÍCIAS, de demonstração. Os endereços reais da Phygital
+     Brasil não entram aqui: este arquivo é servido publicamente pelo GitHub
+     Pages, então qualquer pessoa lê o conteúdo dele. Credencial de verdade vive
+     no banco do servidor, como hash scrypt, e nunca no front-end.
      --------------------------------------------------------------------- */
   var CONTAS = [
     {
-      email: 'inscricoes@phygitalgamesbr.com.br',
-      senha: 'Phygital@2026',
+      email: 'admin@demo.phygital',
+      senha: 'DemoAdmin2026',
       papel: 'admin',
       nivel: 'master',
-      nome: 'Inscrições Phygital',
+      nome: 'Administração (demonstração)',
       destino: '../admin/index.html'
     },
     {
-      email: 'phygitalbrasilgames@gmail.com',
-      senha: 'Phygital@2026',
+      email: 'competidor@demo.phygital',
+      senha: 'DemoCompetidor2026',
       papel: 'competidor',
-      nome: 'Phygital Brasil Games',
+      nome: 'Time de Demonstração',
       destino: 'inicio.html'
     }
   ];
@@ -36,6 +82,8 @@
   /* ---------------------------------------------------------------------
      REGRAS POR MODALIDADE — vindas do briefing (páginas 3 a 6)
      Fonte única de verdade para validação de elenco em todo o sistema.
+     No modo api esta cópia é substituída pela que /api/bootstrap devolve, para
+     cliente e servidor não validarem com regras divergentes.
      --------------------------------------------------------------------- */
   var MODALIDADES = {
     futebol: {
@@ -190,7 +238,7 @@
   };
 
   /* ---------------------------------------------------------------------
-     SEMENTE DE DEMONSTRAÇÃO
+     SEMENTE DE DEMONSTRAÇÃO (modo local)
      --------------------------------------------------------------------- */
   function semente() {
     return {
@@ -499,9 +547,11 @@
 
       auditoria: [],
 
+      /* A senha do SMTP fica em branco de propósito: este arquivo é público.
+         No servidor ela vem de PHYGITAL_SMTP_SENHA e não é gravada no banco. */
       smtp: {
         email: 'inscricoes@phygitalgamesbr.com.br',
-        senha: 'Phygital@2026',
+        senha: '',
         usuario: 'inscricoes@phygitalgamesbr.com.br',
         servidorEntrada: 'mail.phygitalgamesbr.com.br',
         imap: 993,
@@ -665,13 +715,218 @@
     };
   }
 
-  /* ---------------------------------------------------------------------
+  /* =====================================================================
+     TRANSPORTE
+
+     Duas portas para o mesmo back-end:
+       pedirSync  — XMLHttpRequest síncrono, usado por PB.dados.*
+       pedir      — fetch, usado por PB.api.* (assíncrono, devolve Promise)
+
+     Nenhuma das duas lança: uma falha vira { ok: false, erro: '...' }, porque
+     quem chama está no meio da montagem de uma tela e não pode quebrar.
+     ===================================================================== */
+
+  function urlDe(caminho) {
+    return BASE + caminho;
+  }
+
+  function interpretar(status, texto) {
+    var dados = null;
+    try { dados = texto ? JSON.parse(texto) : null; } catch (e) { dados = null; }
+
+    var httpOk = status >= 200 && status < 300;
+    var ok = httpOk && !(dados && dados.ok === false);
+    var erro = null;
+
+    if (!ok) {
+      erro = (dados && dados.erro) ||
+             (status ? 'O servidor recusou a operação (HTTP ' + status + ').'
+                     : 'Sem resposta do servidor.');
+    }
+
+    return { ok: ok, status: status, dados: dados, erro: erro };
+  }
+
+  /* XHR síncrono. O motivo está no cabeçalho do arquivo: as páginas leem
+     PB.dados.* durante o parse e não têm como esperar uma Promise. */
+  function pedirSync(metodo, caminho, corpo) {
+    if (!global.XMLHttpRequest) return { ok: false, status: 0, dados: null, erro: 'Sem XMLHttpRequest.' };
+
+    var req = new global.XMLHttpRequest();
+    try {
+      req.open(metodo, urlDe(caminho), false);   /* false = síncrono */
+      req.setRequestHeader('Accept', 'application/json');
+      if (corpo !== undefined && corpo !== null) {
+        req.setRequestHeader('Content-Type', 'application/json');
+      }
+      req.send(corpo === undefined || corpo === null ? null : JSON.stringify(corpo));
+    } catch (e) {
+      /* Rede fora, CSP, porta errada, file:// — tudo cai aqui e vira modo local. */
+      return { ok: false, status: 0, dados: null, erro: 'Não foi possível falar com o servidor.' };
+    }
+
+    return interpretar(req.status, req.responseText);
+  }
+
+  /* Versão assíncrona, base do PB.api.*. Resolve sempre; nunca rejeita. */
+  function pedir(metodo, caminho, corpo) {
+    if (!global.fetch) {
+      return Promise.resolve({ ok: false, status: 0, dados: null, erro: 'Sem fetch neste navegador.' });
+    }
+
+    var opcoes = { method: metodo, headers: { Accept: 'application/json' }, credentials: 'same-origin' };
+    if (corpo !== undefined && corpo !== null) {
+      opcoes.headers['Content-Type'] = 'application/json';
+      opcoes.body = JSON.stringify(corpo);
+    }
+
+    return global.fetch(urlDe(caminho), opcoes)
+      .then(function (resposta) {
+        return resposta.text().then(function (texto) {
+          return interpretar(resposta.status, texto);
+        });
+      })
+      .catch(function () {
+        return { ok: false, status: 0, dados: null, erro: 'Não foi possível falar com o servidor.' };
+      });
+  }
+
+  /* Aviso ao usuário quando uma escrita não passou. phygital.js carrega depois
+     deste arquivo, então PB.toast pode ainda não existir na primeira carga. */
+  function avisar(mensagem) {
+    if (global.PB && typeof global.PB.toast === 'function') {
+      global.PB.toast('Não foi possível salvar', mensagem || 'Tente novamente em instantes.', 'erro');
+    } else if (global.console && console.warn) {
+      console.warn('[PB.dados] ' + mensagem);
+    }
+  }
+
+  function clonar(valor) {
+    return valor === undefined ? undefined : JSON.parse(JSON.stringify(valor));
+  }
+
+  /* Tira o item do array SEM trocar a referência: várias telas guardam a lista
+     em uma variável e continuariam lendo o array antigo. */
+  function retirar(lista, item) {
+    var i = lista.indexOf(item);
+    if (i >= 0) lista.splice(i, 1);
+  }
+
+  function ehAdmin() {
+    return !!(_conta && _conta.papel === 'admin');
+  }
+
+  /* =====================================================================
+     ROTAS POR COLEÇÃO
+
+     Cada coleção do cache sabe onde gravar. `preparar` existe para as rotas
+     que recusam campos extras — PUT /api/times/:id, por exemplo, devolve 400
+     se o corpo trouxer o elenco junto.
+     ===================================================================== */
+
+  function apenas(item, campos) {
+    var saida = {};
+    campos.forEach(function (c) { if (item[c] !== undefined) saida[c] = item[c]; });
+    return saida;
+  }
+
+  var ROTAS = {
+    campeonatos: {
+      caminho: '/campeonatos', chaveUm: 'campeonato', tabela: 'campeonatos', admin: true
+    },
+    posts: {
+      caminho: '/posts', chaveUm: 'post', tabela: 'posts', admin: true, temHistorico: true
+    },
+    categorias: {
+      caminho: '/categorias', chaveUm: 'categoria', tabela: 'categorias', admin: true, temHistorico: true
+    },
+    eventos: {
+      caminho: '/eventos', chaveUm: 'evento', tabela: 'eventos', admin: true, temHistorico: true
+    },
+    parceiros: {
+      caminho: '/parceiros', chaveUm: 'parceiro', tabela: 'parceiros', admin: true, temHistorico: true
+    },
+    banners: {
+      caminho: '/banners', chaveUm: 'banner', tabela: 'banners', admin: true, temHistorico: true
+    },
+    bannersSite: {
+      caminho: '/banners-site', chaveUm: 'bannerSite', chaveLista: 'bannersSite',
+      tabela: 'banners_site', admin: true, temHistorico: true
+    },
+    adminUsuarios: {
+      caminho: '/admin/usuarios', chaveUm: 'usuario', tabela: 'contas', admin: true,
+      preparar: function (u) { return apenas(u, ['nome', 'email', 'telefone', 'nivel']); }
+    },
+    meusTimes: {
+      caminho: '/times', chaveUm: 'time', tabela: 'times',
+      /* O elenco tem rotas próprias (/times/:id/jogadores); mandá-lo aqui é 400. */
+      preparar: function (t) { return apenas(t, ['nome', 'categoria', 'escudo', 'descricao', 'historico']); }
+    },
+    minhasInscricoes: {
+      caminho: '/inscricoes', chaveUm: 'inscricao', semGravacao: true
+    },
+    modelosEmail: {
+      caminho: '/email/modelos', chaveUm: 'modelo', admin: true, semCriacao: true,
+      preparar: function (m) { return apenas(m, ['grupo', 'nome', 'quando', 'assunto', 'corpo', 'ativo']); }
+    }
+  };
+
+  /* Coleções que o sincronizar() compara com o espelho. Ficam de fora as que
+     não têm rota de escrita (resultados, auditoria, emailsEnviados) e as que
+     têm porta própria (chamados, minhasInscricoes). */
+  var COLECOES_SINCRONIZADAS = [
+    'campeonatos', 'posts', 'categorias', 'eventos', 'parceiros',
+    'banners', 'bannersSite', 'adminUsuarios', 'meusTimes', 'modelosEmail'
+  ];
+
+  /* =====================================================================
+     DESCOBERTA E HIDRATAÇÃO
+     ===================================================================== */
+
+  /* /api/ping é a pergunta "existe back-end aqui?". Em GitHub Pages responde
+     404, em file:// nem chega a sair — os dois caem no modo local. */
+  function descobrir() {
+    if (!global.XMLHttpRequest) return false;
+    if (global.location && global.location.protocol === 'file:') return false;
+
+    var r = pedirSync('GET', '/ping');
+    return !!(r.ok && r.dados && r.dados.modo === 'api');
+  }
+
+  /* Uma chamada enche o cache inteiro. O payload DEPENDE DA SESSÃO: sem login
+     vem só conteúdo público, com login vêm os próprios times, inscrições e
+     chamados. Por isso todo login e todo logout precisa passar por aqui. */
+  function hidratar() {
+    var r = pedirSync('GET', '/bootstrap');
+    if (!r.ok || !r.dados || !r.dados.dados) return false;
+
+    _cache = r.dados.dados;
+    _conta = r.dados.conta || null;
+
+    /* As regras de elenco passam a ser as do servidor: uma cópia divergente no
+       cliente deixaria o formulário aceitar o que a API recusa. */
+    if (r.dados.modalidades && typeof r.dados.modalidades === 'object') {
+      MODALIDADES = r.dados.modalidades;
+      api.MODALIDADES = MODALIDADES;
+    }
+
+    _arquivados = null;
+    fotografar();
+    return true;
+  }
+
+  /* =====================================================================
      PERSISTÊNCIA
-     --------------------------------------------------------------------- */
-  var _cache = null;
+     ===================================================================== */
 
   function carregar() {
     if (_cache) return _cache;
+
+    if (_modo === 'api') {
+      if (hidratar()) return _cache;
+      _modo = 'local';   /* o servidor sumiu no meio da navegação */
+    }
+
     try {
       var bruto = global.localStorage && localStorage.getItem(CHAVE);
       _cache = bruto ? JSON.parse(bruto) : semente();
@@ -682,20 +937,160 @@
   }
 
   function salvar() {
+    if (_modo === 'api') { sincronizar(); return; }
     try {
       if (global.localStorage) localStorage.setItem(CHAVE, JSON.stringify(_cache));
     } catch (e) { /* modo privado / cota — segue em memória */ }
   }
 
   function resetar() {
+    if (_modo === 'api') {
+      /* O servidor é a fonte: aqui "resetar" significa descartar o que está em
+         memória e buscar tudo de novo. Recriar a base é `node server/semente.js`. */
+      recarregar();
+      return _cache;
+    }
     _cache = semente();
     salvar();
     return _cache;
   }
 
-  /* ---------------------------------------------------------------------
-     CONSULTAS
-     --------------------------------------------------------------------- */
+  function recarregar() {
+    if (_modo === 'api') return hidratar();
+    _cache = null;
+    carregar();
+    return true;
+  }
+
+  /* =====================================================================
+     ESPELHO E SINCRONIZAÇÃO
+
+     Várias telas editam o cache direto (D.tudo() ... D.salvar()) em vez de
+     chamar D.gravar(). Para essas, salvar() precisa descobrir sozinho o que
+     mudou: o espelho é a foto do cache logo depois da última gravação bem
+     sucedida, e a diferença entre ele e o cache atual é exatamente o que
+     precisa subir para a API.
+     ===================================================================== */
+
+  function fotografar() {
+    if (_modo !== 'api' || !_cache) { _espelho = null; return; }
+
+    var foto = { colecoes: {}, ranking: {}, rankingConfig: {}, smtp: '' };
+
+    COLECOES_SINCRONIZADAS.forEach(function (nome) {
+      var itens = {};
+      (_cache[nome] || []).forEach(function (item) {
+        if (item && item.id !== undefined && item.id !== null) {
+          itens[item.id] = JSON.stringify(item);
+        }
+      });
+      foto.colecoes[nome] = itens;
+    });
+
+    Object.keys(_cache.ranking || {}).forEach(function (mod) {
+      foto.ranking[mod] = JSON.stringify(_cache.ranking[mod]);
+    });
+    Object.keys(_cache.rankingConfig || {}).forEach(function (mod) {
+      foto.rankingConfig[mod] = JSON.stringify(_cache.rankingConfig[mod]);
+    });
+    foto.smtp = JSON.stringify(_cache.smtp || {});
+
+    _espelho = foto;
+  }
+
+  /* Devolve o item da coleção ao estado em que o espelho o guardou. */
+  function desfazerItem(colecao, id) {
+    if (!_espelho || !_espelho.colecoes[colecao]) return;
+    var anterior = _espelho.colecoes[colecao][id];
+    if (anterior === undefined) return;
+
+    var lista = _cache[colecao] || [];
+    for (var i = 0; i < lista.length; i++) {
+      if (lista[i] && lista[i].id === id) { lista[i] = JSON.parse(anterior); return; }
+    }
+  }
+
+  function corpoDe(rota, item) {
+    return rota.preparar ? rota.preparar(item) : item;
+  }
+
+  function sincronizar() {
+    if (_modo !== 'api' || !_cache) return;
+    if (!_espelho) { fotografar(); return; }
+
+    var falhas = [];
+
+    COLECOES_SINCRONIZADAS.forEach(function (colecao) {
+      var rota = ROTAS[colecao];
+      if (!rota || rota.semGravacao) return;
+      if (rota.admin && !ehAdmin()) return;   /* sem permissão: fica só no cache */
+
+      var antes = _espelho.colecoes[colecao] || {};
+
+      (_cache[colecao] || []).forEach(function (item) {
+        if (!item || item.id === undefined || item.id === null) return;
+
+        var agora = JSON.stringify(item);
+        /* Item novo é criação e sai por gravar(); aqui só o que já existia. */
+        if (antes[item.id] === undefined || antes[item.id] === agora) return;
+
+        var r = pedirSync('PUT', rota.caminho + '/' + encodeURIComponent(item.id), corpoDe(rota, item));
+        if (r.ok) absorver(colecao, r.dados);
+        else { desfazerItem(colecao, item.id); falhas.push(r.erro); }
+      });
+    });
+
+    if (ehAdmin()) {
+      Object.keys(_cache.ranking || {}).forEach(function (mod) {
+        var agora = JSON.stringify(_cache.ranking[mod]);
+        if (_espelho.ranking[mod] === undefined || _espelho.ranking[mod] === agora) return;
+
+        /* A lista inteira sobe junto: a tela tanto corrige uma linha quanto
+           reordena o pódio, e { linhas } cobre os dois casos. */
+        var r = pedirSync('PUT', '/ranking/' + encodeURIComponent(mod), { linhas: _cache.ranking[mod] });
+        if (!r.ok) { _cache.ranking[mod] = JSON.parse(_espelho.ranking[mod]); falhas.push(r.erro); }
+      });
+
+      Object.keys(_cache.rankingConfig || {}).forEach(function (mod) {
+        var agoraCfg = JSON.stringify(_cache.rankingConfig[mod]);
+        if (_espelho.rankingConfig[mod] === undefined || _espelho.rankingConfig[mod] === agoraCfg) return;
+
+        var rc = pedirSync('PUT', '/ranking-config/' + encodeURIComponent(mod), _cache.rankingConfig[mod]);
+        if (!rc.ok) { _cache.rankingConfig[mod] = JSON.parse(_espelho.rankingConfig[mod]); falhas.push(rc.erro); }
+      });
+
+      var agoraSmtp = JSON.stringify(_cache.smtp || {});
+      if (_espelho.smtp !== agoraSmtp) {
+        var rs = pedirSync('PUT', '/email/smtp', _cache.smtp || {});
+        if (rs.ok) { if (rs.dados && rs.dados.smtp) _cache.smtp = rs.dados.smtp; }
+        else { _cache.smtp = JSON.parse(_espelho.smtp); falhas.push(rs.erro); }
+      }
+    }
+
+    if (falhas.length) avisar(falhas[0]);
+    fotografar();
+  }
+
+  /* Troca o item do cache pelo que o servidor devolveu (ids gerados, carimbos
+     de data, contadores derivados). Devolve o item já no cache. */
+  function absorver(colecao, resposta, idOtimista) {
+    var rota = ROTAS[colecao];
+    var vindo = rota && rota.chaveUm && resposta ? resposta[rota.chaveUm] : null;
+    if (!vindo) return null;
+
+    var lista = _cache[colecao] || (_cache[colecao] = []);
+    var alvo = idOtimista === undefined ? vindo.id : idOtimista;
+
+    for (var i = 0; i < lista.length; i++) {
+      if (lista[i] && lista[i].id === alvo) { lista[i] = vindo; return vindo; }
+    }
+    lista.push(vindo);
+    return vindo;
+  }
+
+  /* =====================================================================
+     CONSULTAS E ESCRITAS
+     ===================================================================== */
   var api = {
     MODALIDADES: MODALIDADES,
     STATUS_INSCRICAO: STATUS_INSCRICAO,
@@ -704,6 +1099,12 @@
     TIPOS_DOCUMENTO: TIPOS_DOCUMENTO,
     STATUS_DOCUMENTO: STATUS_DOCUMENTO,
     CONTAS: CONTAS,
+
+    /** 'api' quando há back-end, 'local' quando o site é só estático. */
+    modo: function () { return _modo; },
+
+    /** Busca o payload de novo no servidor. No modo local, relê o localStorage. */
+    recarregar: recarregar,
 
     /* -------------------------------------------------------------------
        DOCUMENTOS
@@ -770,7 +1171,10 @@
       return { total: total, ok: ok, pendencias: pendencias, completo: pendencias.length === 0 };
     },
 
-    /* Registra ou atualiza um documento do jogador */
+    /* Registra ou atualiza um documento do jogador.
+       No modo api há duas portas: o competidor ENVIA o arquivo, o administrador
+       CONFERE (aprova ou recusa) — são rotas diferentes porque são permissões
+       diferentes. */
     gravarDocumento: function (timeId, indiceJogador, doc) {
       var d = carregar();
       var time = (d.meusTimes || []).filter(function (t) { return t.id === timeId; })[0];
@@ -780,12 +1184,52 @@
 
       j.documentos = j.documentos || [];
       var atual = j.documentos.filter(function (x) { return x.tipo === doc.tipo; })[0];
+      var antes = atual ? clonar(atual) : null;
+
       if (atual) {
         Object.keys(doc).forEach(function (k) { atual[k] = doc[k]; });
       } else {
         j.documentos.push(doc);
       }
-      salvar();
+
+      if (_modo === 'api') {
+        var conferencia = doc.status === 'aprovado' || doc.status === 'recusado';
+        var r;
+
+        if (conferencia) {
+          var documentoId = (atual && atual.id) || (j.id ? j.id + '-' + doc.tipo : null);
+          r = documentoId
+            ? pedirSync('POST', '/documentos/' + encodeURIComponent(documentoId) + '/conferir',
+                        { status: doc.status, observacao: doc.observacao || '' })
+            : { ok: false, erro: 'Documento ainda não enviado — não há o que conferir.' };
+        } else {
+          r = pedirSync(
+            'PUT',
+            '/times/' + encodeURIComponent(timeId) +
+            '/jogadores/' + encodeURIComponent(j.id) +
+            '/documentos/' + encodeURIComponent(doc.tipo),
+            { arquivo: doc.arquivo, validade: doc.validade || null }
+          );
+        }
+
+        if (!r.ok) {
+          /* Desfaz: repõe o documento anterior ou tira o que acabou de entrar. */
+          if (antes && atual) Object.keys(atual).forEach(function (k) { atual[k] = antes[k]; });
+          else j.documentos = j.documentos.filter(function (x) { return x !== doc; });
+          avisar(r.erro);
+          return false;
+        }
+
+        if (r.dados && r.dados.documento) {
+          var salvo = r.dados.documento;
+          var alvo = j.documentos.filter(function (x) { return x.tipo === salvo.tipo; })[0];
+          if (alvo) Object.keys(salvo).forEach(function (k) { alvo[k] = salvo[k]; });
+        }
+        fotografar();
+      } else {
+        salvar();
+      }
+
       api.registrar('documento', time.nome,
         doc.status === 'aprovado' ? 'aprovou' : doc.status === 'recusado' ? 'recusou' : 'enviou',
         j.nome + ' · ' + (TIPOS_DOCUMENTO[doc.tipo] || {}).nome);
@@ -797,9 +1241,26 @@
     resetar: resetar,
 
     /* -------------------------------------------------------------------
-       AUTENTICAÇÃO (protótipo — a validação real será do servidor)
+       AUTENTICAÇÃO
        ------------------------------------------------------------------- */
+
+    /* Mesmo retorno nos dois modos: { ok: true, conta } ou { ok: false, erro }.
+       A conta traz `destino`, que é para onde a tela de login redireciona. */
     autenticar: function (email, senha) {
+      if (_modo === 'api') {
+        var r = pedirSync('POST', '/auth/login', { email: email, senha: senha });
+        if (!r.ok || !r.dados || !r.dados.conta) {
+          return { ok: false, erro: r.erro || 'Não foi possível entrar.' };
+        }
+
+        /* CRÍTICO: o bootstrap depende da sessão. Sem esta recarga o usuário
+           entra no painel e não enxerga os próprios times — o cache ainda é o
+           payload público que veio antes do login. */
+        hidratar();
+
+        return { ok: true, conta: r.dados.conta };
+      }
+
       var e = String(email || '').trim().toLowerCase();
       var conta = CONTAS.filter(function (c) { return c.email.toLowerCase() === e; })[0];
       if (!conta) return { ok: false, erro: 'E-mail não encontrado.' };
@@ -807,7 +1268,11 @@
       return { ok: true, conta: conta };
     },
 
+    /* No modo api não faz nada: o cookie de sessão já veio na resposta do
+       login, com HttpOnly, e guardar uma cópia em localStorage só criaria uma
+       segunda fonte de verdade para desencontrar da primeira. */
     abrirSessao: function (conta) {
+      if (_modo === 'api') return;
       try {
         global.localStorage.setItem(CHAVE_SESSAO, JSON.stringify({
           email: conta.email, papel: conta.papel, nome: conta.nome, nivel: conta.nivel
@@ -816,6 +1281,13 @@
     },
 
     sessao: function () {
+      if (_modo === 'api') {
+        if (!_conta) return null;
+        return {
+          email: _conta.email, papel: _conta.papel,
+          nome: _conta.nome, nivel: _conta.nivel
+        };
+      }
       try {
         var b = global.localStorage.getItem(CHAVE_SESSAO);
         return b ? JSON.parse(b) : null;
@@ -823,6 +1295,14 @@
     },
 
     encerrarSessao: function () {
+      if (_modo === 'api') {
+        pedirSync('POST', '/auth/logout', {});
+        _conta = null;
+        /* Mesma razão do login: sem rehidratar, o cache seguiria com os dados
+           da conta que acabou de sair. */
+        hidratar();
+        return;
+      }
       try { global.localStorage.removeItem(CHAVE_SESSAO); } catch (e) {}
     },
 
@@ -833,14 +1313,61 @@
       chave = chave || 'id';
       var d = carregar();
       if (!d[colecao]) d[colecao] = [];
+
       var i = d[colecao].map(function (x) { return x[chave]; }).indexOf(item[chave]);
-      if (i >= 0) {
+      var existia = i >= 0;
+      var antes = existia ? clonar(d[colecao][i]) : null;
+
+      if (existia) {
         /* merge: preserva campos que a tela de edição não envia */
         Object.keys(item).forEach(function (k) { d[colecao][i][k] = item[k]; });
       } else {
         d[colecao].push(item);
       }
-      salvar();
+
+      if (_modo !== 'api') { salvar(); return item; }
+
+      var rota = ROTAS[colecao];
+
+      /* O disparo de e-mail tem porta própria: gravar('emailsEnviados', …) é a
+         forma como a tela pede o envio, e o histórico é consequência dele. */
+      if (colecao === 'emailsEnviados') {
+        dispararEmailDoRegistro(item);
+        fotografar();
+        return item;
+      }
+
+      /* Coleção sem rota (resultados, auditoria) ou escrita que esta sessão não
+         tem permissão de fazer: fica no cache até a próxima rehidratação. É o
+         caso de painel/inscricoes.html, que decrementa o contador do
+         campeonato só para a tela não piscar — quem manda no número é o
+         servidor, que recalcula a partir das inscrições. */
+      if (!rota || rota.semGravacao || (rota.admin && !ehAdmin())) {
+        fotografar();
+        return item;
+      }
+
+      var id = d[colecao][existia ? i : d[colecao].length - 1][chave];
+      var atual = existia ? d[colecao][i] : item;
+      var r;
+
+      if (existia || rota.semCriacao) {
+        r = pedirSync('PUT', rota.caminho + '/' + encodeURIComponent(id), corpoDe(rota, atual));
+      } else {
+        r = pedirSync('POST', rota.caminho, corpoDe(rota, atual));
+      }
+
+      if (!r.ok) {
+        /* Desfaz no próprio array: as telas guardam a referência da lista, e
+           trocá-la por outra deixaria a página lendo a versão antiga. */
+        if (existia) d[colecao][i] = antes;
+        else retirar(d[colecao], item);
+        avisar(r.erro);
+        return item;
+      }
+
+      absorver(colecao, r.dados, id);
+      fotografar();
       return item;
     },
 
@@ -856,16 +1383,51 @@
       var d = carregar();
       var item = (d[colecao] || []).filter(function (x) { return x[chave] === valor; })[0];
       if (!item) return false;
+
+      var antes = clonar(item);
+
       item.arquivado = true;
       item.arquivadoEm = new Date().toISOString().slice(0, 16).replace('T', ' ');
       if (motivo) item.arquivadoMotivo = motivo;
-      salvar();
+
+      if (_modo !== 'api') { salvar(); return true; }
+
+      var rota = ROTAS[colecao];
+      if (!rota || (rota.admin && !ehAdmin())) { fotografar(); return true; }
+
+      /* DELETE no servidor é arquivamento lógico, igual ao daqui. */
+      var r = pedirSync('DELETE', rota.caminho + '/' + encodeURIComponent(valor),
+                        motivo ? { observacao: motivo } : {});
+
+      if (!r.ok) {
+        Object.keys(item).forEach(function (k) { delete item[k]; });
+        Object.keys(antes).forEach(function (k) { item[k] = antes[k]; });
+        avisar(r.erro);
+        return false;
+      }
+
+      absorver(colecao, r.dados, valor);
+      _arquivados = null;
+      fotografar();
       return true;
     },
 
     restaurar: function (colecao, valor, chave) {
       chave = chave || 'id';
       var d = carregar();
+
+      if (_modo === 'api') {
+        var rotaR = ROTAS[colecao];
+        if (!rotaR || !rotaR.tabela) return false;
+
+        var rr = pedirSync('POST', '/historico/restaurar', { tabela: rotaR.tabela, id: valor });
+        if (!rr.ok) { avisar(rr.erro); return false; }
+
+        _arquivados = null;
+        hidratar();     /* o item volta para as listas — o payload inteiro muda */
+        return true;
+      }
+
       var item = (d[colecao] || []).filter(function (x) { return x[chave] === valor; })[0];
       if (!item) return false;
       delete item.arquivado;
@@ -879,6 +1441,23 @@
     excluirDefinitivo: function (colecao, valor, chave) {
       chave = chave || 'id';
       var d = carregar();
+
+      if (_modo === 'api') {
+        var rotaE = ROTAS[colecao];
+        if (!rotaE || !rotaE.tabela) return false;
+
+        var re = pedirSync('DELETE', '/historico', { tabela: rotaE.tabela, id: valor });
+        if (!re.ok) { avisar(re.erro); return false; }
+
+        if (d[colecao]) {
+          var alvo = d[colecao].filter(function (x) { return x[chave] === valor; })[0];
+          if (alvo) retirar(d[colecao], alvo);
+        }
+        _arquivados = null;
+        fotografar();
+        return true;
+      }
+
       if (!d[colecao]) return false;
       var i = d[colecao].map(function (x) { return x[chave]; }).indexOf(valor);
       if (i < 0) return false;
@@ -887,9 +1466,43 @@
       return true;
     },
 
-    /* Itens no histórico de uma coleção */
+    /* Itens no histórico de uma coleção.
+       No modo api o bootstrap traz só o que está em circulação, então o
+       histórico é consultado sob demanda — e memorizado, porque a tela de
+       histórico chama esta função uma vez por coleção a cada render. */
     arquivados: function (colecao) {
-      return (carregar()[colecao] || []).filter(function (x) { return x.arquivado; });
+      if (_modo !== 'api') {
+        return (carregar()[colecao] || []).filter(function (x) { return x.arquivado; });
+      }
+
+      carregar();
+      if (!_arquivados) _arquivados = {};
+      if (_arquivados[colecao]) return _arquivados[colecao];
+
+      var rota = ROTAS[colecao];
+      var lista = (_cache[colecao] || []).filter(function (x) { return x.arquivado; });
+
+      if (rota && rota.temHistorico) {
+        /* Recursos de conteúdo devolvem o registro completo. */
+        var r = pedirSync('GET', rota.caminho + '?arquivados=1');
+        var chaveLista = rota.chaveLista || colecao;
+        if (r.ok && r.dados && r.dados[chaveLista]) lista = r.dados[chaveLista];
+      } else if (rota && rota.tabela) {
+        /* Campeonatos, times e contas não têm listagem de arquivados: o que dá
+           para mostrar vem de /api/historico, que devolve id, nome e data. */
+        var h = pedirSync('GET', '/historico?tabela=' + encodeURIComponent(rota.tabela));
+        if (h.ok && h.dados && h.dados.itens) {
+          lista = h.dados.itens.map(function (it) {
+            return {
+              id: it.id, nome: it.nome, titulo: it.nome,
+              arquivado: true, arquivadoEm: it.data
+            };
+          });
+        }
+      }
+
+      _arquivados[colecao] = lista;
+      return lista;
     },
 
     /* Itens em circulação (o que as telas listam por padrão) */
@@ -904,9 +1517,21 @@
 
     definir: function (caminho, valor) {
       var d = carregar();
+      var antes = clonar(d[caminho]);
       d[caminho] = valor;
-      salvar();
-      return valor;
+
+      if (_modo !== 'api') { salvar(); return valor; }
+
+      /* Só a configuração de SMTP tem porta direta; o resto que passa por aqui
+         não tem rota própria e fica no cache até a próxima rehidratação. */
+      if (caminho === 'smtp' && ehAdmin()) {
+        var r = pedirSync('PUT', '/email/smtp', valor);
+        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return antes; }
+        if (r.dados && r.dados.smtp) d.smtp = r.dados.smtp;
+      }
+
+      fotografar();
+      return d[caminho];
     },
 
     modalidade: function (id) { return MODALIDADES[id] || MODALIDADES.outros; },
@@ -949,7 +1574,16 @@
     },
 
     parceiros: function () { return carregar().parceiros.slice(); },
-    usuario: function () { return carregar().usuario; },
+    /* Nunca devolve null. No cliente antigo `usuario` era sempre o objeto da
+       semente, então as páginas leem usuario().nome e usuario().email direto,
+       sem checar. Sem sessão o bootstrap manda null, e seis telas quebravam com
+       TypeError logo na primeira linha — inclusive verificar-email.html, que o
+       cadastro abre justamente antes de existir sessão. Um objeto vazio mantém
+       o contrato de forma e deixa a página renderizar em branco, que é o
+       comportamento correto para quem ainda não entrou. */
+    usuario: function () {
+      return carregar().usuario || { nome: '', email: '', telefone: '', criadoEm: '' };
+    },
     meusTimes: function () {
       return carregar().meusTimes.filter(function (t) { return !t.arquivado; });
     },
@@ -1002,6 +1636,8 @@
       });
       if (!alvos.length) return false;
 
+      var estadoAnterior = alvos.map(function (c) { return clonar(c); });
+
       var conversa = alvos.reduce(function (maior, c) {
         return (c.mensagens && c.mensagens.length > (maior ? maior.length : 0)) ? c.mensagens : maior;
       }, null) || [];
@@ -1015,7 +1651,51 @@
         });
       });
 
-      salvar();
+      if (_modo !== 'api') { salvar(); return true; }
+
+      var falha = null;
+
+      if (mudancas.mensagem && mudancas.mensagem.texto) {
+        var rm = pedirSync('POST', '/chamados/' + encodeURIComponent(protocolo) + '/mensagens',
+                           { texto: mudancas.mensagem.texto });
+        if (!rm.ok) falha = rm.erro;
+      }
+
+      /* Mudar o status é ato da organização: a rota exige administrador. Para o
+         competidor, o próprio servidor ajusta o status ao receber a mensagem
+         (respondido → em andamento), então não há nada a enviar daqui. */
+      if (!falha && mudancas.status && ehAdmin()) {
+        var rs = pedirSync('POST', '/chamados/' + encodeURIComponent(protocolo) + '/status',
+                           { status: mudancas.status });
+        if (!rs.ok) falha = rs.erro;
+      }
+
+      if (falha) {
+        alvos.forEach(function (c, i) {
+          Object.keys(c).forEach(function (k) { delete c[k]; });
+          Object.keys(estadoAnterior[i]).forEach(function (k) { c[k] = estadoAnterior[i][k]; });
+        });
+        avisar(falha);
+        return false;
+      }
+
+      /* Relê o chamado para o cache ficar com a verdade do servidor: status
+         derivado, carimbos e a mensagem de sistema que ele mesmo inseriu. */
+      var rl = pedirSync('GET', '/chamados/' + encodeURIComponent(protocolo));
+      if (rl.ok && rl.dados) {
+        var atualizado = rl.dados.chamado || rl.dados.adminChamado;
+        if (atualizado) {
+          alvos.forEach(function (c) {
+            Object.keys(atualizado).forEach(function (k) {
+              /* `time` no painel do admin é o NOME do time; o payload do
+                 competidor não tem esse campo e não pode sobrescrevê-lo. */
+              if (atualizado[k] !== undefined) c[k] = atualizado[k];
+            });
+          });
+        }
+      }
+
+      fotografar();
       return true;
     },
 
@@ -1029,7 +1709,7 @@
         inscritos: soma(d.campeonatos, 'inscritos'),
         oficial: soma(d.campeonatos, 'oficial'),
         espera: soma(d.campeonatos, 'espera'),
-        chamadosAbertos: d.adminChamados.filter(function (c) { return c.status !== 'encerrado'; }).length
+        chamadosAbertos: (d.adminChamados || []).filter(function (c) { return c.status !== 'encerrado'; }).length
       };
     },
 
@@ -1037,6 +1717,12 @@
        REGISTRO DE AUDITORIA
        Quem fez o quê e quando. Sem isto ninguém sabe quem moveu um time
        para a lista oficial ou quem alterou o campeonato depois da inscrição.
+
+       No modo api quem assina o registro é o servidor, dentro da mesma
+       transação da escrita — não existe (nem deve existir) rota para o
+       navegador inserir linha de auditoria. O que acontece aqui é só o eco
+       local, para a tela que acabou de agir já mostrar a linha; a versão
+       oficial chega na próxima rehidratação.
        ------------------------------------------------------------------- */
     registrar: function (area, alvo, acao, detalhe) {
       var d = carregar();
@@ -1061,7 +1747,8 @@
 
       /* Mantém o log num tamanho saudável para o localStorage */
       if (d.auditoria.length > 500) d.auditoria.length = 500;
-      salvar();
+
+      if (_modo !== 'api') salvar();
     },
 
     auditoria: function (filtro) {
@@ -1087,8 +1774,22 @@
       var origem = api.campeonato(id);
       if (!origem) return { ok: false, erro: 'Campeonato de origem não encontrado.' };
 
-      var copia = JSON.parse(JSON.stringify(origem));
       ajustes = ajustes || {};
+
+      if (_modo === 'api') {
+        var r = pedirSync('POST', '/campeonatos/' + encodeURIComponent(id) + '/duplicar', ajustes);
+        if (!r.ok) { avisar(r.erro); return { ok: false, erro: r.erro }; }
+
+        var novo = r.dados && r.dados.campeonato;
+        if (novo) {
+          carregar().campeonatos.push(novo);
+          fotografar();
+        }
+        api.registrar('campeonato', novo ? novo.nome : '', 'duplicou', 'a partir de "' + origem.nome + '"');
+        return { ok: true, campeonato: novo };
+      }
+
+      var copia = JSON.parse(JSON.stringify(origem));
 
       copia.id = 'camp-' + Date.now();
       copia.nome = ajustes.nome || (origem.nome + ' (cópia)');
@@ -1131,6 +1832,25 @@
       });
       if (jaInscrito) return { ok: false, erro: 'Este time já está inscrito neste campeonato.' };
 
+      if (_modo === 'api') {
+        var r = pedirSync('POST', '/inscricoes', { campeonatoId: campeonatoId, timeId: timeId });
+        if (!r.ok) return { ok: false, erro: r.erro };
+
+        var nova = r.dados.inscricao;
+        d.minhasInscricoes = d.minhasInscricoes || [];
+        d.minhasInscricoes.push(nova);
+
+        /* Os contadores são derivados das inscrições; a resposta já os traz. */
+        if (r.dados.contagens) {
+          camp.inscritos = r.dados.contagens.inscritos;
+          camp.oficial = r.dados.contagens.oficial;
+          camp.espera = r.dados.contagens.espera;
+        }
+
+        fotografar();
+        return { ok: true, inscricao: nova, protocolo: r.dados.protocolo };
+      }
+
       var protocolo = String(new Date().getFullYear()) + '-' +
                       String(600 + (d.minhasInscricoes || []).length * 7).padStart(6, '0');
 
@@ -1168,6 +1888,257 @@
     }
   };
 
+  /* ---------------------------------------------------------------------
+     DISPARO DE E-MAIL A PARTIR DO REGISTRO DA TELA
+
+     admin/email.html grava a LINHA DO HISTÓRICO e considera o e-mail enviado.
+     A API precisa do seletor de destinatários, que essa linha não carrega —
+     o que ela tem é o rótulo já formatado. Os três rótulos fixos e o nome do
+     campeonato são suficientes para reconstruir o alvo.
+     --------------------------------------------------------------------- */
+  function alvoDoDestino(destino) {
+    if (destino === 'Todos os campeonatos') return 'todos';
+    if (destino === 'Campeonatos com inscrições abertas') return 'abertos';
+
+    var camp = (_cache.campeonatos || []).filter(function (c) { return c.nome === destino; })[0];
+    return camp ? camp.id : null;
+  }
+
+  function dispararEmailDoRegistro(item) {
+    if (!ehAdmin()) return;
+
+    var alvo = alvoDoDestino(item.destino);
+    if (!alvo) {
+      /* "Lista manual" não tem equivalente na API: o servidor só conhece os
+         responsáveis com inscrição ativa. Fica registrado só no cache. */
+      avisar('Envio para lista manual ainda não é aceito pelo servidor. Nada foi disparado.');
+      return;
+    }
+
+    var r = pedirSync('POST', '/email/disparar', {
+      assunto: item.assunto, corpo: item.corpo || '', alvo: alvo
+    });
+
+    if (!r.ok) {
+      retirar(_cache.emailsEnviados || [], item);
+      avisar(r.erro);
+      return;
+    }
+
+    if (r.dados) {
+      item.qtd = r.dados.destinatarios || item.qtd;
+      item.destino = r.dados.destino || item.destino;
+      item.status = r.dados.status || item.status;
+    }
+  }
+
+  /* =====================================================================
+     PB.api — CAMINHO RECOMENDADO PARA CÓDIGO NOVO
+
+     Mesmo back-end, em fetch, devolvendo Promise. Toda função resolve com
+     { ok, status, dados, erro } — nenhuma rejeita, para o chamador tratar erro
+     de rede e erro de regra do mesmo jeito.
+
+     Página nova deve usar isto e não PB.dados.*: sem XHR síncrono, sem cache
+     global e com os dados sempre frescos.
+     ===================================================================== */
+  var apiAssincrona = {
+    BASE: BASE,
+
+    modo: function () { return _modo; },
+    conta: function () { return _conta ? clonar(_conta) : null; },
+
+    pedir: pedir,
+    get: function (caminho) { return pedir('GET', caminho); },
+    post: function (caminho, corpo) { return pedir('POST', caminho, corpo || {}); },
+    put: function (caminho, corpo) { return pedir('PUT', caminho, corpo || {}); },
+    patch: function (caminho, corpo) { return pedir('PATCH', caminho, corpo || {}); },
+    remover: function (caminho, corpo) { return pedir('DELETE', caminho, corpo || {}); },
+
+    /* ---- Descoberta e sessão ---- */
+    ping: function () { return pedir('GET', '/ping'); },
+    bootstrap: function () { return pedir('GET', '/bootstrap'); },
+    entrar: function (email, senha) { return pedir('POST', '/auth/login', { email: email, senha: senha }); },
+    sair: function () { return pedir('POST', '/auth/logout', {}); },
+    sessao: function () { return pedir('GET', '/auth/sessao'); },
+    cadastrar: function (dados) { return pedir('POST', '/auth/cadastro', dados); },
+    verificarEmail: function (dados) { return pedir('POST', '/auth/verificar-email', dados); },
+    recuperarSenha: function (email) { return pedir('POST', '/auth/recuperar-senha', { email: email }); },
+    redefinirSenha: function (dados) { return pedir('POST', '/auth/redefinir-senha', dados); },
+
+    /* ---- Campeonatos ---- */
+    campeonatos: function (filtro) {
+      var q = [];
+      if (filtro && filtro.status) q.push('status=' + encodeURIComponent(filtro.status));
+      if (filtro && filtro.modalidade) q.push('modalidade=' + encodeURIComponent(filtro.modalidade));
+      return pedir('GET', '/campeonatos' + (q.length ? '?' + q.join('&') : ''));
+    },
+    campeonato: function (id) { return pedir('GET', '/campeonatos/' + encodeURIComponent(id)); },
+    inscricoesAbertas: function () { return pedir('GET', '/campeonatos/abertas'); },
+    inscritosDoCampeonato: function (id) { return pedir('GET', '/campeonatos/' + encodeURIComponent(id) + '/inscritos'); },
+    salvarCampeonato: function (camp) {
+      return camp && camp.id
+        ? pedir('PUT', '/campeonatos/' + encodeURIComponent(camp.id), camp)
+        : pedir('POST', '/campeonatos', camp);
+    },
+    mudarStatusCampeonato: function (id, status) {
+      return pedir('POST', '/campeonatos/' + encodeURIComponent(id) + '/status', { status: status });
+    },
+    apurarCampeonato: function (id, classificacao) {
+      return pedir('POST', '/campeonatos/' + encodeURIComponent(id) + '/apuracao', { classificacao: classificacao });
+    },
+    duplicarCampeonato: function (id, ajustes) {
+      return pedir('POST', '/campeonatos/' + encodeURIComponent(id) + '/duplicar', ajustes || {});
+    },
+
+    /* ---- Times e elenco ---- */
+    times: function () { return pedir('GET', '/times'); },
+    time: function (id) { return pedir('GET', '/times/' + encodeURIComponent(id)); },
+    salvarTime: function (time) {
+      return time && time.id
+        ? pedir('PUT', '/times/' + encodeURIComponent(time.id), time)
+        : pedir('POST', '/times', time);
+    },
+    excluirTime: function (id) { return pedir('DELETE', '/times/' + encodeURIComponent(id), {}); },
+    elenco: function (id) { return pedir('GET', '/times/' + encodeURIComponent(id) + '/elenco'); },
+    salvarJogador: function (timeId, jogador) {
+      return jogador && jogador.id
+        ? pedir('PUT', '/times/' + encodeURIComponent(timeId) + '/jogadores/' + encodeURIComponent(jogador.id), jogador)
+        : pedir('POST', '/times/' + encodeURIComponent(timeId) + '/jogadores', jogador);
+    },
+    excluirJogador: function (timeId, jogadorId) {
+      return pedir('DELETE', '/times/' + encodeURIComponent(timeId) + '/jogadores/' + encodeURIComponent(jogadorId), {});
+    },
+    salvarStaff: function (timeId, membro) {
+      return membro && membro.id
+        ? pedir('PUT', '/times/' + encodeURIComponent(timeId) + '/staff/' + encodeURIComponent(membro.id), membro)
+        : pedir('POST', '/times/' + encodeURIComponent(timeId) + '/staff', membro);
+    },
+    excluirStaff: function (timeId, staffId) {
+      return pedir('DELETE', '/times/' + encodeURIComponent(timeId) + '/staff/' + encodeURIComponent(staffId), {});
+    },
+
+    /* ---- Documentos ---- */
+    documentacao: function (timeId) { return pedir('GET', '/times/' + encodeURIComponent(timeId) + '/documentacao'); },
+    enviarDocumento: function (timeId, jogadorId, tipo, dados) {
+      return pedir('PUT',
+        '/times/' + encodeURIComponent(timeId) +
+        '/jogadores/' + encodeURIComponent(jogadorId) +
+        '/documentos/' + encodeURIComponent(tipo), dados);
+    },
+    conferirDocumento: function (documentoId, status, observacao) {
+      return pedir('POST', '/documentos/' + encodeURIComponent(documentoId) + '/conferir',
+                   { status: status, observacao: observacao || '' });
+    },
+
+    /* ---- Inscrições ---- */
+    inscricoes: function () { return pedir('GET', '/inscricoes'); },
+    inscrever: function (campeonatoId, timeId) {
+      return pedir('POST', '/inscricoes', { campeonatoId: campeonatoId, timeId: timeId });
+    },
+    mudarStatusInscricao: function (id, status, observacao) {
+      return pedir('POST', '/inscricoes/' + encodeURIComponent(id) + '/status',
+                   { status: status, observacao: observacao || '' });
+    },
+    cancelarInscricao: function (id, motivo) {
+      return pedir('DELETE', '/inscricoes/' + encodeURIComponent(id), { observacao: motivo || '' });
+    },
+
+    /* ---- Chamados ---- */
+    chamados: function () { return pedir('GET', '/chamados'); },
+    chamado: function (protocolo) { return pedir('GET', '/chamados/' + encodeURIComponent(protocolo)); },
+    abrirChamado: function (dados) { return pedir('POST', '/chamados', dados); },
+    responderChamado: function (protocolo, texto) {
+      return pedir('POST', '/chamados/' + encodeURIComponent(protocolo) + '/mensagens', { texto: texto });
+    },
+    mudarStatusChamado: function (protocolo, status) {
+      return pedir('POST', '/chamados/' + encodeURIComponent(protocolo) + '/status', { status: status });
+    },
+
+    /* ---- Conteúdo ---- */
+    posts: function () { return pedir('GET', '/posts'); },
+    post: function (id) { return pedir('GET', '/posts/' + encodeURIComponent(id)); },
+    categorias: function () { return pedir('GET', '/categorias'); },
+    eventos: function () { return pedir('GET', '/eventos'); },
+    parceiros: function () { return pedir('GET', '/parceiros'); },
+    banners: function () { return pedir('GET', '/banners'); },
+    bannersSite: function () { return pedir('GET', '/banners-site'); },
+    ordenarBannerSite: function (id, ordem) {
+      return pedir('POST', '/banners-site/' + encodeURIComponent(id) + '/ordem', { ordem: ordem });
+    },
+
+    /* ---- Administração ---- */
+    metricas: function () { return pedir('GET', '/admin/metricas'); },
+    usuarios: function () { return pedir('GET', '/admin/usuarios'); },
+    salvarUsuario: function (u) {
+      return u && u.id
+        ? pedir('PUT', '/admin/usuarios/' + encodeURIComponent(u.id), u)
+        : pedir('POST', '/admin/usuarios', u);
+    },
+    ranking: function (modalidade) { return pedir('GET', '/ranking/' + encodeURIComponent(modalidade)); },
+    salvarRanking: function (modalidade, linhas) {
+      return pedir('PUT', '/ranking/' + encodeURIComponent(modalidade), { linhas: linhas });
+    },
+    rankingConfig: function (modalidade) { return pedir('GET', '/ranking-config/' + encodeURIComponent(modalidade)); },
+    salvarRankingConfig: function (modalidade, cfg) {
+      return pedir('PUT', '/ranking-config/' + encodeURIComponent(modalidade), cfg);
+    },
+    auditoria: function (filtro) {
+      var q = [];
+      if (filtro && filtro.area) q.push('area=' + encodeURIComponent(filtro.area));
+      if (filtro && filtro.de) q.push('de=' + encodeURIComponent(filtro.de));
+      if (filtro && filtro.ate) q.push('ate=' + encodeURIComponent(filtro.ate));
+      return pedir('GET', '/auditoria' + (q.length ? '?' + q.join('&') : ''));
+    },
+    historico: function (tabela) {
+      return pedir('GET', '/historico' + (tabela ? '?tabela=' + encodeURIComponent(tabela) : ''));
+    },
+    restaurarDoHistorico: function (tabela, id) {
+      return pedir('POST', '/historico/restaurar', { tabela: tabela, id: id });
+    },
+    excluirDoHistorico: function (tabela, id) {
+      return pedir('DELETE', '/historico', { tabela: tabela, id: id });
+    },
+
+    /* ---- E-mail ---- */
+    modelosEmail: function () { return pedir('GET', '/email/modelos'); },
+    salvarModeloEmail: function (id, dados) { return pedir('PUT', '/email/modelos/' + encodeURIComponent(id), dados); },
+    variaveisEmail: function () { return pedir('GET', '/email/variaveis'); },
+    smtp: function () { return pedir('GET', '/email/smtp'); },
+    salvarSmtp: function (cfg) { return pedir('PUT', '/email/smtp', cfg); },
+    testarSmtp: function (para) { return pedir('POST', '/email/testar', { para: para }); },
+    emailsEnviados: function () { return pedir('GET', '/email/enviados'); },
+    previaEmail: function (dados) { return pedir('POST', '/email/previa', dados); },
+    dispararEmail: function (dados) { return pedir('POST', '/email/disparar', dados); }
+  };
+
+  /* =====================================================================
+     ARRANQUE
+
+     Roda no parse do arquivo, antes de qualquer script de página. Em modo
+     local nada acontece: o cache continua preguiçoso, montado no primeiro
+     carregar(), exatamente como antes.
+     ===================================================================== */
+  function iniciar() {
+    if (!descobrir()) { _modo = 'local'; return; }
+
+    _modo = 'api';
+    if (!hidratar()) {
+      /* Respondeu ao ping mas não entregou o bootstrap: sem dados confiáveis,
+         é mais honesto cair para a demonstração do que abrir a tela vazia. */
+      _modo = 'local';
+      _cache = null;
+      return;
+    }
+
+    /* Nenhum e-mail nem senha vive neste arquivo quando há servidor. */
+    CONTAS = [];
+    api.CONTAS = CONTAS;
+  }
+
+  iniciar();
+
   global.PB = global.PB || {};
   global.PB.dados = api;
+  global.PB.api = apiAssincrona;
 })(window);

@@ -655,7 +655,7 @@ function bannerSite(l) {
 }
 
 function paraLinhaBannerSite(b, { id } = {}) {
-  return db.limpar({
+  const linha = db.limpar({
     id: id || b.id,
     titulo: b.titulo || '',
     texto: b.texto || '',
@@ -670,8 +670,19 @@ function paraLinhaBannerSite(b, { id } = {}) {
     titulo_tamanho: Number(b.tituloTamanho) || 0,
     sem_texto: db.paraBool(b.semTexto),
     ordem: Number(b.ordem) || 0,
-    ativo: db.paraBool(b.ativo === undefined ? true : b.ativo)
+    ativo: db.paraBool(b.ativo === undefined ? true : b.ativo),
+    /* admin/banners-site.html arquiva e restaura gravando b.arquivado no
+       próprio objeto, não por DELETE. Sem mapear, "Remover da rotação" e
+       "Restaurar" respondiam 200 e não faziam nada. */
+    arquivado_em: b.arquivado ? (b.arquivadoEm || db.agora()) : null
   });
+
+  /* db.limpar troca undefined por null, então a chave precisa sair da linha
+     quando a tela não mandou o campo — senão toda gravação desarquivaria o
+     banner sem querer. */
+  if (b.arquivado === undefined) delete linha.arquivado_em;
+
+  return linha;
 }
 
 /* ==========================================================================

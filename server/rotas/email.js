@@ -309,15 +309,18 @@ function registrar(rotas) {
     const corpoReq = await ctx.corpo();
 
     /* Senha por API viraria senha no banco, no log e no histórico de request.
-       Ela entra por ambiente e só por ambiente. */
-    if (corpoReq.senha !== undefined || corpoReq.password !== undefined) {
-      throw erro400(
-        'A senha do SMTP não é gravada pelo painel: defina PHYGITAL_SMTP_SENHA no ambiente do servidor.'
-      );
-    }
+       Ela entra por ambiente e só por ambiente.
+
+       O campo é DESCARTADO, não recusado. A tela admin/email.html sempre manda
+       a chave (o campo é obrigatório no formulário), então recusar significava
+       que a tela de configuração de SMTP não salvava nunca — e ainda mostrava
+       "Configurações salvas" por cima do erro. Ignorar cumpre a mesma regra de
+       segurança sem quebrar a única tela que edita esses dados. */
+    const { senha, password, ...semSegredo } = corpoReq;
+    const senhaIgnorada = senha !== undefined || password !== undefined;
 
     const atual = mapa.smtp(db.um('SELECT * FROM smtp WHERE id = 1'));
-    const linha = mapa.paraLinhaSmtp({ ...atual, ...corpoReq });
+    const linha = mapa.paraLinhaSmtp({ ...atual, ...semSegredo });
 
     const colunas = Object.keys(linha);
     db.transacao(() => {
@@ -337,7 +340,10 @@ function registrar(rotas) {
     ctx.ok({
       ok: true,
       smtp: mapa.smtp(db.um('SELECT * FROM smtp WHERE id = 1')),
-      senhaConfigurada: Boolean(process.env.PHYGITAL_SMTP_SENHA)
+      senhaConfigurada: Boolean(process.env.PHYGITAL_SMTP_SENHA),
+      /* Deixa registrado na resposta que a senha enviada foi jogada fora, para
+         quem chama a API por fora do painel não achar que ela foi guardada. */
+      senhaIgnorada
     });
   });
 

@@ -245,24 +245,35 @@ function doAdmin(conta) {
   const times = db.todos('SELECT * FROM times WHERE arquivado_em IS NULL ORDER BY criado_em, id');
   const inscricoes = db.todos('SELECT * FROM inscricoes ORDER BY data DESC, id');
 
+  /* O bootstrap precisa respeitar as MESMAS barreiras das rotas dedicadas.
+     Enquanto entregava tudo a qualquer admin, um nível 'operacao' lia por aqui
+     a trilha de auditoria e o cadastro completo de administradores que
+     GET /api/auditoria e GET /api/admin/usuarios recusam com 403. */
+
   /* papel não existe em auditoria: vem da conta que assinou o registro. */
-  const auditoria = db.todos(
-    `SELECT a.*, c.papel AS papel
-       FROM auditoria a
-       LEFT JOIN contas c ON c.id = a.conta_id
-      ORDER BY a.em DESC
-      LIMIT ?`,
-    LIMITE_AUDITORIA
-  );
+  const auditoria = auth.podeFazer(conta, 'auditoria:ler')
+    ? db.todos(
+      `SELECT a.*, c.papel AS papel
+         FROM auditoria a
+         LEFT JOIN contas c ON c.id = a.conta_id
+        ORDER BY a.em DESC
+        LIMIT ?`,
+      LIMITE_AUDITORIA
+    )
+    : [];
 
   /* A tela Minha Conta do admin lê adminUsuarios()[0] como sendo o próprio
-     usuário logado — daí ele vir primeiro. */
-  const usuarios = db.todos(
-    `SELECT * FROM contas
-      WHERE papel = 'admin' AND arquivado_em IS NULL
-      ORDER BY (id = ?) DESC, criado_em, id`,
-    conta.id
-  );
+     usuário logado — daí ele vir primeiro. Quem não é master recebe só a
+     própria conta: a tela continua funcionando e o organograma de
+     administradores não vaza. */
+  const usuarios = conta.nivel === 'master'
+    ? db.todos(
+      `SELECT * FROM contas
+        WHERE papel = 'admin' AND arquivado_em IS NULL
+        ORDER BY (id = ?) DESC, criado_em, id`,
+      conta.id
+    )
+    : db.todos('SELECT * FROM contas WHERE id = ?', conta.id);
 
   return {
     /* Sem filtro de publicado: o CMS precisa enxergar os rascunhos. */

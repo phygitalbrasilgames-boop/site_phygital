@@ -13,6 +13,44 @@
   var reduzirMovimento = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------------------------------------------------------------------
+     GUARDA DE SESSÃO
+
+     Roda no topo do arquivo, e não em iniciar(): este script é carregado antes
+     do script inline de cada página, então a saída acontece antes de a página
+     tentar montar a tela com dados que não existem.
+
+     Só vale no modo api. No modo local (GitHub Pages) não há sessão de verdade
+     e a demonstração precisa continuar navegável.
+     --------------------------------------------------------------------- */
+  var PAGINAS_ABERTAS = [
+    'login.html', 'cadastro.html', 'recuperar-senha.html',
+    'verificar-email.html', 'primeiro-acesso.html', 'index.html'
+  ];
+
+  function guardarSessao() {
+    if (!PB.dados || typeof PB.dados.modo !== 'function' || PB.dados.modo() !== 'api') return false;
+
+    var caminho = global.location.pathname;
+    var area = /\/admin\//.test(caminho) ? 'admin'
+      : (/\/painel\//.test(caminho) ? 'painel' : null);
+    if (!area) return false;
+
+    var arquivo = caminho.split('/').pop() || 'index.html';
+    if (PAGINAS_ABERTAS.indexOf(arquivo) >= 0) return false;
+
+    var conta = PB.dados.sessao && PB.dados.sessao();
+    if (conta) return false;
+
+    /* replace, não href: a página protegida não fica no histórico, então o
+       botão voltar do navegador não volta para uma tela sem dados. */
+    var destino = area === 'admin' ? '../painel/login.html' : 'login.html';
+    global.location.replace(destino + '?retorno=' + encodeURIComponent(caminho));
+    return true;
+  }
+
+  var saindo = guardarSessao();
+
+  /* ---------------------------------------------------------------------
      FORMATADORES
      --------------------------------------------------------------------- */
   var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -776,7 +814,11 @@
     if (typeof PB.aoIniciar === 'function') PB.aoIniciar();
   }
 
-  if (doc.readyState === 'loading') {
+  /* Página protegida sem sessão já está saindo: montar a tela seria trabalho
+     jogado fora, e sobre dados que não existem. */
+  if (saindo) {
+    /* nada a inicializar */
+  } else if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', iniciar);
   } else {
     iniciar();
