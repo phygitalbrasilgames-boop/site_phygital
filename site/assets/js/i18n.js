@@ -1,7 +1,15 @@
 /* ==========================================================================
    PHYGITAL BRASIL — TRADUÇÃO EM TEMPO DE EXECUÇÃO
 
-   Carregado ANTES de phygital.js e DEPOIS de dados.js, em todas as páginas.
+   PRIMEIRO SCRIPT DE TODAS AS 50 PÁGINAS — antes de dados.js e de phygital.js.
+
+   A ordem é obrigatória, não estética. O dados.js pede /api/bootstrap durante o
+   parse e o servidor devolve o conteúdo cadastrado JÁ TRADUZIDO; para traduzir
+   no idioma certo ele precisa do ?lang=, e quem sabe o idioma é este arquivo.
+   Enquanto ele vinha depois, a requisição saía com o cookie da navegação
+   ANTERIOR: ?lang=en abria o conteúdo em português e ?lang=es abria em inglês.
+   Por isso a resolução do idioma acontece no parse deste arquivo, síncrona, sem
+   depender do bootstrap.
 
    COMO FUNCIONA
    O português continua escrito no HTML, exatamente como está hoje: nenhuma
@@ -30,7 +38,9 @@
 
    API
      PB.i18n.idioma()        'pt' | 'en' | 'es'
-     PB.i18n.definir(cod)    troca, persiste e retraduz a página, sem recarregar
+     PB.i18n.definir(cod)    troca e persiste; com back-end recarrega a página,
+                             porque o conteúdo cadastrado vem traduzido de lá
+     PB.i18n.escolhido()     o idioma quando foi escolha, null quando foi palpite
      PB.i18n.t(texto)        traduz uma string solta (para o JS das páginas)
      PB.i18n.traduzir(raiz)  traduz o que houver dentro de um nó
      PB.i18n.idiomas()       lista de { codigo, rotulo }
@@ -64,7 +74,7 @@
   var TAGS_OPACAS = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, PRE: 1, CODE: 1, SVG: 1 };
 
   var _idioma = PADRAO;
-  var _origem = 'padrao';        /* url | cookie | conta | navegador | padrao */
+  var _origem = 'padrao';        /* url | cookie | escolha | conta | servidor | navegador | padrao */
   var _textos = {};              /* chave normalizada -> tradução */
   var _padroes = [];             /* rótulos montados em tempo de execução */
   var _cache = {};               /* idioma -> pacote já baixado */
@@ -504,6 +514,20 @@
     return null;
   }
 
+  /* Idioma que o servidor resolveu para a carga desta página, como veio no
+     /api/bootstrap. É a resposta mais completa que existe: só ele enxerga a
+     preferência gravada na conta, e o front-end não tem como ler essa coluna
+     antes do bootstrap. null quando não há back-end. */
+  function doServidor() {
+    try {
+      var d = PB.dados;
+      if (!d || typeof d.idiomaResolvido !== 'function') return null;
+      return limpar(d.idiomaResolvido());
+    } catch (e) {
+      return null;
+    }
+  }
+
   function resolver() {
     var c = daUrl();
     if (c) { _origem = 'url'; return c; }
@@ -516,6 +540,12 @@
     _origem = 'padrao';
     return PADRAO;
   }
+
+  /* Origens que são DECISÃO — de quem montou o link, de quem já navegou aqui
+     ou de quem clicou no seletor. 'navegador' e 'padrao' são palpite, e palpite
+     não vale como ?lang= no bootstrap: atropelaria a preferência da conta, que
+     só o servidor conhece. Ver o cabeçalho de dados.js. */
+  var EXPLICITAS = { url: 1, cookie: 1, escolha: 1 };
 
   /* O cookie é o que o servidor lê para responder e-mail e mensagem de erro no
      idioma certo; o localStorage é o reforço para quando o cookie não pega
@@ -549,6 +579,49 @@
     _padroes = pacote.padroes;
   }
 
+  /* O CONTEÚDO CADASTRADO NÃO ESTÁ NO DICIONÁRIO
+
+     Nome de campeonato, manchete e texto de banner vêm traduzidos do servidor,
+     dentro do /api/bootstrap, e as ~50 páginas os desenham UMA vez, durante o
+     parse. Reescrever o dicionário da interface não alcança esse texto — ele
+     não está no dicionário, está no cache de dados. Sem o recarregamento
+     abaixo, clicar no seletor trocava a interface na hora e deixava o nome do
+     campeonato na língua anterior: exatamente a tela misturada que este arquivo
+     existe para não produzir.
+
+     É o mesmo remédio que PB.recarregar() aplica depois de toda gravação, pelo
+     mesmo motivo: tela meio velha é pior que tela que pisca. E é UMA requisição
+     só — a página que volta já pede o bootstrap com o idioma novo, porque o
+     cookie foi gravado antes de sair daqui.
+
+     Sem back-end (GitHub Pages, file://) o conteúdo é a semente em português e
+     não muda com o idioma; ali a troca continua instantânea, sem recarregar. */
+  function conteudoVemDoServidor() {
+    try {
+      return !!(PB.dados && typeof PB.dados.modo === 'function' && PB.dados.modo() === 'api');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /* Recarrega a MESMA página, preservando a querystring (?id=…). O ?lang= é
+     reescrito quando existe: deixá-lo com o valor antigo faria o parâmetro
+     vencer o cookie recém-gravado e a tela voltaria para o idioma de antes. */
+  function recarregarNoIdioma(codigo) {
+    var loc = global.location;
+    var busca = loc.search || '';
+    if (/[?&](?:lang|idioma)=/i.test(busca)) {
+      busca = busca.replace(/([?&])(lang|idioma)=[^&#]*/gi, '$1$2=' + encodeURIComponent(codigo));
+    }
+    loc.replace(loc.pathname + busca);
+  }
+
+  /**
+   * @param {string} codigo
+   * @param {boolean} [silencioso] true = só alinha a interface: não grava o
+   *   cookie nem recarrega. É como o runtime se ajusta ao idioma que o servidor
+   *   já usou para traduzir o conteúdo desta carga.
+   */
   function definir(codigo, silencioso) {
     var alvo = limpar(codigo);
     if (!alvo || alvo === _idioma) {
@@ -556,14 +629,23 @@
       return _idioma;
     }
 
+    if (!silencioso) {
+      _origem = 'escolha';
+      persistir(alvo);
+    }
     _idioma = alvo;
-    _origem = 'escolha';
-    if (!silencioso) persistir(alvo);
+
+    if (!silencioso && conteudoVemDoServidor()) {
+      sincronizarSeletores();
+      recarregarNoIdioma(alvo);
+      return _idioma;
+    }
+
     marcarHtml(alvo);
     carregarDicionario(alvo);
 
-    /* A troca é na hora, sem recarregar: cada nó guarda o português original,
-       então voltar para 'pt' é reescrever o original de volta. */
+    /* A troca é na hora: cada nó guarda o português original, então voltar para
+       'pt' é reescrever o original de volta. */
     desligarObservador();
     traduzir(doc.documentElement);
     ligarObservador();
@@ -608,7 +690,27 @@
     'padding:12px var(--e-4);border-top:1px solid var(--linha);',
     'color:rgba(255,255,255,.7);font-size:.9375rem}',
     '.i18n-idioma--painel .i18n-idioma__globo{width:19px;height:19px}',
-    '.i18n-idioma--painel:hover{background:rgba(255,255,255,.06);color:#fff}'
+    '.i18n-idioma--painel:hover{background:rgba(255,255,255,.06);color:#fff}',
+
+    /* Telas .auth — FORA DO FLUXO, de propósito.
+       .auth__painel centra a caixa do formulário com place-items:center; um
+       elemento em fluxo no fim da coluna empurraria o formulário para cima
+       (metade da altura do seletor) e a tela deixaria de ser a de antes. No
+       absoluto o seletor ocupa a faixa do padding de baixo (--e-6, 48px), que
+       já existe vazia em todas as cinco telas, e nada se move. O position
+       abaixo é só para essa coluna virar a referência do absoluto — sem
+       deslocamento, não muda nada do que se vê. */
+    '.auth__painel{position:relative}',
+    '.i18n-idioma--auth{position:absolute;left:var(--e-5);right:var(--e-5);',
+    'bottom:var(--e-3);justify-content:center;',
+    'color:var(--texto-suave);font-size:var(--t-peq)}',
+    '.i18n-idioma--auth:hover{color:var(--texto)}',
+
+    /* Splash do painel: fundo escuro e nenhuma barra onde encostar. .splash já
+       é position:fixed, então serve de referência sem precisar de regra nova. */
+    '.i18n-idioma--splash{position:absolute;left:0;right:0;bottom:var(--e-5);',
+    'justify-content:center;color:rgba(255,255,255,.55);font-size:var(--t-peq)}',
+    '.i18n-idioma--splash:hover{color:#fff}'
   ].join('');
 
   var GLOBO = '<svg class="i18n-idioma__globo" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
@@ -685,6 +787,18 @@
       if (sair) rodape.insertBefore(seletor, sair);
       else rodape.appendChild(seletor);
     }
+
+    /* Telas de autenticação (login, cadastro, recuperar senha, verificar
+       e-mail, primeiro acesso): não têm cabeçalho nem barra lateral, então
+       nenhuma das âncoras acima existe. O seletor vai no pé da coluna do
+       formulário — inclusive no login, que é a primeira tela de quem chega de
+       fora e a única porta dos dois painéis. */
+    var colunaAuth = doc.querySelector('.auth__painel');
+    if (colunaAuth) colunaAuth.appendChild(criarSeletor('auth'));
+
+    /* Splash do painel, a sexta tela sem cabeçalho. */
+    var splash = doc.querySelector('.splash');
+    if (splash) splash.appendChild(criarSeletor('splash'));
   }
 
   /* =====================================================================
@@ -698,15 +812,22 @@
   if (_origem === 'url') persistir(_idioma);
 
   function iniciar() {
-    /* A preferência da conta só pode ser lida depois que o bootstrap encheu o
-       cache de dados — o que costuma acontecer no script da página, depois
-       deste arquivo. Vale só quando ninguém escolheu nada: escolha explícita
-       (URL, cookie, clique) manda mais que a conta. */
-    if (_origem === 'navegador' || _origem === 'padrao') {
-      var daBase = daConta();
-      if (daBase && daBase !== _idioma) {
-        definir(daBase, true);
-        _origem = 'conta';
+    /* ALINHAMENTO COM O SERVIDOR
+
+       Quando a resolução acima foi só palpite ('navegador'/'padrao'), o
+       bootstrap saiu sem ?lang= e quem escolheu o idioma do conteúdo foi o
+       servidor — que enxerga a preferência gravada na conta, invisível daqui
+       antes da resposta. A interface se alinha ao que ele decidiu; o conteúdo
+       na tela já está nesse idioma, então não há nada a recarregar.
+
+       Escolha explícita (URL, cookie, clique) manda mais e não é revista:
+       naquele caso o ?lang= foi junto e os dois lados já concordam. */
+    if (!EXPLICITAS[_origem]) {
+      var doBanco = doServidor();
+      var novo = doBanco || daConta();
+      if (novo && novo !== _idioma) {
+        definir(novo, true);
+        _origem = doBanco ? 'servidor' : 'conta';
       }
     }
 
@@ -725,6 +846,15 @@
   PB.i18n = {
     idioma: function () { return _idioma; },
     definir: function (codigo) { return definir(codigo); },
+
+    /**
+     * O idioma quando ele é ESCOLHA (link com ?lang=, cookie desta máquina,
+     * clique no seletor); null quando é só palpite do navegador. É o que o
+     * dados.js manda no ?lang= do bootstrap — palpite fica de fora para não
+     * atropelar a preferência gravada na conta.
+     * @returns {string|null}
+     */
+    escolhido: function () { return EXPLICITAS[_origem] ? _idioma : null; },
 
     /** Traduz uma string solta. Devolve o português quando não há tradução. */
     t: function (texto) {

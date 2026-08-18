@@ -490,6 +490,93 @@ describe('idiomas', () => {
   });
 
   /* ------------------------------------------------------------------------
+     DICIONÁRIO DA INTERFACE
+
+     site/assets/i18n/*.json é gerado por ferramentas/extrair-textos.js e vive
+     no repositório. A chave é o próprio texto em português, então uma chave é
+     uma regra de reescrita GLOBAL: se um nome de time virar chave, o runtime o
+     traduz em qualquer tela em que ele apareça — inclusive na sessão do admin,
+     que server/http.js protege devolvendo o conteúdo sempre em português.
+
+     O extrator tem uma guarda que apaga essas chaves. Estes testes provam que
+     a guarda rodou no arquivo que está commitado: sem eles, alguém regenera o
+     dicionário com a guarda desligada (--sem-banco) e ninguém percebe.
+     ------------------------------------------------------------------------ */
+
+  const dicionario = () => {
+    const bruto = require('node:fs').readFileSync(`${amb.RAIZ}/site/assets/i18n/pt.json`, 'utf8');
+    return JSON.parse(bruto);
+  };
+
+  /* A MESMA normalização do extrator e do runtime. Se as três divergirem, a
+     comparação aqui deixa de valer. */
+  const normalizar = (texto) => String(texto == null ? '' : texto).replace(/\s+/g, ' ').trim();
+
+  const chavesDoDicionario = () => {
+    const pt = dicionario();
+    return new Set(Object.keys(pt.textos).concat(Object.keys(pt.padroes)).map(normalizar));
+  };
+
+  /** Valores de uma coluna que o dicionário não pode conter. */
+  const valoresDe = (tabela, coluna) => db.todos(`SELECT ${coluna} AS v FROM ${tabela}`)
+    .map((l) => normalizar(l.v))
+    .filter((v) => v && /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(v));
+
+  it('o dicionário não traduz campo traduzível de conteúdo cadastrado', () => {
+    const chaves = chavesDoDicionario();
+    const colisoes = [];
+
+    for (const tabela of Object.keys(traducoes.CAMPOS_TRADUZIVEIS)) {
+      for (const campo of traducoes.CAMPOS_TRADUZIVEIS[tabela]) {
+        for (const valor of valoresDe(tabela, campo)) {
+          if (chaves.has(valor)) colisoes.push(`${tabela}.${campo}: ${valor}`);
+        }
+      }
+    }
+
+    assert.deepEqual(colisoes, [], 'chave do dicionário sobrescreveria conteúdo do banco');
+  });
+
+  it('o dicionário não traduz nome de time, de pessoa nem linha de ranking', () => {
+    const chaves = chavesDoDicionario();
+    const colisoes = [];
+
+    /* Nome próprio não tem tradução em idioma nenhum: nem pelo dicionário da
+       interface, nem pela tela de tradução do admin. */
+    const colunas = [
+      ['times', 'nome'], ['jogadores', 'nome'], ['jogadores', 'apelido'],
+      ['staff', 'nome'], ['contas', 'nome'], ['ranking', 'nome']
+    ];
+
+    for (const [tabela, coluna] of colunas) {
+      for (const valor of valoresDe(tabela, coluna)) {
+        if (chaves.has(valor)) colisoes.push(`${tabela}.${coluna}: ${valor}`);
+      }
+    }
+
+    assert.deepEqual(colisoes, [], 'chave do dicionário sobrescreveria nome cadastrado');
+  });
+
+  it('os três dicionários têm exatamente as mesmas chaves', () => {
+    const ler = (idioma) => {
+      const bruto = require('node:fs').readFileSync(`${amb.RAIZ}/site/assets/i18n/${idioma}.json`, 'utf8');
+      const pacote = JSON.parse(bruto);
+      return {
+        textos: Object.keys(pacote.textos).sort(),
+        padroes: Object.keys(pacote.padroes).sort()
+      };
+    };
+
+    const pt = ler('pt');
+    /* Chave a menos em en.json é trecho que nunca chega a ser traduzido, e
+       chave a mais é chave que o runtime nunca procura: nos dois casos o
+       arquivo saiu de uma extração diferente da que gerou o pt.json. */
+    for (const idioma of ['en', 'es']) {
+      assert.deepEqual(ler(idioma), pt, `${idioma}.json não casa com pt.json`);
+    }
+  });
+
+  /* ------------------------------------------------------------------------
      BANCO
      ------------------------------------------------------------------------ */
 

@@ -4,11 +4,30 @@
 
    Uso:  node ferramentas/extrair-textos.js
          node ferramentas/extrair-textos.js --relatorio   (mostra o que ficou de fora)
+         node ferramentas/extrair-textos.js --sem-banco   (pula a guarda; ver abaixo)
 
    Roda à mão, nunca no navegador. Varre o HTML das 50 páginas e os scripts de
    site/assets/js/ e escreve site/assets/i18n/pt.json — o catálogo de tudo que
    o visitante lê em português. en.json e es.json são criados com as mesmas
    chaves e valores vazios, para outro agente preencher.
+
+   O DICIONÁRIO SÓ PODE CONTER RÓTULO, NUNCA DADO CADASTRADO
+   A chave é o próprio texto em português (ver abaixo), então uma chave é uma
+   regra de reescrita GLOBAL: se 'Tigres Phygital' entra no dicionário, o
+   runtime reescreve esse texto em qualquer lugar da tela — inclusive onde ele
+   veio do banco. Nome de time, de campeonato e título de post traduzidos são
+   informação errada, e o administrador não tem como perceber. Duas camadas
+   seguram isso, nesta ordem:
+
+     1. A POSIÇÃO decide se um literal de JavaScript é rótulo ou dado. Nome de
+        propriedade ('Tigres Phygital': 1), índice de acesso (M['x']) e valor de
+        tabela endereçada por campo ('campeonato.nome': 'Copa …') são endereço e
+        amostra, não texto de tela. Ver `posicoesDeDado()`.
+
+     2. A GUARDA DO BANCO cruza o catálogo pronto com os valores realmente
+        cadastrados e apaga toda chave que coincidir. Não depende de heurística
+        nenhuma e alcança o que a camada 1 não vê — markup de demonstração com
+        o nome do time escrito à mão, por exemplo. Ver `guardaDoBanco()`.
 
    POR QUE O DICIONÁRIO É INDEXADO PELO PRÓPRIO TEXTO EM PORTUGUÊS
    O português continua escrito no HTML. Marcar 2 mil elementos com data-i18n
@@ -32,6 +51,7 @@ const SITE = path.join(RAIZ, 'site');
 const PASTA_SAIDA = path.join(SITE, 'assets', 'i18n');
 
 const RELATORIO = process.argv.indexOf('--relatorio') >= 0;
+const SEM_BANCO = process.argv.indexOf('--sem-banco') >= 0;
 
 /* Marcador interno da interpolação de template string. É um caractere de
    controle: não existe em arquivo de texto de verdade, então não colide. */
@@ -117,6 +137,7 @@ function decodificar(texto) {
 
 const catalogo = new Map();
 const descartes = new Map();   /* motivo -> exemplos, só para o relatório */
+let guarda = null;             /* resultado da guarda do banco, ver adiante */
 
 function descartar(motivo, texto) {
   if (!descartes.has(motivo)) descartes.set(motivo, { total: 0, exemplos: [] });
@@ -588,6 +609,162 @@ function analisarIntervalo(tokens, ini, fim, emitir) {
   fecharCadeia();
 }
 
+/* --------------------------------------------------------------------------
+   RÓTULO OU DADO — QUEM DECIDE É A POSIÇÃO
+
+   'Tigres Phygital' e 'Salvar alterações' são as duas strings do mesmo tipo
+   para um léxico: nada no CONTEÚDO separa nome de time de rótulo de botão, e
+   qualquer tentativa de separar por conteúdo (tem maiúscula no meio? é nome
+   próprio?) erra nos dois sentidos. O que separa é o USO. Três posições em que
+   um literal comprovadamente não vira texto na tela:
+
+     1. NOME DE PROPRIEDADE — `{ 'Tigres Phygital': 1 }`. O programa lê essa
+        string por igualdade, para achar o valor; ela nunca é escrita no DOM.
+        É daqui que sai o mapa ESCUDOS de painel/ranking.html, a origem dos oito
+        nomes de time que apareciam traduzidos no ranking.
+
+     2. ÍNDICE DE ACESSO — `MAPA['Tigres Phygital']`. Mesmo papel: endereço.
+
+     3. VALOR DE TABELA ENDEREÇADA POR CAMPO — `{ 'campeonato.nome': 'Copa
+        Phygital Futebol 2026 — Etapa Nacional' }`. Uma chave como
+        'campeonato.nome' é o CAMINHO de um campo de registro escrito como
+        string; ninguém lê isso numa tela. Uma tabela endereçada assim é um
+        registro de mentira, e o outro lado de cada entrada é o valor daquele
+        campo: dado de amostra. É o EXEMPLO de admin/email-modelos.html.
+
+   O caso 3 é deliberadamente estreito. `{ 'Redação Phygital': 'Equipe de
+   conteúdo da federação…' }`, em post.html, tem chave de string igual à do
+   EXEMPLO, mas a chave é um nome de autor e o valor é uma frase que a página
+   escreve na tela — traduzível. Sem o teste do caminho de campo, uma regra do
+   tipo "valor de mapa com chave de string é dado" levaria essa frase junto.
+
+   Marcar a posição não apaga a chave do catálogo: apaga AQUELA OCORRÊNCIA. A
+   mesma palavra continua entrando pelo lugar onde é rótulo de verdade —
+   'Futebol' sai do EXEMPLO e permanece pelo menu das modalidades.
+   -------------------------------------------------------------------------- */
+
+/* Depois disto, '{' abre um OBJETO. Depois de ')', '}', ';' ou 'else' abre um
+   BLOCO — e bloco não tem entrada 'chave': valor, então nem é examinado. */
+const ANTES_DE_OBJETO = {
+  '=': 1, '(': 1, ',': 1, ':': 1, '[': 1, '?': 1, '&': 1, '|': 1, '!': 1,
+  '+': 1, '-': 1, '*': 1, '/': 1, '%': 1, '<': 1, '>': 1, '^': 1, '~': 1
+};
+
+const PALAVRAS_ANTES_DE_OBJETO = {
+  return: 1, typeof: 1, case: 1, of: 1, in: 1, new: 1, void: 1, delete: 1,
+  yield: 1, await: 1, throw: 1
+};
+
+/* 'campeonato.nome', 'usuario.email': identificador ponto identificador. */
+const CAMINHO_DE_CAMPO = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+$/;
+
+function ehObjetoLiteral(tokens, indice) {
+  const anterior = tokens[indice - 1];
+  if (!anterior) return true;
+  if (anterior.tipo === 'nome') return !!PALAVRAS_ANTES_DE_OBJETO[anterior.valor];
+  if (anterior.tipo === 'pontuacao') return !!ANTES_DE_OBJETO[anterior.valor];
+  return false;
+}
+
+/** `alvo['x']` é acesso; `[ 'x', 'y' ]` é lista. O que vem antes do '[' diz. */
+function ehAcessoPorColchete(tokens, indice) {
+  const anterior = tokens[indice - 1];
+  if (!anterior) return false;
+  if (anterior.tipo === 'nome') return !PALAVRAS_RESERVADAS[anterior.valor];
+  return anterior.tipo === 'texto'
+    || (anterior.tipo === 'pontuacao' && (anterior.valor === ']' || anterior.valor === ')'));
+}
+
+/** Entradas de primeiro nível de um objeto literal, na forma chave/valor. */
+function entradasDeObjeto(tokens, ini, fim) {
+  const entradas = [];
+  let atual = null;
+
+  function nova() {
+    atual = { chave: -1, chaveTexto: null, antesDoDoisPontos: 0, temDoisPontos: false, valores: [] };
+  }
+  nova();
+
+  let i = ini + 1;
+  while (i < fim) {
+    const t = tokens[i];
+
+    if (t.tipo === 'pontuacao' && ABRE[t.valor]) {
+      /* Objeto ou chamada aninhada: o valor deixa de ser um literal simples. */
+      const f = casarBloco(tokens, i, fim);
+      if (atual.temDoisPontos) atual.valores.push(-1);
+      else { atual.antesDoDoisPontos += 2; atual.chave = -1; }
+      i = f + 1;
+      continue;
+    }
+    if (t.tipo === 'pontuacao' && t.valor === ',') { entradas.push(atual); nova(); i++; continue; }
+    /* O ':' que separa chave de valor é o primeiro, e vem logo depois de UM
+       token. Os outros — os do operador ternário — caem no valor. */
+    if (t.tipo === 'pontuacao' && t.valor === ':'
+      && !atual.temDoisPontos && atual.antesDoDoisPontos === 1) {
+      atual.temDoisPontos = true;
+      i++;
+      continue;
+    }
+
+    if (!atual.temDoisPontos) {
+      if (atual.antesDoDoisPontos === 0 && t.tipo === 'texto') {
+        atual.chave = i;
+        atual.chaveTexto = t.valor;
+      } else {
+        atual.chave = -1;
+      }
+      atual.antesDoDoisPontos++;
+    } else {
+      atual.valores.push(t.tipo === 'texto' ? i : -1);
+    }
+    i++;
+  }
+  entradas.push(atual);
+
+  return entradas.filter((e) => e.temDoisPontos);
+}
+
+/** Índices de token que são endereço ou dado de amostra, não texto de tela. */
+function posicoesDeDado(tokens) {
+  const marcadas = {};
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.tipo !== 'pontuacao') continue;
+
+    if (t.valor === '[' && ehAcessoPorColchete(tokens, i)
+      && tokens[i + 1] && tokens[i + 1].tipo === 'texto'
+      && tokens[i + 2] && tokens[i + 2].tipo === 'pontuacao' && tokens[i + 2].valor === ']') {
+      marcadas[i + 1] = 1;
+      continue;
+    }
+
+    if (t.valor !== '{' || !ehObjetoLiteral(tokens, i)) continue;
+
+    const fim = casarBloco(tokens, i, tokens.length);
+    const entradas = entradasDeObjeto(tokens, i, fim);
+    if (!entradas.length) continue;
+
+    let todasComChaveDeTexto = true;
+    let temCaminhoDeCampo = false;
+    entradas.forEach((e) => {
+      if (e.chave < 0) { todasComChaveDeTexto = false; return; }
+      marcadas[e.chave] = 1;                         /* caso 1: nome de propriedade */
+      if (CAMINHO_DE_CAMPO.test(e.chaveTexto)) temCaminhoDeCampo = true;
+    });
+
+    /* Caso 3: só quando a tabela inteira é endereçada por string e ao menos uma
+       dessas strings é caminho de campo. */
+    if (!todasComChaveDeTexto || !temCaminhoDeCampo) continue;
+    entradas.forEach((e) => {
+      if (e.valores.length === 1 && e.valores[0] >= 0) marcadas[e.valores[0]] = 1;
+    });
+  }
+
+  return marcadas;
+}
+
 /* Nomes que garantem que a string ao lado é texto para gente. setAttribute
    fica de fora de propósito: quase todo uso dele é 'aria-hidden' e afins. */
 const CHAMADAS_DE_TEXTO = [
@@ -669,9 +846,15 @@ function varrerJs(fonte, arquivo) {
   const tokens = lexer(fonte);
   const base = path.basename(arquivo);
   const proibidos = intervalosProibidos(tokens, FUNCOES_IGNORADAS[base] || []);
+  const dados = posicoesDeDado(tokens);
 
   analisarIntervalo(tokens, 0, tokens.length, (texto, indice) => {
     if (proibidos.some((f) => indice >= f[0] && indice < f[1])) return;
+
+    /* Endereço ou amostra de registro: o literal existe no código, mas não na
+       tela. Vale a OCORRÊNCIA, não a palavra — ela volta pelo lugar em que for
+       rótulo de verdade. */
+    if (dados[indice]) { descartar('dado, não rótulo (posição)', normalizar(texto)); return; }
 
     /* MARCA guarda a interpolação de template string: vira valor variável. */
     let n = 0;
@@ -741,6 +924,129 @@ function relativo(arquivo) {
 }
 
 /* --------------------------------------------------------------------------
+   GUARDA DO BANCO — A CAMADA QUE NÃO ADIVINHA NADA
+
+   A camada da posição depende de o dado estar escrito como dado. Não cobre o
+   markup de demonstração: `<strong>Tigres Phygital</strong>` numa tabela de
+   exemplo de mod-futebol.html é, para qualquer analisador, texto de tela.
+
+   Esta camada não analisa: ela COMPARA. Com o catálogo pronto, lê os valores
+   realmente cadastrados no banco e apaga toda chave idêntica a um deles. Como
+   a comparação usa a mesma `normalizar()` do runtime, "coincide aqui" é
+   exatamente "o runtime reescreveria isso lá".
+
+   Roda em toda extração, e é por isso que ela vale mais que a camada 1: o
+   conteúdo que o cliente cadastrar no ano que vem passa pelo mesmo teste, sem
+   ninguém precisar lembrar de nada.
+
+   O QUE É LIDO
+   As colunas traduzíveis vêm de server/traducoes.js — a mesma constante que a
+   API de tradução usa, para as duas listas não separarem com o tempo. As de
+   identidade estão abaixo: são texto que o usuário digitou e que aparece na
+   tela, mas que nunca se traduz em idioma nenhum.
+
+   QUANDO A PALAVRA É RÓTULO **E** VALOR DE BANCO
+   Um time chamado "Ranking", uma categoria de blog chamada "Eventos": a chave
+   sai do dicionário, e o rótulo de interface passa a ficar em português nos
+   três idiomas. O dado ganha, sempre, e não por gosto — por assimetria de
+   dano. Um rótulo sem tradução é uma tradução FALTANDO: o leitor vê, entende,
+   e ninguém é enganado. Um nome próprio traduzido é informação ERRADA, e nem o
+   leitor nem o administrador têm como perceber (é exatamente por isso que
+   ctx.idiomaConteudo já devolve português para sessão de admin — proteção que
+   o runtime anulava traduzindo o mesmo texto no DOM). Entre falhar visível e
+   falhar invisível, escolhe-se visível.
+
+   E o prejuízo é reversível pelos dois lados, o que a alternativa não é: o
+   relatório abaixo diz nome por nome quem saiu e por qual coluna, então dá
+   para renomear o registro, ou aceitar aquele rótulo em português, com o
+   número na mão. Não existe terceira saída dentro deste desenho: a chave é o
+   próprio texto, então manter a chave é reescrever as duas ocorrências, e
+   nenhuma regra de conteúdo distingue no DOM o "Ranking" do menu do "Ranking"
+   que é nome de time. Distinguir de verdade exigiria marcar no markup todo
+   ponto em que a página escreve dado — outro trabalho, e mudança nas 50
+   páginas.
+   -------------------------------------------------------------------------- */
+
+const traducoes = require('../server/traducoes');
+
+/* Texto digitado pelo usuário que aparece na tela e nunca é traduzido. Não
+   está em CAMPOS_TRADUZIVEIS justamente porque não se traduz nome de gente
+   nem de time — e é por isso que precisa ser listado aqui. */
+const COLUNAS_DE_IDENTIDADE = [
+  ['times', 'nome'],
+  ['jogadores', 'nome'],
+  ['jogadores', 'apelido'],
+  ['staff', 'nome'],
+  ['contas', 'nome'],
+  ['ranking', 'nome']       /* uma linha do ranking global por time/atleta */
+];
+
+function arquivoDoBanco() {
+  const pasta = process.env.PHYGITAL_DADOS || path.join(RAIZ, 'dados');
+  return path.join(pasta, 'phygital.db');
+}
+
+/** Map: texto normalizado -> Set('tabela.coluna'). null quando não há banco. */
+function valoresCadastrados() {
+  const arquivo = arquivoDoBanco();
+  if (!fs.existsSync(arquivo)) return null;
+
+  const { DatabaseSync } = require('node:sqlite');
+  /* Somente leitura: um extrator de texto não tem o que gravar, e o banco pode
+     estar aberto pelo servidor neste momento. */
+  const bd = new DatabaseSync(arquivo, { readOnly: true });
+  const indice = new Map();
+
+  function coletar(tabela, colunas) {
+    let linhas;
+    try {
+      linhas = bd.prepare('SELECT ' + colunas.join(', ') + ' FROM ' + tabela).all();
+    } catch (e) {
+      /* Banco de uma versão anterior, sem a tabela ou sem a coluna: o que não
+         existe não pode ter virado chave. */
+      return;
+    }
+    linhas.forEach((linha) => {
+      colunas.forEach((coluna) => {
+        const texto = normalizar(linha[coluna]);
+        if (!texto || !temLetra(texto)) return;
+        if (!indice.has(texto)) indice.set(texto, new Set());
+        indice.get(texto).add(tabela + '.' + coluna);
+      });
+    });
+  }
+
+  Object.keys(traducoes.CAMPOS_TRADUZIVEIS)
+    .forEach((tabela) => coletar(tabela, traducoes.CAMPOS_TRADUZIVEIS[tabela]));
+  COLUNAS_DE_IDENTIDADE.forEach(([tabela, coluna]) => coletar(tabela, [coluna]));
+
+  bd.close();
+  return indice;
+}
+
+function guardaDoBanco() {
+  const valores = valoresCadastrados();
+  if (!valores) return null;
+
+  const saiu = [];
+  catalogo.forEach((item, chave) => {
+    const origem = valores.get(chave);
+    if (!origem) return;
+    saiu.push({
+      chave,
+      colunas: Array.from(origem).sort(),
+      arquivos: Array.from(item.arquivos).sort(),
+      ocorrencias: item.ocorrencias
+    });
+  });
+
+  saiu.sort((a, b) => b.arquivos.length - a.arquivos.length || a.chave.localeCompare(b.chave, 'pt-BR'));
+  saiu.forEach((d) => catalogo.delete(d.chave));
+
+  return { valores: valores.size, saiu };
+}
+
+/* --------------------------------------------------------------------------
    SAÍDA
    -------------------------------------------------------------------------- */
 
@@ -782,10 +1088,24 @@ function montar(idioma, vazio) {
     textos,
     padroes
   };
-  /* O contexto só vai no pt.json: é material para quem traduz, e o runtime
-     baixa en.json/es.json em toda página traduzida — carregar de novo a lista
-     de arquivos de cada chave só engordaria o download. */
-  if (!vazio) pacote.contexto = contexto;
+  /* O contexto e a guarda só vão no pt.json: são material para quem traduz e
+     para quem revisa, e o runtime baixa en.json/es.json em toda página
+     traduzida — carregar isso de novo só engordaria o download. */
+  if (!vazio) {
+    if (guarda) {
+      pacote.guarda = {
+        descricao: 'Chaves apagadas por coincidirem com conteúdo cadastrado no banco. '
+          + 'O runtime as reescreveria em cima do dado do usuário.',
+        valoresLidos: guarda.valores,
+        descartadas: guarda.saiu.length,
+        chaves: guarda.saiu.reduce((mapa, d) => {
+          mapa[d.chave] = { colunas: d.colunas, arquivos: d.arquivos };
+          return mapa;
+        }, {})
+      };
+    }
+    pacote.contexto = contexto;
+  }
   return pacote;
 }
 
@@ -811,6 +1131,26 @@ function principal() {
   htmls.forEach((arquivo) => varrerHtml(fs.readFileSync(arquivo, 'utf8'), relativo(arquivo)));
   scripts.forEach((arquivo) => varrerJs(fs.readFileSync(arquivo, 'utf8'), relativo(arquivo)));
 
+  const encontradas = catalogo.size;
+
+  if (SEM_BANCO) {
+    console.warn('AVISO: --sem-banco. O dicionário NÃO foi conferido contra o conteúdo');
+    console.warn('       cadastrado; nome de time ou de campeonato pode ter entrado como');
+    console.warn('       chave e será traduzido por cima do dado. Não publique assim.');
+  } else {
+    guarda = guardaDoBanco();
+    /* Sem banco a guarda não roda, e uma guarda que não roda em silêncio é a
+       mesma coisa que não existir. Falha explícita, com a saída à mão. */
+    if (!guarda) {
+      console.error('Banco não encontrado: ' + arquivoDoBanco());
+      console.error('A guarda contra tradução de dado cadastrado precisa dele para rodar.');
+      console.error('  npm run semear                             (cria e popula)');
+      console.error('  PHYGITAL_DADOS=/caminho/do/banco node ...   (aponta para outro)');
+      console.error('  node ferramentas/extrair-textos.js --sem-banco   (pula, por sua conta)');
+      process.exit(1);
+    }
+  }
+
   fs.mkdirSync(PASTA_SAIDA, { recursive: true });
   const pt = gravar('pt.json', montar('pt', false));
   const en = gravar('en.json', montar('en', true));
@@ -828,6 +1168,31 @@ function principal() {
   console.log('Strings distintas: ' + catalogo.size + ' (' + textos + ' fixas, ' + padroes + ' padrões)');
   console.log('Ocorrências: ' + ocorrencias);
   console.log('Gravado: ' + relativo(pt) + ', ' + relativo(en) + ', ' + relativo(es));
+
+  if (guarda) {
+    console.log('');
+    console.log('Guarda do banco: ' + guarda.saiu.length + ' de ' + encontradas
+      + ' chaves apagadas por serem conteúdo cadastrado'
+      + ' (' + guarda.valores + ' valores conferidos, ' + relativo(arquivoDoBanco()) + ')');
+    guarda.saiu.forEach((d) => {
+      const corte = d.chave.length > 64 ? d.chave.slice(0, 61) + '…' : d.chave;
+      /* Quantos arquivos do site usavam a chave é o que mede o estrago: uma
+         chave presente em um arquivo só era a cópia de demonstração; presente
+         em muitos, era também rótulo de interface — e esse rótulo fica em
+         português nos três idiomas a partir de agora. */
+      console.log('  ' + (d.arquivos.length > 1 ? '! ' : '  ')
+        + JSON.stringify(corte) + '  ← ' + d.colunas.join(', ')
+        + '  [' + d.arquivos.length + ' arquivo' + (d.arquivos.length > 1 ? 's' : '') + ']');
+    });
+    const conflitos = guarda.saiu.filter((d) => d.arquivos.length > 1);
+    if (conflitos.length) {
+      console.log('');
+      console.log('  As ' + conflitos.length + ' marcadas com ! apareciam em mais de um arquivo:');
+      console.log('  eram rótulo de interface E valor de banco. O dado ganha (o motivo está no');
+      console.log('  cabeçalho da guarda), então esses rótulos ficam em português nos três');
+      console.log('  idiomas. Para recuperar um deles, renomeie o registro no painel.');
+    }
+  }
 
   if (RELATORIO) {
     console.log('\nDescartado (string solta de JS que não parece texto de tela):');

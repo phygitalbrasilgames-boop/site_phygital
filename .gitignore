@@ -36,3 +36,6 @@ desktop.ini
 *.swp
 .idea/
 .vscode/
+
+# Saída de diagnóstico de agentes.
+ctx.txt

@@ -1,11 +1,11 @@
 {
   "idioma": "pt",
   "versao": 1,
-  "geradoEm": "2026-08-18T10:01:20.659Z",
+  "geradoEm": "2026-08-18T11:34:49.520Z",
   "resumo": {
-    "textos": 3258,
+    "textos": 3198,
     "padroes": 357,
-    "total": 3615
+    "total": 3555
   },
   "textos": {
     "— a organização analisa caso a caso e pode pedir comprovação (atestado médico, por exemplo). Cancelamento de inscrição também é feito por chamado.": "— a organização analisa caso a caso e pode pedir comprovação (atestado médico, por exemplo). Cancelamento de inscrição também é feito por chamado.",
@@ -209,7 +209,6 @@
     "A premiação da etapa é composta por kit completo de material esportivo e vaga na etapa nacional da modalidade. O ritmo curto do 3x3 favorece viradas: na primeira edição, metade dos confrontos foi decidida na última posse de bola da metade física.": "A premiação da etapa é composta por kit completo de material esportivo e vaga na etapa nacional da modalidade. O ritmo curto do 3x3 favorece viradas: na primeira edição, metade dos confrontos foi decidida na última posse de bola da metade física.",
     "A premiação da etapa nacional é de R$ 60 mil, divididos entre os três primeiros colocados: R$ 30 mil para o campeão, R$ 18 mil para o vice e R$ 12 mil para o terceiro lugar. Além do prêmio em dinheiro, o campeão leva a vaga direta na seletiva do Games of the Future, ao lado dos vencedores de basquete, dance e shooter.": "A premiação da etapa nacional é de R$ 60 mil, divididos entre os três primeiros colocados: R$ 30 mil para o campeão, R$ 18 mil para o vice e R$ 12 mil para o terceiro lugar. Além do prêmio em dinheiro, o campeão leva a vaga direta na seletiva do Games of the Future, ao lado dos vencedores de basquete, dance e shooter.",
     "A preparação inclui rodadas de treino conjunto na Arena Phygital e sessões de análise de desempenho baseadas nas súmulas das etapas nacionais. Os times seguem disputando o calendário interno normalmente — a convocação não impede a participação nas competições da temporada.": "A preparação inclui rodadas de treino conjunto na Arena Phygital e sessões de análise de desempenho baseadas nas súmulas das etapas nacionais. Os times seguem disputando o calendário interno normalmente — a convocação não impede a participação nas competições da temporada.",
-    "A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.": "A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.",
     "A próxima arena pode ser na sua cidade": "A próxima arena pode ser na sua cidade",
     "A publicação fica gravada, mas não aparece no site até ser publicada.": "A publicação fica gravada, mas não aparece no site até ser publicada.",
     "A publicação mais recente": "A publicação mais recente",
@@ -301,7 +300,6 @@
     "Alcance nacional": "Alcance nacional",
     "Além dos campos comuns (nome, apelido, e-mail, telefone, data de nascimento, foto e @Instagram), quais campos extras a modalidade exige — como número de camisa, categoria, função ou identificador de conta de jogo.": "Além dos campos comuns (nome, apelido, e-mail, telefone, data de nascimento, foto e @Instagram), quais campos extras a modalidade exige — como número de camisa, categoria, função ou identificador de conta de jogo.",
     "alerta": "alerta",
-    "Alpha Squad BR": "Alpha Squad BR",
     "Alpha Squad BR enviou o elenco para o Phygital Shooter Open — protocolo": "Alpha Squad BR enviou o elenco para o Phygital Shooter Open — protocolo",
     "Alteração bloqueada": "Alteração bloqueada",
     "Alteração de elenco": "Alteração de elenco",
@@ -358,7 +356,6 @@
     "Apelido / nome de jogo": "Apelido / nome de jogo",
     "Aplicados nesta ordem quando a soma das duas metades termina igual.": "Aplicados nesta ordem quando a soma das duas metades termina igual.",
     "Aplicativo móvel": "Aplicativo móvel",
-    "Apoio institucional": "Apoio institucional",
     "Apresentação de pista no Dance Championship 2025": "Apresentação de pista no Dance Championship 2025",
     "Apresentação na final do Phygital Dance Championship 2025": "Apresentação na final do Phygital Dance Championship 2025",
     "Apresentação presencial de 90 segundos, com música sorteada entre as três faixas do repertório oficial. Ordem de entrada definida por sorteio aberto, transmitido ao vivo.": "Apresentação presencial de 90 segundos, com música sorteada entre as três faixas do repertório oficial. Ordem de entrada definida por sorteio aberto, transmitido ao vivo.",
@@ -388,7 +385,6 @@
     "Arena itinerante": "Arena itinerante",
     "Arena montada para etapa nacional": "Arena montada para etapa nacional",
     "Arena nacional · 2025": "Arena nacional · 2025",
-    "Arena Phygital — São Paulo, SP": "Arena Phygital — São Paulo, SP",
     "Arena Phygital · 2025": "Arena Phygital · 2025",
     "Arena Phygital · São Paulo, SP": "Arena Phygital · São Paulo, SP",
     "Arena Phygital montada para a etapa nacional de futebol": "Arena Phygital montada para a etapa nacional de futebol",
@@ -556,14 +552,12 @@
     "Brasil": "Brasil",
     "Brasília · DF": "Brasília · DF",
     "Breve descrição": "Breve descrição",
-    "Bulls Phygital": "Bulls Phygital",
     "Buscar": "Buscar",
     "Buscar campeonato": "Buscar campeonato",
     "Cada assunto tem um caminho. Usar o canal certo encurta a resposta.": "Cada assunto tem um caminho. Usar o canal certo encurta a resposta.",
     "Cada card traz o prazo real de encerramento, o elenco exigido pela modalidade e quantos times já estão na lista oficial. Filtre pela modalidade que você disputa.": "Cada card traz o prazo real de encerramento, o elenco exigido pela modalidade e quantos times já estão na lista oficial. Filtre pela modalidade que você disputa.",
     "Cada confronto do Phygital Futebol é disputado duas vezes pelas mesmas equipes, no mesmo dia. Os gols das duas metades entram na mesma conta — não há partida \"de ida\" nem \"de volta\".": "Cada confronto do Phygital Futebol é disputado duas vezes pelas mesmas equipes, no mesmo dia. Os gols das duas metades entram na mesma conta — não há partida \"de ida\" nem \"de volta\".",
     "Cada confronto phygital soma o resultado da disputa digital ao da disputa física. Ao encerrar um campeonato, a organização faz a": "Cada confronto phygital soma o resultado da disputa digital ao da disputa física. Ao encerrar um campeonato, a organização faz a",
-    "Cada confronto tem duas metades: uma no console, outra na quadra. O placar final é a soma das duas. É assim que a Phygital Brasil disputa futebol, basquete, dance e shooter em todo o país.": "Cada confronto tem duas metades: uma no console, outra na quadra. O placar final é a soma das duas. É assim que a Phygital Brasil disputa futebol, basquete, dance e shooter em todo o país.",
     "Cada evento tem captação de foto e vídeo desde a passagem de som até a premiação. O álbum entra no site em até 10 dias úteis depois da final.": "Cada evento tem captação de foto e vídeo desde a passagem de som até a premiação. O álbum entra no site em até 10 dias úteis depois da final.",
     "Cada foto recebe o nome do campo “nome” do jogador. É isso que permite identificar a quem a foto pertence na hora de montar crachás, transmissão e material da arena.": "Cada foto recebe o nome do campo “nome” do jogador. É isso que permite identificar a quem a foto pertence na hora de montar crachás, transmissão e material da arena.",
     "Cada jogador": "Cada jogador",
@@ -622,15 +616,6 @@
     "Campeonato publicado": "Campeonato publicado",
     "Campeonato relacionado": "Campeonato relacionado",
     "Campeonato removido": "Campeonato removido",
-    "campeonato.data": "campeonato.data",
-    "campeonato.encerramento": "campeonato.encerramento",
-    "campeonato.espera": "campeonato.espera",
-    "campeonato.inscritos": "campeonato.inscritos",
-    "campeonato.local": "campeonato.local",
-    "campeonato.nome": "campeonato.nome",
-    "campeonato.oficial": "campeonato.oficial",
-    "campeonato.vagas": "campeonato.vagas",
-    "Campeonatos": "Campeonatos",
     "Campeonatos abertos": "Campeonatos abertos",
     "Campeonatos abertos no momento": "Campeonatos abertos no momento",
     "Campeonatos apurados aparecem aqui com o pódio.": "Campeonatos apurados aparecem aqui com o pódio.",
@@ -672,7 +657,6 @@
     "Cancelar": "Cancelar",
     "Cancelar ação": "Cancelar ação",
     "Cancelar inscrição": "Cancelar inscrição",
-    "Cangaço 3x3": "Cangaço 3x3",
     "Cangaço 3x3 saiu da triagem e ocupou vaga no Circuito Phygital Basquete 3x3. O e-mail automático de mudança de status foi enviado ao responsável do time.": "Cangaço 3x3 saiu da triagem e ocupou vaga no Circuito Phygital Basquete 3x3. O e-mail automático de mudança de status foi enviado ao responsável do time.",
     "Capa do vídeo do YouTube": "Capa do vídeo do YouTube",
     "Captura da plataforma, comparada à marcação de referência da coreografia": "Captura da plataforma, comparada à marcação de referência da coreografia",
@@ -695,7 +679,6 @@
     "Categorias do Blog — Painel do Administrador — Phygital Brasil": "Categorias do Blog — Painel do Administrador — Phygital Brasil",
     "Categorias do futebol: Sub 16, Sub 17, Sub 18, Amador e Profissional.": "Categorias do futebol: Sub 16, Sub 17, Sub 18, Amador e Profissional.",
     "Central de chamados do Painel do Competidor da Phygital Brasil: abra um protocolo, acompanhe as respostas da organização e solicite alterações bloqueadas após o encerramento das inscrições.": "Central de chamados do Painel do Competidor da Phygital Brasil: abra um protocolo, acompanhe as respostas da organização e solicite alterações bloqueadas após o encerramento das inscrições.",
-    "Central de Inscrições": "Central de Inscrições",
     "Central de Inscrições da Phygital Brasil": "Central de Inscrições da Phygital Brasil",
     "Cesta da virada": "Cesta da virada",
     "chamado": "chamado",
@@ -710,9 +693,6 @@
     "Chamado não encontrado": "Chamado não encontrado",
     "Chamado registrado": "Chamado registrado",
     "chamado respondido": "chamado respondido",
-    "chamado.assunto": "chamado.assunto",
-    "chamado.protocolo": "chamado.protocolo",
-    "chamado.status": "chamado.status",
     "Chamados": "Chamados",
     "Chamados — Painel do Administrador — Phygital Brasil": "Chamados — Painel do Administrador — Phygital Brasil",
     "Chamados — Painel do Competidor — Phygital Brasil": "Chamados — Painel do Competidor — Phygital Brasil",
@@ -736,9 +716,7 @@
     "cinco rodadas classificatórias": "cinco rodadas classificatórias",
     "Cinco rodadas online": "Cinco rodadas online",
     "Cinza": "Cinza",
-    "Circuito Basquete 3x3": "Circuito Basquete 3x3",
     "Circuito de agilidade com alvo eletrônico — só entra em jogo no empate": "Circuito de agilidade com alvo eletrônico — só entra em jogo no empate",
-    "Circuito Phygital Basquete 3x3": "Circuito Phygital Basquete 3x3",
     "Citação": "Citação",
     "Citação do locutor a cada rodada": "Citação do locutor a cada rodada",
     "Citação e marca no overlay": "Citação e marca no overlay",
@@ -792,7 +770,6 @@
     "Comissão técnica e prazos": "Comissão técnica e prazos",
     "Comissão técnica inscrita": "Comissão técnica inscrita",
     "Comissão técnica não cadastrada": "Comissão técnica não cadastrada",
-    "Comitê Técnico": "Comitê Técnico",
     "Comitê Técnico da Phygital Brasil": "Comitê Técnico da Phygital Brasil",
     "Como a fila funciona.": "Como a fila funciona.",
     "Como a metade digital e a metade física são pontuadas, como as duas notas se somam no placar final e quais são os critérios de desempate.": "Como a metade digital e a metade física são pontuadas, como as duas notas se somam no placar final e quais são os critérios de desempate.",
@@ -806,10 +783,8 @@
     "Como esses dados são usados": "Como esses dados são usados",
     "Como este ranking é montado.": "Como este ranking é montado.",
     "Como faço a inscrição do meu time?": "Como faço a inscrição do meu time?",
-    "Como funciona": "Como funciona",
     "Como funciona a cobertura": "Como funciona a cobertura",
     "Como funciona a inscrição em três passos": "Como funciona a inscrição em três passos",
-    "Como funciona a pontuação combinada no formato phygital": "Como funciona a pontuação combinada no formato phygital",
     "Como funciona a triagem": "Como funciona a triagem",
     "Como pontua": "Como pontua",
     "Como propor uma modalidade": "Como propor uma modalidade",
@@ -904,8 +879,6 @@
     "Conversa": "Conversa",
     "Convocação de vaga liberada, mudanças de regulamento, tabela e informações do dia do evento. Todos saem do endereço inscricoes@phygitalgamesbr.com.br.": "Convocação de vaga liberada, mudanças de regulamento, tabela e informações do dia do evento. Todos saem do endereço inscricoes@phygitalgamesbr.com.br.",
     "Copa Futebol 2026": "Copa Futebol 2026",
-    "Copa Phygital Futebol 2026 — Etapa Nacional": "Copa Phygital Futebol 2026 — Etapa Nacional",
-    "Copa Phygital Futebol 2026 abre inscrições para 24 times": "Copa Phygital Futebol 2026 abre inscrições para 24 times",
     "Cópia criada": "Cópia criada",
     "Copiado": "Copiado",
     "Copiar link": "Copiar link",
@@ -1421,7 +1394,6 @@
     "Etapas presenciais": "Etapas presenciais",
     "Etapas realizadas": "Etapas realizadas",
     "Etiquetas usadas nas publicações e no filtro do blog": "Etiquetas usadas nas publicações e no filtro do blog",
-    "Eventos": "Eventos",
     "Eventos realizados": "Eventos realizados",
     "Eventos realizados — Phygital Brasil": "Eventos realizados — Phygital Brasil",
     "Ex.: Arena Phygital — São Paulo, SP": "Ex.: Arena Phygital — São Paulo, SP",
@@ -1539,7 +1511,6 @@
     "Formatos de ativação com fotos das etapas anteriores": "Formatos de ativação com fotos das etapas anteriores",
     "Fórmula:": "Fórmula:",
     "Formulário curto com a ideia em poucas linhas. A Phygital responde em até 10 dias úteis dizendo se o formato é elegível.": "Formulário curto com a ideia em poucas linhas. A Phygital responde em até 10 dias úteis dizendo se o formato é elegível.",
-    "Fornecedor oficial": "Fornecedor oficial",
     "Fornecedores e transmissão": "Fornecedores e transmissão",
     "Foto": "Foto",
     "Foto 3:4 (mín. 600 × 800 px)": "Foto 3:4 (mín. 600 × 800 px)",
@@ -1561,7 +1532,6 @@
     "Função em campo (goleiro, zagueiro, meia…)": "Função em campo (goleiro, zagueiro, meia…)",
     "Fundação e a 1ª Copa Phygital de Futebol": "Fundação e a 1ª Copa Phygital de Futebol",
     "Fundo do banner": "Fundo do banner",
-    "Fúria Digital": "Fúria Digital",
     "Futebol": "Futebol",
     "Futebol 6 a 8 · Basquete 3 a 4 · Shooter 5 · Dance individual.": "Futebol 6 a 8 · Basquete 3 a 4 · Shooter 5 · Dance individual.",
     "Futebol phygital em imagens": "Futebol phygital em imagens",
@@ -1716,7 +1686,6 @@
     "Inscrever meu time": "Inscrever meu time",
     "Inscrever o time e ter vaga garantida são coisas diferentes. O caminho abaixo é o mesmo para as quatro modalidades e cada mudança de etapa dispara um e-mail para o responsável.": "Inscrever o time e ter vaga garantida são coisas diferentes. O caminho abaixo é o mesmo para as quatro modalidades e cada mudança de etapa dispara um e-mail para o responsável.",
     "Inscrever o time novamente": "Inscrever o time novamente",
-    "Inscrever time": "Inscrever time",
     "Inscrever time de basquete": "Inscrever time de basquete",
     "Inscrever time de futebol": "Inscrever time de futebol",
     "Inscrever time em um campeonato": "Inscrever time em um campeonato",
@@ -1734,11 +1703,7 @@
     "Inscrição recebida e na Lista de Inscritos. A organização ainda vai conferir elenco e documentação — este status não é garantia de vaga.": "Inscrição recebida e na Lista de Inscritos. A organização ainda vai conferir elenco e documentação — este status não é garantia de vaga.",
     "Inscrição removida e responsável notificado.": "Inscrição removida e responsável notificado.",
     "inscrição vinculada": "inscrição vinculada",
-    "inscricao.protocolo": "inscricao.protocolo",
-    "inscricao.status": "inscricao.status",
     "inscrições": "inscrições",
-    "Inscrições": "Inscrições",
-    "Inscrições abertas": "Inscrições abertas",
     "Inscrições abertas — Phygital Brasil": "Inscrições abertas — Phygital Brasil",
     "Inscrições até": "Inscrições até",
     "inscrições ativas": "inscrições ativas",
@@ -1749,7 +1714,6 @@
     "Inscrições em campeonatos já encerrados": "Inscrições em campeonatos já encerrados",
     "inscrições em triagem": "inscrições em triagem",
     "Inscrições encerradas": "Inscrições encerradas",
-    "Inscrições Phygital": "Inscrições Phygital",
     "Inscrições recebidas": "Inscrições recebidas",
     "inscrições vinculadas": "inscrições vinculadas",
     "Inscrições vinculadas a este time": "Inscrições vinculadas a este time",
@@ -1764,7 +1728,6 @@
     "Inserir variável": "Inserir variável",
     "Instagram": "Instagram",
     "Instagram da Phygital Brasil": "Instagram da Phygital Brasil",
-    "Institucional": "Institucional",
     "Integrante da comissão": "Integrante da comissão",
     "Interpretação de regra, critério de desempate, pontuação combinada digital + arena e uso de equipamento.": "Interpretação de regra, critério de desempate, pontuação combinada digital + arena e uso de equipamento.",
     "IntersectionObserver": "IntersectionObserver",
@@ -1800,7 +1763,6 @@
     "Leia também": "Leia também",
     "Leituras entre 1º e 14 de agosto de 2026.": "Leituras entre 1º e 14 de agosto de 2026.",
     "Lembrou a senha?": "Lembrou a senha?",
-    "Leões do Cerrado": "Leões do Cerrado",
     "Ler as últimas notícias": "Ler as últimas notícias",
     "Ler publicação completa": "Ler publicação completa",
     "Letícia Alves (RJ)": "Letícia Alves (RJ)",
@@ -1854,7 +1816,6 @@
     "Logo do time": "Logo do time",
     "Logo ou foto de identidade": "Logo ou foto de identidade",
     "lotado · só entra pela lista de espera": "lotado · só entra pela lista de espera",
-    "mail.phygitalgamesbr.com.br": "mail.phygitalgamesbr.com.br",
     "Maior de 18 anos para acessar a área de pista": "Maior de 18 anos para acessar a área de pista",
     "Maior de 18 anos para acessar a área técnica": "Maior de 18 anos para acessar a área técnica",
     "Maior número de cestas de 2 pontos em quadra": "Maior número de cestas de 2 pontos em quadra",
@@ -2274,7 +2235,6 @@
     "Oficina para escolas": "Oficina para escolas",
     "Oito equipes na arena, mata-mata em melhor de três. Credenciamento com documento com foto obrigatório para os cinco titulares e para o treinador.": "Oito equipes na arena, mata-mata em melhor de três. Credenciamento com documento com foto obrigatório para os cinco titulares e para o treinador.",
     "Olá, Diego": "Olá, Diego",
-    "Onça Preta e-Sports": "Onça Preta e-Sports",
     "Onde": "Onde",
     "Onde a sua marca aparece": "Onde a sua marca aparece",
     "Onde acompanhar": "Onde acompanhar",
@@ -2359,8 +2319,6 @@
     "passo passo--feito": "passo passo--feito",
     "pasta com o nome do time": "pasta com o nome do time",
     "pasta por time": "pasta por time",
-    "Patrocinador": "Patrocinador",
-    "Patrocinador master": "Patrocinador master",
     "Patrocinadores": "Patrocinadores",
     "Patrocinadores e apoiadores": "Patrocinadores e apoiadores",
     "Patrocinadores, fornecedores, transmissão, apoio institucional e projetos sociais que constroem a Phygital Brasil. Veja as cotas de patrocínio, os números da temporada e fale com o comercial.": "Patrocinadores, fornecedores, transmissão, apoio institucional e projetos sociais que constroem a Phygital Brasil. Veja as cotas de patrocínio, os números da temporada e fale com o comercial.",
@@ -2398,7 +2356,6 @@
     "Phygital Brasil — página inicial": "Phygital Brasil — página inicial",
     "Phygital Dance": "Phygital Dance",
     "Phygital Dance — Phygital Brasil": "Phygital Dance — Phygital Brasil",
-    "Phygital Dance Championship 2025": "Phygital Dance Championship 2025",
     "Phygital Experience · 2024": "Phygital Experience · 2024",
     "Phygital Futebol": "Phygital Futebol",
     "Phygital Futebol — Phygital Brasil": "Phygital Futebol — Phygital Brasil",
@@ -2504,7 +2461,6 @@
     "Problema técnico": "Problema técnico",
     "Problemas no acesso?": "Problemas no acesso?",
     "Profissional": "Profissional",
-    "Projeto social": "Projeto social",
     "Pronto": "Pronto",
     "Propor uma modalidade": "Propor uma modalidade",
     "Proporção 3:4, mínimo 600×800 px, JPG ou PNG de até 5 MB": "Proporção 3:4, mínimo 600×800 px, JPG ou PNG de até 5 MB",
@@ -2661,7 +2617,6 @@
     "Regras de elenco": "Regras de elenco",
     "Regras de elenco e campos exigidos por modalidade": "Regras de elenco e campos exigidos por modalidade",
     "Regras de elenco lado a lado": "Regras de elenco lado a lado",
-    "Regulamento": "Regulamento",
     "Regulamento completo:": "Regulamento completo:",
     "Regulamento do campeonato": "Regulamento do campeonato",
     "Regulamento publicado antes de a inscrição abrir, arbitragem nas duas metades e apuração registrada campeonato a campeonato. Nenhum resultado entra no ranking nacional antes de ser apurado e assinado pela organização.": "Regulamento publicado antes de a inscrição abrir, arbitragem nas duas metades e apuração registrada campeonato a campeonato. Nenhum resultado entra no ranking nacional antes de ser apurado e assinado pela organização.",
@@ -2757,11 +2712,9 @@
     "são obrigatórios. Quanto mais contexto (modalidade, campeonato, nome do time), mais rápida é a resposta.": "são obrigatórios. Quanto mais contexto (modalidade, campeonato, nome do time), mais rápida é a resposta.",
     "São Paulo · SP": "São Paulo · SP",
     "São Paulo · SP · Brasil": "São Paulo · SP · Brasil",
-    "São Paulo, SP": "São Paulo, SP",
     "Se esquecer, use o \"Esqueci minha senha\" na tela de login — o código de recuperação chega no mesmo e-mail.": "Se esquecer, use o \"Esqueci minha senha\" na tela de login — o código de recuperação chega no mesmo e-mail.",
     "Se já tiver regras escritas, diga aqui — pedimos o documento completo na etapa seguinte.": "Se já tiver regras escritas, diga aqui — pedimos o documento completo na etapa seguinte.",
     "Seções da ficha do time": "Seções da ficha do time",
-    "Sede oficial": "Sede oficial",
     "Segunda a sexta, das 9h às 18h": "Segunda a sexta, das 9h às 18h",
     "Segurança": "Segurança",
     "Seis álbuns publicados desde 2024. Cada evento mostra uma seleção de destaques; o álbum completo em alta resolução fica disponível para os times inscritos.": "Seis álbuns publicados desde 2024. Cada evento mostra uma seleção de destaques; o álbum completo em alta resolução fica disponível para os times inscritos.",
@@ -2859,7 +2812,6 @@
     "Situação dos chamados": "Situação dos chamados",
     "Situações possíveis:": "Situações possíveis:",
     "smtp.phygitalgamesbr.com.br": "smtp.phygitalgamesbr.com.br",
-    "smtp.servidor": "smtp.servidor",
     "Só aparecem aqui os campeonatos em que você tem inscrição registrada.": "Só aparecem aqui os campeonatos em que você tem inscrição registrada.",
     "Só aparecem times da mesma modalidade do campeonato.": "Só aparecem times da mesma modalidade do campeonato.",
     "Só entra em quadra quem está na lista oficial homologada": "Só entra em quadra quem está na lista oficial homologada",
@@ -2930,7 +2882,6 @@
     "Tempo em aberto": "Tempo em aberto",
     "Tempo restante para o encerramento das inscrições": "Tempo restante para o encerramento das inscrições",
     "Tempo técnico da comissão": "Tempo técnico da comissão",
-    "Temporada 2026": "Temporada 2026",
     "Temporada 2026 · Copa Phygital Futebol, Circuito Basquete 3x3, Shooter Open e Dance Championship.": "Temporada 2026 · Copa Phygital Futebol, Circuito Basquete 3x3, Shooter Open e Dance Championship.",
     "Temporada 2026 · veja o que precisa da sua atenção hoje": "Temporada 2026 · veja o que precisa da sua atenção hoje",
     "Temporada 2026 · visão geral da operação": "Temporada 2026 · visão geral da operação",
@@ -2949,7 +2900,6 @@
     "Texto da postagem": "Texto da postagem",
     "Texto de apoio": "Texto de apoio",
     "Textos dos alertas automáticos do sistema": "Textos dos alertas automáticos do sistema",
-    "Tigres Phygital": "Tigres Phygital",
     "Tigres Phygital · lista oficial": "Tigres Phygital · lista oficial",
     "Time": "Time",
     "Time / atleta": "Time / atleta",
@@ -2971,9 +2921,6 @@
     "time removido": "time removido",
     "Time removido": "Time removido",
     "Time, campeonato, protocolo ou pessoa": "Time, campeonato, protocolo ou pessoa",
-    "time.jogadores": "time.jogadores",
-    "time.modalidade": "time.modalidade",
-    "time.nome": "time.nome",
     "Times": "Times",
     "Times abaixo deste número ficam de fora da tabela pública.": "Times abaixo deste número ficam de fora da tabela pública.",
     "times cadastrados": "times cadastrados",
@@ -3047,7 +2994,6 @@
     "total recebido": "total recebido",
     "Trajetória": "Trajetória",
     "translateX(20px)": "translateX(20px)",
-    "Transmissão": "Transmissão",
     "Transmissão e mídia": "Transmissão e mídia",
     "Transmissões": "Transmissões",
     "Treinador": "Treinador",
@@ -3067,7 +3013,6 @@
     "Triagem da central de inscrições e análise do pedido.": "Triagem da central de inscrições e análise do pedido.",
     "Trilha de navegação": "Trilha de navegação",
     "Trio no console antes da metade física do Circuito Phygital Basquete 3x3": "Trio no console antes da metade física do Circuito Phygital Basquete 3x3",
-    "Troca de jogador": "Troca de jogador",
     "Troca de jogadores no controle liberada no intervalo": "Troca de jogadores no controle liberada no intervalo",
     "Trocar atleta, corrigir número de camisa, subir outra foto ou mudar o staff: tudo direto no painel, sem pedir autorização.": "Trocar atleta, corrigir número de camisa, subir outra foto ou mudar o staff: tudo direto no painel, sem pedir autorização.",
     "Trocar de modalidade?": "Trocar de modalidade?",
@@ -3135,9 +3080,6 @@
     "Usuário": "Usuário",
     "Usuário criado. A senha temporária foi enviada por e-mail.": "Usuário criado. A senha temporária foi enviada por e-mail.",
     "Usuário removido": "Usuário removido",
-    "usuario.email": "usuario.email",
-    "usuario.nome": "usuario.nome",
-    "usuario.telefone": "usuario.telefone",
     "usuários": "usuários",
     "Usuários": "Usuários",
     "Usuários — Painel do Administrador — Phygital Brasil": "Usuários — Painel do Administrador — Phygital Brasil",
@@ -3169,7 +3111,6 @@
     "var(--verde)": "var(--verde)",
     "Variáveis disponíveis": "Variáveis disponíveis",
     "Vencido": "Vencido",
-    "Vendaval FC": "Vendaval FC",
     "Ver": "Ver",
     "Ver a galeria de eventos realizados": "Ver a galeria de eventos realizados",
     "Ver a galeria desta edição": "Ver a galeria desta edição",
@@ -3186,7 +3127,6 @@
     "Ver histórico de chamados": "Ver histórico de chamados",
     "Ver inscrição": "Ver inscrição",
     "Ver inscrições": "Ver inscrições",
-    "Ver inscrições abertas": "Ver inscrições abertas",
     "Ver Meu Time": "Ver Meu Time",
     "Ver minhas inscrições": "Ver minhas inscrições",
     "Ver na galeria de eventos": "Ver na galeria de eventos",
@@ -3625,6 +3565,415 @@
     "Você está alterando o e-mail de acesso. Por segurança, enviamos o código para o endereço ANTIGO: {0}.": "Você está alterando o e-mail de acesso. Por segurança, enviamos o código para o endereço ANTIGO: {0}.",
     "Você pode alterar elenco, comissão e dados do time até {0}, data de encerramento das inscrições do campeonato {1}. Depois disso, só por chamado.": "Você pode alterar elenco, comissão e dados do time até {0}, data de encerramento das inscrições do campeonato {1}. Depois disso, só por chamado.",
     "youtube:{0}": "youtube:{0}"
+  },
+  "guarda": {
+    "descricao": "Chaves apagadas por coincidirem com conteúdo cadastrado no banco. O runtime as reescreveria em cima do dado do usuário.",
+    "valoresLidos": 156,
+    "descartadas": 31,
+    "chaves": {
+      "Inscrições": {
+        "colunas": [
+          "categorias.nome"
+        ],
+        "arquivos": [
+          "site/admin/auditoria.html",
+          "site/admin/campeonato-novo.html",
+          "site/admin/historico.html",
+          "site/blog.html",
+          "site/contato.html",
+          "site/eventos.html",
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-outros.html",
+          "site/mod-shooter.html",
+          "site/modalidades.html",
+          "site/painel/chamado.html",
+          "site/painel/chamados.html",
+          "site/painel/conta.html",
+          "site/painel/inicio.html",
+          "site/painel/inscricoes.html",
+          "site/painel/meus-times.html",
+          "site/painel/ranking.html",
+          "site/painel/time-cadastro.html",
+          "site/painel/time-detalhe.html",
+          "site/painel/time-novo.html",
+          "site/parceiros.html",
+          "site/post.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Campeonatos": {
+        "colunas": [
+          "categorias.nome"
+        ],
+        "arquivos": [
+          "site/admin/auditoria.html",
+          "site/admin/banners-site.html",
+          "site/admin/banners.html",
+          "site/admin/blog-categorias.html",
+          "site/admin/blog-post.html",
+          "site/admin/blog.html",
+          "site/admin/campeonato-apuracao.html",
+          "site/admin/campeonato-gerenciar.html",
+          "site/admin/campeonato-novo.html",
+          "site/admin/campeonato-time.html",
+          "site/admin/campeonatos.html",
+          "site/admin/chamado.html",
+          "site/admin/chamados.html",
+          "site/admin/conta.html",
+          "site/admin/email-modelos.html",
+          "site/admin/email.html",
+          "site/admin/historico.html",
+          "site/admin/index.html",
+          "site/admin/ranking.html",
+          "site/admin/usuarios.html",
+          "site/blog.html"
+        ]
+      },
+      "Circuito Basquete 3x3": {
+        "colunas": [
+          "banners.titulo"
+        ],
+        "arquivos": [
+          "site/admin/auditoria.html",
+          "site/admin/banners-site.html",
+          "site/admin/banners.html",
+          "site/admin/blog-categorias.html",
+          "site/admin/blog-post.html",
+          "site/admin/blog.html",
+          "site/admin/campeonato-apuracao.html",
+          "site/admin/campeonato-gerenciar.html",
+          "site/admin/campeonato-novo.html",
+          "site/admin/campeonato-time.html",
+          "site/admin/campeonatos.html",
+          "site/admin/chamado.html",
+          "site/admin/chamados.html",
+          "site/admin/conta.html",
+          "site/admin/email-modelos.html",
+          "site/admin/email.html",
+          "site/admin/historico.html",
+          "site/admin/index.html",
+          "site/admin/ranking.html",
+          "site/admin/usuarios.html"
+        ]
+      },
+      "Inscrições Phygital": {
+        "colunas": [
+          "contas.nome"
+        ],
+        "arquivos": [
+          "site/admin/auditoria.html",
+          "site/admin/banners-site.html",
+          "site/admin/banners.html",
+          "site/admin/blog-categorias.html",
+          "site/admin/blog-post.html",
+          "site/admin/blog.html",
+          "site/admin/campeonato-apuracao.html",
+          "site/admin/campeonato-gerenciar.html",
+          "site/admin/campeonato-novo.html",
+          "site/admin/campeonato-time.html",
+          "site/admin/campeonatos.html",
+          "site/admin/chamado.html",
+          "site/admin/chamados.html",
+          "site/admin/conta.html",
+          "site/admin/email-modelos.html",
+          "site/admin/email.html",
+          "site/admin/historico.html",
+          "site/admin/index.html",
+          "site/admin/ranking.html",
+          "site/admin/usuarios.html"
+        ]
+      },
+      "Inscrições abertas": {
+        "colunas": [
+          "banners_site.eyebrow"
+        ],
+        "arquivos": [
+          "site/admin/campeonato-novo.html",
+          "site/assets/js/dados.js",
+          "site/blog.html",
+          "site/contato.html",
+          "site/eventos.html",
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-outros.html",
+          "site/mod-shooter.html",
+          "site/modalidades.html",
+          "site/painel/inicio.html",
+          "site/parceiros.html",
+          "site/post.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Eventos": {
+        "colunas": [
+          "categorias.nome"
+        ],
+        "arquivos": [
+          "site/blog.html",
+          "site/contato.html",
+          "site/eventos.html",
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-outros.html",
+          "site/mod-shooter.html",
+          "site/modalidades.html",
+          "site/parceiros.html",
+          "site/post.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Institucional": {
+        "colunas": [
+          "categorias.nome"
+        ],
+        "arquivos": [
+          "site/blog.html",
+          "site/contato.html",
+          "site/eventos.html",
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-outros.html",
+          "site/mod-shooter.html",
+          "site/modalidades.html",
+          "site/parceiros.html",
+          "site/post.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Ver inscrições abertas": {
+        "colunas": [
+          "banners_site.botao"
+        ],
+        "arquivos": [
+          "site/blog.html",
+          "site/eventos.html",
+          "site/index.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-shooter.html",
+          "site/modalidades.html",
+          "site/painel/cadastro.html",
+          "site/painel/login.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Como funciona": {
+        "colunas": [
+          "banners_site.botao2"
+        ],
+        "arquivos": [
+          "site/index.html",
+          "site/mod-basquete.html",
+          "site/mod-dance.html",
+          "site/mod-futebol.html",
+          "site/mod-outros.html",
+          "site/mod-shooter.html"
+        ]
+      },
+      "Inscrever time": {
+        "colunas": [
+          "banners_site.botao"
+        ],
+        "arquivos": [
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/mod-basquete.html",
+          "site/mod-futebol.html",
+          "site/mod-shooter.html",
+          "site/painel/inicio.html"
+        ]
+      },
+      "Temporada 2026": {
+        "colunas": [
+          "banners_site.eyebrow"
+        ],
+        "arquivos": [
+          "site/index.html",
+          "site/inscricoes.html",
+          "site/modalidades.html",
+          "site/parceiros.html",
+          "site/quem-somos.html"
+        ]
+      },
+      "Regulamento": {
+        "colunas": [
+          "categorias.nome"
+        ],
+        "arquivos": [
+          "site/admin/campeonato-novo.html",
+          "site/blog.html",
+          "site/inscricoes.html"
+        ]
+      },
+      "Copa Phygital Futebol 2026 — Etapa Nacional": {
+        "colunas": [
+          "campeonatos.nome"
+        ],
+        "arquivos": [
+          "site/painel/inicio.html",
+          "site/post.html"
+        ]
+      },
+      "A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.": {
+        "colunas": [
+          "campeonatos.descricao"
+        ],
+        "arquivos": [
+          "site/painel/inicio.html"
+        ]
+      },
+      "Apoio institucional": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "Bulls Phygital": {
+        "colunas": [
+          "ranking.nome"
+        ],
+        "arquivos": [
+          "site/mod-basquete.html"
+        ]
+      },
+      "Cada confronto tem duas metades: uma no console, outra na quadra. O placar final é a soma das duas. É assim que a Phygital Brasil disputa futebol, basquete, dance e shooter em todo o país.": {
+        "colunas": [
+          "banners_site.texto"
+        ],
+        "arquivos": [
+          "site/index.html"
+        ]
+      },
+      "Cangaço 3x3": {
+        "colunas": [
+          "ranking.nome"
+        ],
+        "arquivos": [
+          "site/mod-basquete.html"
+        ]
+      },
+      "Circuito Phygital Basquete 3x3": {
+        "colunas": [
+          "banners_site.titulo"
+        ],
+        "arquivos": [
+          "site/post.html"
+        ]
+      },
+      "Como funciona a pontuação combinada no formato phygital": {
+        "colunas": [
+          "posts.titulo"
+        ],
+        "arquivos": [
+          "site/index.html"
+        ]
+      },
+      "Copa Phygital Futebol 2026 abre inscrições para 24 times": {
+        "colunas": [
+          "posts.titulo"
+        ],
+        "arquivos": [
+          "site/index.html"
+        ]
+      },
+      "Fornecedor oficial": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "Fúria Digital": {
+        "colunas": [
+          "ranking.nome"
+        ],
+        "arquivos": [
+          "site/mod-futebol.html"
+        ]
+      },
+      "Patrocinador": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "Patrocinador master": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "Phygital Dance Championship 2025": {
+        "colunas": [
+          "campeonatos.nome"
+        ],
+        "arquivos": [
+          "site/post.html"
+        ]
+      },
+      "Projeto social": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "São Paulo, SP": {
+        "colunas": [
+          "eventos.local"
+        ],
+        "arquivos": [
+          "site/painel/conta.html"
+        ]
+      },
+      "Sede oficial": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      },
+      "Tigres Phygital": {
+        "colunas": [
+          "ranking.nome",
+          "times.nome"
+        ],
+        "arquivos": [
+          "site/mod-futebol.html"
+        ]
+      },
+      "Transmissão": {
+        "colunas": [
+          "parceiros.tipo"
+        ],
+        "arquivos": [
+          "site/parceiros.html"
+        ]
+      }
+    }
   },
   "contexto": {
     "— {0} entrada(s) ignorada(s) por não serem e-mails válidos.": {
@@ -6193,13 +6542,6 @@
         "site/post.html"
       ]
     },
-    "A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/painel/inicio.html"
-      ]
-    },
     "A próxima arena pode ser na sua cidade": {
       "tipo": "texto",
       "usos": 1,
@@ -6960,13 +7302,6 @@
         "site/admin/banners.html"
       ]
     },
-    "Alpha Squad BR": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/painel/ranking.html"
-      ]
-    },
     "Alpha Squad BR enviou o elenco para o Phygital Shooter Open — protocolo": {
       "tipo": "texto",
       "usos": 1,
@@ -7433,13 +7768,6 @@
       ],
       "frase": "Safari · iPhone Aplicativo móvel"
     },
-    "Apoio institucional": {
-      "tipo": "texto",
-      "usos": 4,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
-    },
     "Apresentação de pista no Dance Championship 2025": {
       "tipo": "atributo",
       "usos": 1,
@@ -7666,13 +7994,6 @@
       "usos": 1,
       "arquivos": [
         "site/mod-outros.html"
-      ]
-    },
-    "Arena Phygital — São Paulo, SP": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
       ]
     },
     "Arena Phygital · 2025": {
@@ -8994,14 +9315,6 @@
         "site/painel/time-cadastro.html"
       ]
     },
-    "Bulls Phygital": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/mod-basquete.html",
-        "site/painel/ranking.html"
-      ]
-    },
     "Buscar": {
       "tipo": "texto",
       "usos": 2,
@@ -9043,13 +9356,6 @@
       "usos": 1,
       "arquivos": [
         "site/painel/ranking.html"
-      ]
-    },
-    "Cada confronto tem duas metades: uma no console, outra na quadra. O placar final é a soma das duas. É assim que a Phygital Brasil disputa futebol, basquete, dance e shooter em todo o país.": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/index.html"
       ]
     },
     "Cada evento tem captação de foto e vídeo desde a passagem de som até a premiação. O álbum entra no site em até 10 dias úteis depois da final.": {
@@ -9545,71 +9851,6 @@
         "site/admin/historico.html"
       ]
     },
-    "campeonato.data": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.encerramento": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.espera": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.inscritos": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.local": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.nome": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.oficial": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "campeonato.vagas": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "Campeonatos": {
-      "tipo": "texto",
-      "usos": 25,
-      "arquivos": [
-        "site/admin/auditoria.html",
-        "site/admin/banners-site.html",
-        "site/admin/banners.html"
-      ]
-    },
     "Campeonatos abertos": {
       "tipo": "texto",
       "usos": 3,
@@ -9925,14 +10166,6 @@
         "site/painel/inscricoes.html"
       ]
     },
-    "Cangaço 3x3": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/mod-basquete.html",
-        "site/painel/ranking.html"
-      ]
-    },
     "Cangaço 3x3 saiu da triagem e ocupou vaga no Circuito Phygital Basquete 3x3. O e-mail automático de mudança de status foi enviado ao responsável do time.": {
       "tipo": "texto",
       "usos": 1,
@@ -10118,13 +10351,6 @@
         "content"
       ]
     },
-    "Central de Inscrições": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/post.html"
-      ]
-    },
     "Central de Inscrições da Phygital Brasil": {
       "tipo": "texto",
       "usos": 1,
@@ -10244,27 +10470,6 @@
       "usos": 1,
       "arquivos": [
         "site/painel/inicio.html"
-      ]
-    },
-    "chamado.assunto": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "chamado.protocolo": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "chamado.status": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
       ]
     },
     "Chamados": {
@@ -10439,29 +10644,12 @@
         "site/admin/blog-categorias.html"
       ]
     },
-    "Circuito Basquete 3x3": {
-      "tipo": "texto",
-      "usos": 20,
-      "arquivos": [
-        "site/admin/auditoria.html",
-        "site/admin/banners-site.html",
-        "site/admin/banners.html"
-      ]
-    },
     "Circuito de agilidade com alvo eletrônico — só entra em jogo no empate": {
       "tipo": "texto",
       "usos": 1,
       "arquivos": [
         "site/mod-shooter.html"
       ]
-    },
-    "Circuito Phygital Basquete 3x3": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/post.html"
-      ],
-      "frase": "A segunda edição do Circuito Phygital Basquete 3x3 acontece nos dias 11 e 12 de outubro, no Ginásio Poliesportivo de Belo Horizonte. São 16 vagas e as inscrições ficam abertas de 10 de agosto a 28 de setembro, pelo Painel do Competidor."
     },
     "Citação": {
       "tipo": "atributo",
@@ -10882,13 +11070,6 @@
         "site/painel/time-detalhe.html"
       ]
     },
-    "Comitê Técnico": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/post.html"
-      ]
-    },
     "Comitê Técnico da Phygital Brasil": {
       "tipo": "texto",
       "usos": 2,
@@ -10988,16 +11169,6 @@
         "site/contato.html"
       ]
     },
-    "Como funciona": {
-      "tipo": "texto",
-      "usos": 6,
-      "arquivos": [
-        "site/index.html",
-        "site/mod-basquete.html",
-        "site/mod-dance.html"
-      ],
-      "frase": "Ver inscrições abertas Como funciona"
-    },
     "Como funciona a cobertura": {
       "tipo": "texto",
       "usos": 1,
@@ -11010,13 +11181,6 @@
       "usos": 1,
       "arquivos": [
         "site/inscricoes.html"
-      ]
-    },
-    "Como funciona a pontuação combinada no formato phygital": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/index.html"
       ]
     },
     "Como funciona a triagem": {
@@ -11630,7 +11794,7 @@
     },
     "Content-Type": {
       "tipo": "texto",
-      "usos": 2,
+      "usos": 1,
       "arquivos": [
         "site/assets/js/dados.js"
       ]
@@ -11734,22 +11898,6 @@
         "site/admin/auditoria.html",
         "site/admin/banners-site.html",
         "site/admin/banners.html"
-      ]
-    },
-    "Copa Phygital Futebol 2026 — Etapa Nacional": {
-      "tipo": "texto",
-      "usos": 3,
-      "arquivos": [
-        "site/admin/email-modelos.html",
-        "site/painel/inicio.html",
-        "site/post.html"
-      ]
-    },
-    "Copa Phygital Futebol 2026 abre inscrições para 24 times": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/index.html"
       ]
     },
     "Cópia criada": {
@@ -12839,11 +12987,11 @@
     },
     "Diego Martins": {
       "tipo": "texto",
-      "usos": 11,
+      "usos": 10,
       "arquivos": [
-        "site/admin/email-modelos.html",
         "site/painel/chamado.html",
-        "site/painel/chamados.html"
+        "site/painel/chamados.html",
+        "site/painel/conta.html"
       ]
     },
     "diego@digitalsolvers.com": {
@@ -14378,11 +14526,11 @@
     },
     "Em triagem": {
       "tipo": "texto",
-      "usos": 6,
+      "usos": 5,
       "arquivos": [
-        "site/admin/email-modelos.html",
         "site/admin/index.html",
-        "site/assets/js/dados.js"
+        "site/assets/js/dados.js",
+        "site/inscricoes.html"
       ],
       "frase": "Situações possíveis: Em triagem Lista oficial Lista de espera Cancelada"
     },
@@ -16011,16 +16159,6 @@
         "site/admin/blog-categorias.html"
       ]
     },
-    "Eventos": {
-      "tipo": "texto",
-      "usos": 44,
-      "arquivos": [
-        "site/blog.html",
-        "site/contato.html",
-        "site/eventos.html"
-      ],
-      "frase": "Home Quem Somos Inscrições Eventos Parceiros Blog Contato Acessar Painel"
-    },
     "Eventos realizados": {
       "tipo": "texto",
       "usos": 2,
@@ -17057,13 +17195,6 @@
         "site/mod-outros.html"
       ]
     },
-    "Fornecedor oficial": {
-      "tipo": "texto",
-      "usos": 3,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
-    },
     "Fornecedores e transmissão": {
       "tipo": "texto",
       "usos": 1,
@@ -17260,21 +17391,13 @@
         "site/admin/banners-site.html"
       ]
     },
-    "Fúria Digital": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/mod-futebol.html",
-        "site/painel/ranking.html"
-      ]
-    },
     "Futebol": {
       "tipo": "texto",
-      "usos": 14,
+      "usos": 13,
       "arquivos": [
         "site/admin/campeonato-novo.html",
         "site/admin/campeonatos.html",
-        "site/admin/email-modelos.html"
+        "site/admin/ranking.html"
       ],
       "frase": "Futebol : gols do digital somam aos gols do campo reduzido."
     },
@@ -18480,15 +18603,6 @@
         "site/painel/inscricoes.html"
       ]
     },
-    "Inscrever time": {
-      "tipo": "texto",
-      "usos": 7,
-      "arquivos": [
-        "site/index.html",
-        "site/inscricoes.html",
-        "site/mod-basquete.html"
-      ]
-    },
     "Inscrever time de basquete": {
       "tipo": "texto",
       "usos": 1,
@@ -18624,46 +18738,12 @@
         "site/painel/time-detalhe.html"
       ]
     },
-    "inscricao.protocolo": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "inscricao.status": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
     "inscrições": {
       "tipo": "texto",
       "usos": 1,
       "arquivos": [
         "site/painel/time-detalhe.html"
       ]
-    },
-    "Inscrições": {
-      "tipo": "texto",
-      "usos": 59,
-      "arquivos": [
-        "site/admin/auditoria.html",
-        "site/admin/campeonato-novo.html",
-        "site/admin/historico.html"
-      ],
-      "frase": "Home Quem Somos Inscrições Eventos Parceiros Blog Contato Acessar Painel"
-    },
-    "Inscrições abertas": {
-      "tipo": "texto",
-      "usos": 21,
-      "arquivos": [
-        "site/admin/campeonato-novo.html",
-        "site/assets/js/dados.js",
-        "site/blog.html"
-      ],
-      "frase": "contato@phygitalgamesbr.com.br · Inscrições abertas"
     },
     "Inscrições abertas — Phygital Brasil": {
       "tipo": "texto",
@@ -18753,15 +18833,6 @@
         "site/assets/js/dados.js",
         "site/inscricoes.html",
         "site/painel/inicio.html"
-      ]
-    },
-    "Inscrições Phygital": {
-      "tipo": "texto",
-      "usos": 20,
-      "arquivos": [
-        "site/admin/auditoria.html",
-        "site/admin/banners-site.html",
-        "site/admin/banners.html"
       ]
     },
     "Inscrições recebidas": {
@@ -18885,15 +18956,6 @@
       ],
       "atributos": [
         "aria-label"
-      ]
-    },
-    "Institucional": {
-      "tipo": "texto",
-      "usos": 15,
-      "arquivos": [
-        "site/blog.html",
-        "site/contato.html",
-        "site/eventos.html"
       ]
     },
     "Integrante da comissão": {
@@ -19164,13 +19226,6 @@
         "site/painel/recuperar-senha.html"
       ],
       "frase": "Lembrou a senha? Voltar para o acesso · Criar cadastro"
-    },
-    "Leões do Cerrado": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/painel/ranking.html"
-      ]
     },
     "Ler as últimas notícias": {
       "tipo": "texto",
@@ -19637,13 +19692,6 @@
       "usos": 1,
       "arquivos": [
         "site/admin/index.html"
-      ]
-    },
-    "mail.phygitalgamesbr.com.br": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
       ]
     },
     "Maior de 18 anos para acessar a área de pista": {
@@ -23017,13 +23065,6 @@
         "site/painel/inicio.html"
       ]
     },
-    "Onça Preta e-Sports": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/painel/ranking.html"
-      ]
-    },
     "Onde": {
       "tipo": "texto",
       "usos": 1,
@@ -23690,20 +23731,6 @@
       ],
       "frase": "Uma pasta por time inscrito"
     },
-    "Patrocinador": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
-    },
-    "Patrocinador master": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
-    },
     "Patrocinadores": {
       "tipo": "texto",
       "usos": 1,
@@ -23991,14 +24018,6 @@
       "arquivos": [
         "site/mod-dance.html"
       ]
-    },
-    "Phygital Dance Championship 2025": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/post.html"
-      ],
-      "frase": "O Phygital Dance Championship 2025 encerrou a temporada no Teatro Municipal do Recife, nos dias 22 e 23 de novembro. Foram 38 inscritos, 36 atletas confirmados na lista oficial e dois dias de disputa individual, com uma final decidida por menos de um ponto na soma das notas."
     },
     "Phygital Experience · 2024": {
       "tipo": "texto",
@@ -24869,13 +24888,6 @@
         "site/mod-futebol.html"
       ],
       "frase": "Sub 16 Sub 17 Sub 18 Amador Profissional"
-    },
-    "Projeto social": {
-      "tipo": "texto",
-      "usos": 3,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
     },
     "Pronto": {
       "tipo": "texto",
@@ -26035,10 +26047,9 @@
     },
     "Redação Phygital": {
       "tipo": "texto",
-      "usos": 4,
+      "usos": 3,
       "arquivos": [
-        "site/admin/blog-post.html",
-        "site/post.html"
+        "site/admin/blog-post.html"
       ]
     },
     "Redes sociais": {
@@ -26179,15 +26190,6 @@
       "usos": 1,
       "arquivos": [
         "site/painel/time-cadastro.html"
-      ]
-    },
-    "Regulamento": {
-      "tipo": "texto",
-      "usos": 3,
-      "arquivos": [
-        "site/admin/campeonato-novo.html",
-        "site/blog.html",
-        "site/inscricoes.html"
       ]
     },
     "Regulamento completo:": {
@@ -26449,11 +26451,11 @@
     },
     "Respondido": {
       "tipo": "texto",
-      "usos": 4,
+      "usos": 3,
       "arquivos": [
         "site/admin/chamado.html",
         "site/admin/chamados.html",
-        "site/admin/email-modelos.html"
+        "site/assets/js/dados.js"
       ]
     },
     "Respondido — aguardando o time": {
@@ -26958,13 +26960,6 @@
         "site/eventos.html"
       ]
     },
-    "São Paulo, SP": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/painel/conta.html"
-      ]
-    },
     "Se esquecer, use o \"Esqueci minha senha\" na tela de login — o código de recuperação chega no mesmo e-mail.": {
       "tipo": "texto",
       "usos": 1,
@@ -26987,13 +26982,6 @@
       ],
       "atributos": [
         "aria-label"
-      ]
-    },
-    "Sede oficial": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/parceiros.html"
       ]
     },
     "Segunda a sexta, das 9h às 18h": {
@@ -27766,13 +27754,6 @@
       ],
       "frase": "“Atualização do regulamento — Shooter Open” enviado para 14 destinatários pelo SMTP único ( smtp.phygitalgamesbr.com.br ). Nenhuma falha de entrega registrada."
     },
-    "smtp.servidor": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
     "Só aparecem aqui os campeonatos em que você tem inscrição registrada.": {
       "tipo": "texto",
       "usos": 1,
@@ -28377,15 +28358,6 @@
         "site/eventos.html"
       ]
     },
-    "Temporada 2026": {
-      "tipo": "texto",
-      "usos": 5,
-      "arquivos": [
-        "site/index.html",
-        "site/inscricoes.html",
-        "site/modalidades.html"
-      ]
-    },
     "Temporada 2026 · {0} · {1}": {
       "tipo": "padrao",
       "usos": 2,
@@ -28524,15 +28496,6 @@
       "usos": 1,
       "arquivos": [
         "site/admin/email-modelos.html"
-      ]
-    },
-    "Tigres Phygital": {
-      "tipo": "texto",
-      "usos": 3,
-      "arquivos": [
-        "site/admin/email-modelos.html",
-        "site/mod-futebol.html",
-        "site/painel/ranking.html"
       ]
     },
     "Tigres Phygital · lista oficial": {
@@ -28698,27 +28661,6 @@
       ],
       "atributos": [
         "placeholder"
-      ]
-    },
-    "time.jogadores": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "time.modalidade": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "time.nome": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
       ]
     },
     "Times": {
@@ -29326,13 +29268,6 @@
         "site/assets/js/phygital.js"
       ]
     },
-    "Transmissão": {
-      "tipo": "texto",
-      "usos": 2,
-      "arquivos": [
-        "site/parceiros.html"
-      ]
-    },
     "Transmissão e mídia": {
       "tipo": "texto",
       "usos": 1,
@@ -29476,13 +29411,6 @@
       ],
       "atributos": [
         "alt"
-      ]
-    },
-    "Troca de jogador": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
       ]
     },
     "Troca de jogadores no controle liberada no intervalo": {
@@ -30016,27 +29944,6 @@
         "site/admin/usuarios.html"
       ]
     },
-    "usuario.email": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "usuario.nome": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
-    "usuario.telefone": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/admin/email-modelos.html"
-      ]
-    },
     "usuários": {
       "tipo": "texto",
       "usos": 1,
@@ -30267,13 +30174,6 @@
         "site/assets/js/dados.js"
       ]
     },
-    "Vendaval FC": {
-      "tipo": "texto",
-      "usos": 1,
-      "arquivos": [
-        "site/painel/ranking.html"
-      ]
-    },
     "Ver": {
       "tipo": "texto",
       "usos": 3,
@@ -30393,16 +30293,6 @@
       "arquivos": [
         "site/painel/inicio.html"
       ]
-    },
-    "Ver inscrições abertas": {
-      "tipo": "texto",
-      "usos": 13,
-      "arquivos": [
-        "site/blog.html",
-        "site/eventos.html",
-        "site/index.html"
-      ],
-      "frase": "Ver inscrições abertas Levar uma etapa"
     },
     "Ver Meu Time": {
       "tipo": "texto",
