@@ -357,12 +357,14 @@
             </div>
 
             <div class="campo">
-              <label for="regulamento">Upload do regulamento (PDF)</label>
+              <label for="regulamento">Upload do regulamento (PDF ou Word)</label>
               <div class="upload" data-upload>
                 <span class="upload__titulo">Arraste o regulamento ou clique para escolher</span>
-                <span class="upload__specs">PDF · até 10 MB</span>
+                <span class="upload__specs">PDF, Word (.doc/.docx) ou OpenDocument (.odt) · até 100 MB</span>
                 <span class="upload__specs" data-upload-nome></span>
-                <input type="file" id="regulamento" name="regulamento" accept="application/pdf" class="sr-only">
+                <input type="file" id="regulamento" name="regulamento"
+                       accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,.pdf,.doc,.docx,.odt"
+                       class="sr-only">
               </div>
             </div>
           </div>

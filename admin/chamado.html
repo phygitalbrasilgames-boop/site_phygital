@@ -172,9 +172,11 @@
                 </div>
                 <div class="campo">
                   <label for="anexo">Anexo (opcional)</label>
-                  <input type="file" id="anexo" name="anexo" accept="image/png,image/jpeg,image/webp,image/gif">
+                  <input type="file" id="anexo" name="anexo"
+                         accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,.pdf,.doc,.docx,.odt">
                   <p class="campo__ajuda">
-                    PNG, JPG, WEBP ou GIF até 5 MB. O arquivo fica guardado no protocolo e vira um
+                    Imagem (PNG, JPG, WEBP ou GIF) até 5 MB, ou documento (PDF, Word .doc/.docx
+                    ou OpenDocument .odt) até 100 MB. O arquivo fica guardado no protocolo e vira um
                     link na conversa — o e-mail de aviso não leva o arquivo junto.
                   </p>
                 </div>
@@ -415,9 +417,16 @@
     var anexo = $('#anexo').files[0];
     if (!anexo) { gravar(''); return; }
 
+    /* A classe define só o teto que o cliente confere antes de subir — o
+       servidor decide de novo pela assinatura. Sem isto o anexo em PDF ou
+       Word (100 MB) levaria "acima de 5 MB" antes de sair da tela. */
+    var classeAnexo = /\.(pdf|docx?|odt)$/i.test(anexo.name)
+      || /pdf|word|opendocument|msword/i.test(anexo.type || '')
+      ? 'documento' : 'imagem';
+
     travarEnvio(true);
     PB.enviarArquivo(anexo, {
-      classe: 'imagem',
+      classe: classeAnexo,
       /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
          que a tela não travou. */
       aoProgresso: function (pct) {

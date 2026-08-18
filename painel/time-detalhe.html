@@ -202,9 +202,11 @@
           <label for="d-arquivo">Arquivo <span class="obrigatorio">*</span></label>
           <div class="upload" data-upload>
             <span class="upload__titulo">Arraste o arquivo ou clique para escolher</span>
-            <span class="upload__specs">PDF até 10 MB · PNG ou JPG até 5 MB</span>
+            <span class="upload__specs">PDF, Word (.doc/.docx) ou ODT até 100 MB · PNG ou JPG até 5 MB</span>
             <span class="upload__specs" data-upload-nome></span>
-            <input type="file" id="d-arquivo" accept="application/pdf,image/png,image/jpeg" class="sr-only" required>
+            <input type="file" id="d-arquivo"
+                   accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,image/png,image/jpeg,.pdf,.doc,.docx,.odt"
+                   class="sr-only" required>
           </div>
           <p class="campo__erro" hidden>Escolha o arquivo do documento.</p>
         </div>
