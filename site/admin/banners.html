@@ -386,7 +386,7 @@
 
     /* Grava o banner. `caminho` só vem preenchido quando um arquivo subiu. */
     function concluir(caminho) {
-      D.gravar('banners', {
+      var salvou = D.gravar('banners', {
         id: id || ('b' + Date.now()),
         titulo: titulo,
         img: caminho || imgAtual,
@@ -394,6 +394,10 @@
         ordem: existente ? existente.ordem : banners.length + 1,
         ativo: true
       });
+
+      /* Recusado pelo servidor, a janela FICA ABERTA com tudo preenchido: o
+         aviso de PB.dados explica o motivo e o admin corrige ali mesmo. */
+      if (!salvou) return;
 
       PB.fecharModal('modal-banner');
       PB.toast(existente ? 'Banner atualizado' : 'Banner publicado',
@@ -446,7 +450,7 @@
       PB.confirmar('Remover banner',
         'O banner "' + banners[k].titulo + '" sai da rotação do painel do competidor e vai para o Histórico, de onde pode ser restaurado. Deseja remover?',
         function () {
-          D.arquivar('banners', banners[k].id);
+          if (!D.arquivar('banners', banners[k].id)) return;
           PB.toast('Banner removido', 'Ele está no Histórico e pode ser restaurado.', 'info');
           PB.recarregar();
         });

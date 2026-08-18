@@ -684,7 +684,10 @@
       'O time “' + t.nome + '” sai da sua lista e das inscrições ativas. Ele vai para o Histórico e a ' +
       'organização pode restaurá-lo. Deseja remover?',
       function () {
-        D.arquivar('meusTimes', id, 'id', 'removido pelo responsável');
+        /* Time com inscrição ativa o servidor não deixa remover, e a mensagem
+           dele diz o porquê. Sem esta guarda a tela arquivava as inscrições
+           assim mesmo e ainda levava para uma lista onde o time continua lá. */
+        if (!D.arquivar('meusTimes', id, 'id', 'removido pelo responsável')) return;
         /* As inscrições do time saem junto: não faz sentido inscrição sem time */
         (D.tudo().minhasInscricoes || []).forEach(function (i) {
           if (i.time === id) D.arquivar('minhasInscricoes', i.id, 'id', 'time removido');

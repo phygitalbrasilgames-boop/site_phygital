@@ -389,7 +389,7 @@
     }
 
     function gravar(marca) {
-      D.atualizarChamado(ch.protocolo, {
+      var salvou = D.atualizarChamado(ch.protocolo, {
         status: 'respondido',
         atualizadoEm: agora(),
         mensagem: {
@@ -398,6 +398,13 @@
           hora: agora()
         }
       });
+
+      /* Recusada pelo servidor (chamado encerrado, texto acima do limite, rede
+         fora): dados.js já mostrou o motivo e desfez a mudança no cache. Dizer
+         "enviada" aqui deixava os dois avisos na tela ao mesmo tempo. O texto
+         continua no campo para o operador corrigir e reenviar. */
+      if (!salvou) return;
+
       D.registrar('chamado', ch.protocolo, 'respondeu', ch.time + ' · ' + ch.assunto);
       PB.toast('Resposta enviada',
         'O chamado passou para "Respondido" e um e-mail foi disparado ao responsável.', 'info');
@@ -444,11 +451,16 @@
       return;
     }
     var st = D.STATUS_CHAMADO[novoStatus];
-    D.atualizarChamado(ch.protocolo, {
+    var salvou = D.atualizarChamado(ch.protocolo, {
       status: novoStatus,
       atualizadoEm: agora(),
       mensagem: { de: 'sistema', texto: 'Status alterado para "' + st.rotulo + '" pela organização.', hora: agora() }
     });
+
+    /* Recusada: dados.js já avisou. A pílula continua com o status antigo, que
+       é o que o servidor tem; o seletor guarda a escolha para tentar de novo. */
+    if (!salvou) return;
+
     D.registrar('chamado', ch.protocolo, 'alterou o status para ' + st.rotulo, ch.time);
     PB.toast('Status atualizado', 'Agora: ' + st.rotulo + '. O responsável foi notificado por e-mail.', 'info');
     PB.recarregar();
@@ -459,11 +471,17 @@
     PB.confirmar('Encerrar chamado',
       'O chamado ' + ch.protocolo + ' sai da fila de atendimento e vai para o histórico de encerrados. Deseja encerrar?',
       function () {
-        D.atualizarChamado(ch.protocolo, {
+        var salvou = D.atualizarChamado(ch.protocolo, {
           status: 'encerrado',
           atualizadoEm: agora(),
           mensagem: { de: 'sistema', texto: 'Chamado encerrado pela organização.', hora: agora() }
         });
+
+        /* Recusada: fica na ficha, com o aviso de erro que dados.js mostrou.
+           Ir para a lista era o pior desfecho — o chamado continuava lá do
+           mesmo jeito e o operador só descobria na próxima vez que abrisse. */
+        if (!salvou) return;
+
         PB.toast('Chamado encerrado', 'Movido para a lista de encerrados e responsável notificado.', 'info');
         setTimeout(function () { location.href = 'chamados.html'; }, 1100);
       });

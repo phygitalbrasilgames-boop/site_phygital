@@ -385,7 +385,7 @@
   var mensagens = c.mensagens || [];
   document.getElementById('ch-conversa').innerHTML = mensagens.map(bloco).join('');
   document.getElementById('ch-qtd-msg').textContent =
-    mensagens.length + ' mensagem' + (mensagens.length === 1 ? '' : 's') + ' no protocolo';
+    mensagens.length + (mensagens.length === 1 ? ' mensagem' : ' mensagens') + ' no protocolo';
 
   /* ---- Linha do tempo do status ---- */
   function primeiraOrg() {
@@ -450,11 +450,17 @@
           var pad = function (n) { return String(n).padStart(2, '0'); };
           var carimbo = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
                         ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-          D.atualizarChamado(c.protocolo, {
+          var salvou = D.atualizarChamado(c.protocolo, {
             status: 'encerrado',
             atualizadoEm: carimbo,
             mensagem: { de: 'sistema', texto: 'Chamado encerrado pelo responsável do time.', hora: carimbo }
           });
+
+          /* Recusada (a organização pode ter encerrado o chamado enquanto esta
+             tela estava aberta): dados.js já avisou. Sem isto o competidor era
+             levado para a lista achando que tinha encerrado. */
+          if (!salvou) return;
+
           PB.toast('Chamado encerrado', 'O protocolo foi para a lista de encerrados.', 'info');
           setTimeout(function () { location.href = 'chamados.html'; }, 1100);
         });
@@ -532,6 +538,20 @@
       function gravar(marca) {
         var completo = texto + marca;
 
+        /* Grava ANTES de encostar na tela. Na ordem inversa, a mensagem já
+           entrava na conversa, no contador, no status e na linha do tempo — e
+           quando o servidor recusava, a recarga logo em seguida apagava tudo
+           enquanto o toast verde dizia que tinha sido enviada. */
+        var salvou = D.atualizarChamado(c.protocolo, {
+          status: 'andamento',
+          atualizadoEm: carimbo,
+          mensagem: { de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }
+        });
+
+        /* Recusada: dados.js já mostrou o motivo. A conversa segue com o que o
+           servidor tem e o texto continua no campo, sem form.reset(). */
+        if (!salvou) return;
+
         var conversa = document.getElementById('ch-conversa');
         conversa.insertAdjacentHTML('beforeend',
           bloco({ de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }) +
@@ -546,14 +566,6 @@
           agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
         );
         renderTimeline('andamento');
-
-        /* Grava de verdade: a mensagem e o novo status ficam salvos e a
-           organização vê a resposta na fila de atendimento. */
-        D.atualizarChamado(c.protocolo, {
-          status: 'andamento',
-          atualizadoEm: carimbo,
-          mensagem: { de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }
-        });
 
         form.reset();
         var nomeArquivo = form.querySelector('[data-upload-nome]');

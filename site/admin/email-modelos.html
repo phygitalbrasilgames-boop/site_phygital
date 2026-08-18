@@ -399,7 +399,11 @@
       m.assunto = assunto;
       m.corpo = editor.innerHTML;
     });
-    D.salvar();
+    /* Servidor recusou: dados.js já devolveu o modelo ao texto anterior no
+       cache e avisou do erro. O modal continua aberto com o que foi escrito
+       para o trabalho não se perder — fechar e comemorar era o defeito. */
+    if (!D.salvar()) return;
+
     PB.fecharModal('modal-modelo');
     PB.toast('Modelo salvo', 'Os próximos envios deste tipo usam o texto novo.', 'info');
     PB.recarregar();

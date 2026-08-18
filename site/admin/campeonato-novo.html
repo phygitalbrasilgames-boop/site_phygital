@@ -798,7 +798,10 @@
         espera: anterior ? anterior.espera : 0
       };
 
-      D.gravar('campeonatos', item);
+      /* Recusa do servidor para a publicação inteira: a revisão fica aberta,
+         com o aviso de erro do dados.js e o botão Publicar já destravado. Sem
+         este corte a tela ia para campeonatos.html sem o campeonato lá. */
+      if (!D.gravar('campeonatos', item)) return;
       D.registrar('campeonato', item.nome,
                   editandoId ? 'editou as informações' : 'publicou o campeonato',
                   item.vagas + ' vagas · inscrições até ' + item.encerramentoInscricoes);

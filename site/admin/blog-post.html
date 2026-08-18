@@ -636,7 +636,10 @@
       return false;
     }
     var post = montarPost(publicado);
-    D.gravar('posts', post);
+    /* Falso derruba o toast E a ida para blog.html: quem chamava a lista sem
+       este corte chegava lá procurando uma publicação que não foi gravada.
+       O editor continua aberto com o texto para tentar de novo. */
+    if (!D.gravar('posts', post)) return false;
     D.registrar('blog', post.titulo, publicado ? (id ? 'atualizou a publicação' : 'publicou') : 'salvou rascunho', post.cat);
     return true;
   }

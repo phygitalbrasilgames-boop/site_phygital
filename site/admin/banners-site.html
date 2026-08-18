@@ -646,8 +646,17 @@
       var i = lista.map(function (b) { return b.id; }).indexOf(mv.getAttribute('data-mover'));
       var j = i + parseInt(mv.getAttribute('data-dir'), 10);
       if (j < 0 || j >= lista.length) return;
-      var t = lista[i].ordem; lista[i].ordem = lista[j].ordem; lista[j].ordem = t;
-      D.gravar('bannersSite', lista[i]); D.gravar('bannersSite', lista[j]);
+
+      /* Gravar objetos NOVOS, e não os itens da lista: PB.dados tira a foto do
+         "antes" no instante da gravação, então trocar a ordem no próprio item
+         antes de chamar faria a volta atrás repor justamente o valor trocado. */
+      var ordemI = lista[i].ordem, ordemJ = lista[j].ordem;
+
+      /* São duas gravações para uma troca só. Recusada qualquer uma delas, a
+         tela não confirma nada — o aviso de PB.dados fica de pé sozinho. */
+      if (!D.gravar('bannersSite', { id: lista[i].id, ordem: ordemJ })) return;
+      if (!D.gravar('bannersSite', { id: lista[j].id, ordem: ordemI })) return;
+
       PB.toast('Ordem alterada', 'A home passa a exibir nesta nova ordem.', 'info');
       PB.recarregar();
       return;
@@ -660,8 +669,8 @@
       PB.confirmar('Remover da rotação',
         'O banner sai da home e vai para o Histórico, de onde você pode restaurá-lo depois. Deseja continuar?',
         function () {
-          b.arquivado = true;
-          D.gravar('bannersSite', b);
+          /* Objeto novo, pelo mesmo motivo da troca de ordem acima. */
+          if (!D.gravar('bannersSite', { id: b.id, arquivado: true })) return;
           PB.toast('Banner arquivado', 'Ele está no Histórico e pode ser restaurado.', 'info');
           PB.recarregar();
         });
@@ -671,9 +680,8 @@
     var rs = e.target.closest('[data-restaurar]');
     if (rs) {
       var br = todos().filter(function (x) { return x.id === rs.getAttribute('data-restaurar'); })[0];
-      br.arquivado = false;
-      br.ordem = ativos().length + 1;
-      D.gravar('bannersSite', br);
+      /* ativos() ainda não conta este banner, então +1 é o fim da rotação. */
+      if (!D.gravar('bannersSite', { id: br.id, arquivado: false, ordem: ativos().length + 1 })) return;
       PB.toast('Banner restaurado', 'Ele voltou para o fim da rotação da home.', 'info');
       PB.recarregar();
       return;
@@ -685,7 +693,7 @@
       PB.confirmar('Excluir definitivamente',
         'Esta ação não pode ser desfeita: o banner será apagado do histórico. Deseja excluir?',
         function () {
-          D.remover('bannersSite', id);
+          if (!D.remover('bannersSite', id)) return;
           PB.toast('Banner excluído', 'Removido em definitivo.', 'info');
           PB.recarregar();
         });
@@ -760,7 +768,10 @@
         arquivado: existente ? !!existente.arquivado : false
       };
 
-      D.gravar('bannersSite', item);
+      /* Recusado pelo servidor, a janela FICA ABERTA com tudo preenchido: o
+         aviso de PB.dados explica o motivo e o admin corrige ali mesmo. */
+      if (!D.gravar('bannersSite', item)) return;
+
       PB.fecharModal('modal-banner');
       PB.toast('Banner salvo', 'A home do site já reflete a alteração.', 'info');
       PB.recarregar();

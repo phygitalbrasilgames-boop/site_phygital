@@ -936,11 +936,13 @@
     return _cache;
   }
 
+  /** @returns {boolean} true quando tudo foi gravado. */
   function salvar() {
-    if (_modo === 'api') { sincronizar(); return; }
+    if (_modo === 'api') return sincronizar();
     try {
       if (global.localStorage) localStorage.setItem(CHAVE, JSON.stringify(_cache));
     } catch (e) { /* modo privado / cota — segue em memória */ }
+    return true;
   }
 
   function resetar() {
@@ -1015,8 +1017,10 @@
   }
 
   function sincronizar() {
-    if (_modo !== 'api' || !_cache) return;
-    if (!_espelho) { fotografar(); return; }
+    /* true, não vazio: salvar() repassa este retorno, e sair sem valor faria uma
+       sincronização que nada tinha a enviar ser lida como recusa pela tela. */
+    if (_modo !== 'api' || !_cache) return true;
+    if (!_espelho) { fotografar(); return true; }
 
     var falhas = [];
 
@@ -1069,6 +1073,11 @@
 
     if (falhas.length) avisar(falhas[0]);
     fotografar();
+
+    /* Devolve se TUDO passou. Sem retorno, as telas que gravam por
+       tudo() + salvar() não tinham como distinguir sucesso de recusa e
+       comemoravam sempre. */
+    return falhas.length === 0;
   }
 
   /* Troca o item do cache pelo que o servidor devolveu (ids gerados, carimbos
@@ -1363,7 +1372,11 @@
         if (existia) d[colecao][i] = antes;
         else retirar(d[colecao], item);
         avisar(r.erro);
-        return item;
+        /* FALSO, não o item. Devolver o item aqui — igual ao sucesso — deixava
+           a tela sem como saber que o servidor recusou: aparecia o aviso de erro
+           E o toast verde de "salvo", e algumas telas ainda navegavam para uma
+           lista onde o registro não existe. */
+        return false;
       }
 
       absorver(colecao, r.dados, id);
@@ -1526,7 +1539,10 @@
          não tem rota própria e fica no cache até a próxima rehidratação. */
       if (caminho === 'smtp' && ehAdmin()) {
         var r = pedirSync('PUT', '/email/smtp', valor);
-        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return antes; }
+        /* FALSO no fracasso. Devolver `antes` — um objeto, portanto truthy —
+           deixava admin/email.html sem como saber que o servidor recusou: a tela
+           mostrava o erro E "Configurações salvas" logo em seguida. */
+        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return false; }
         if (r.dados && r.dados.smtp) d.smtp = r.dados.smtp;
       }
 

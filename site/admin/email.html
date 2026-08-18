@@ -615,18 +615,37 @@
               : (alvo[0] ? alvo[0].nome : '—');
     }
 
+    /* O disparo acontece DENTRO da gravação: PB.dados.gravar('emailsEnviados', …)
+       chama POST /api/email/disparar e, quando o servidor recusa, tira a linha
+       do histórico. Só que essa gravação devolve o registro nos dois casos, então
+       o retorno não serve de resposta — quem sabe se o e-mail saiu é o histórico
+       relido: sem a linha, nada foi entregue. */
+    function saiu(id) {
+      if (D.modo() !== 'api') return true;            /* demonstração: não há servidor a consultar */
+      if (destino === 'Lista manual') return false;   /* sem rota: o servidor só conhece responsáveis inscritos */
+      return D.emailsEnviados().some(function (e) { return e.id === id; });
+    }
+
     function disparar(anexos) {
       var agora = new Date();
       var pad = function (n) { return String(n).padStart(2, '0'); };
-      D.gravar('emailsEnviados', {
+      var registro = {
         id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
         data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
               ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
         status: 'entregue', corpo: corpo, anexos: anexos
-      });
+      };
 
-      D.registrar('email', assunto, 'disparou e-mail', qtd + ' destinatário(s) · ' + destino);
-      PB.toast('E-mail enviado', qtd + ' destinatário(s) · ' + destino + '.', 'info');
+      D.gravar('emailsEnviados', registro);
+
+      /* Nada de "E-mail enviado" com o disparo recusado: o aviso de PB.dados já
+         está na tela e o formulário fica como está, para o admin tentar de novo. */
+      if (!saiu(registro.id)) return;
+
+      /* qtd e destino do registro, não os desta tela: quando o envio dá certo o
+         servidor devolve quantos responsáveis receberam de fato. */
+      D.registrar('email', assunto, 'disparou e-mail', registro.qtd + ' destinatário(s) · ' + registro.destino);
+      PB.toast('E-mail enviado', registro.qtd + ' destinatário(s) · ' + registro.destino + '.', 'info');
       PB.recarregar();
     }
 
@@ -740,7 +759,11 @@
       novo[chave] = (chave === 'smtp' || chave === 'imap' || chave === 'pop3')
         ? (parseInt(el.value, 10) || 0) : el.value.trim();
     });
-    D.definir('smtp', novo);
+    /* Servidor recusou: `definir` devolve false e o aviso de erro já saiu de
+       dados.js. O formulário fica aberto com o que foi digitado — anunciar
+       "Configurações salvas" por cima do erro é o que confundia a pessoa. */
+    if (!D.definir('smtp', novo)) return;
+
     D.registrar('configuracao', 'SMTP', 'alterou as configurações de envio',
                 novo.servidorSaida + ':' + novo.smtp);
     PB.toast('Configurações salvas', 'Todos os e-mails do sistema passam a sair por ' + novo.servidorSaida + ':' + novo.smtp + '.', 'info');
