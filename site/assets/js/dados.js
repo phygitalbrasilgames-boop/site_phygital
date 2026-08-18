@@ -1966,6 +1966,7 @@
   function alvoDoDestino(destino) {
     if (destino === 'Todos os campeonatos') return 'todos';
     if (destino === 'Campeonatos com inscrições abertas') return 'abertos';
+    if (destino === 'Lista manual') return 'manual';
 
     var camp = (_cache.campeonatos || []).filter(function (c) { return c.nome === destino; })[0];
     return camp ? camp.id : null;
@@ -1976,15 +1977,19 @@
 
     var alvo = alvoDoDestino(item.destino);
     if (!alvo) {
-      /* "Lista manual" não tem equivalente na API: o servidor só conhece os
-         responsáveis com inscrição ativa. Fica registrado só no cache. */
-      avisar('Envio para lista manual ainda não é aceito pelo servidor. Nada foi disparado.');
+      /* Rótulo desconhecido: sem público resolvido, o histórico local fica
+         gravado mas nada sai. É o comportamento de segurança — o servidor não
+         adivinha para onde mandar. */
+      avisar('Destino de e-mail não reconhecido. Nada foi disparado.');
       return;
     }
 
-    var r = pedirSync('POST', '/email/disparar', {
-      assunto: item.assunto, corpo: item.corpo || '', alvo: alvo
-    });
+    var carga = { assunto: item.assunto, corpo: item.corpo || '', alvo: alvo };
+    /* Lista manual: os endereços digitados na tela vão junto. Sem eles o
+       servidor responde 400, e o disparo é retirado do histórico. */
+    if (alvo === 'manual') carga.destinatarios = item.destinatarios || [];
+
+    var r = pedirSync('POST', '/email/disparar', carga);
 
     if (!r.ok) {
       retirar(_cache.emailsEnviados || [], item);
@@ -1996,6 +2001,9 @@
       item.qtd = r.dados.destinatarios || item.qtd;
       item.destino = r.dados.destino || item.destino;
       item.status = r.dados.status || item.status;
+      /* O campo local `destinatarios` só serve para o POST — depois de
+         gravado, sai (não precisa ficar em localStorage). */
+      delete item.destinatarios;
     }
   }
 

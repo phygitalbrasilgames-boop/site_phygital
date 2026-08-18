@@ -62,6 +62,37 @@ function limparAnexos(bruto) {
 
 const texto = (v) => String(v === undefined || v === null ? '' : v).trim();
 
+/* Validação de e-mail. RFC 5322 completo não vale a pena: cobre casos que
+   nenhum provedor real aceita. O que interessa é o formato "algo@algo.algo",
+   sem espaço em branco. O tamanho é limitado para não guardar linha gigante
+   no histórico. */
+const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TAMANHO_MAX_EMAIL = 254;   /* limite prático de e-mail em SMTP */
+const MAX_DESTINATARIOS_MANUAIS = 500;   /* teto por disparo, para o histórico não explodir */
+
+/**
+ * Recebe qualquer coisa que a tela mandou como lista de e-mails (array de
+ * string, string única separada por vírgula/ponto-e-vírgula/nova-linha) e
+ * devolve os endereços válidos, únicos, na ordem em que apareceram.
+ */
+function normalizarListaManual(bruto) {
+  if (bruto === undefined || bruto === null) return [];
+  const partes = Array.isArray(bruto) ? bruto : String(bruto).split(/[\s,;]+/);
+  const vistos = new Set();
+  const saida = [];
+  for (const item of partes) {
+    const e = String(item || '').trim();
+    if (!e || e.length > TAMANHO_MAX_EMAIL) continue;
+    if (!RE_EMAIL.test(e)) continue;
+    const chave = e.toLowerCase();
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    saida.push(e);
+    if (saida.length >= MAX_DESTINATARIOS_MANUAIS) break;
+  }
+  return saida;
+}
+
 /* Teto de espera de cada rota que despacha na hora. O envio de teste é o
    diagnóstico que o admin pediu e vale esperar; o disparo em massa é chamado
    pelo painel por XHR SÍNCRONO, então segurar a resposta congela a tela do
@@ -152,11 +183,50 @@ const SQL_DESTINATARIOS = `
 
 /**
  * Resolve o público do disparo.
- * @param alvo 'todos' | 'abertos' | id de campeonato (aceita o prefixo 'camp:'
- *             que o seletor da tela usa)
+ * @param alvo 'todos' | 'abertos' | 'manual' | id de campeonato (aceita o
+ *             prefixo 'camp:' que o seletor da tela usa)
+ * @param opcoes.destinatarios  lista de e-mails para o modo 'manual'.
+ *
+ * O modo 'manual' NÃO consulta o banco: entrega para os endereços que o admin
+ * digitou na tela. É a única forma de mandar e-mail para alguém que não é
+ * responsável de time em algum campeonato ativo. Se a lista chega vazia
+ * (nenhum endereço válido), a função lança 400 em vez de cair no público
+ * padrão — o silêncio disfarçado de sucesso é o bug que motivou este ramo.
  */
-function resolverDestinatarios(alvo) {
+function resolverDestinatarios(alvo, opcoes = {}) {
   const escolha = texto(alvo).replace(/^camp:/, '') || 'todos';
+
+  if (escolha === 'manual') {
+    const lista = normalizarListaManual(opcoes.destinatarios);
+    if (!lista.length) {
+      throw erro400(
+        'Informe ao menos um e-mail válido para a lista manual. '
+        + 'Use vírgula, ponto e vírgula ou quebras de linha para separar.'
+      );
+    }
+    /* Destinatário manual não tem time, campeonato nem protocolo — as
+       variáveis {{campeonato.*}} e {{inscricao.*}} ficam vazias, e o corpo
+       digitado pelo admin sai como está. É o comportamento pedido: o disparo
+       manual é um comunicado avulso, não um lembrete de inscrição. */
+    return {
+      rotulo: 'Lista manual',
+      escolha: 'manual',
+      destinatarios: lista.map((email) => ({
+        email,
+        nome: null,
+        contaId: null,
+        telefone: null,
+        time: null,
+        modalidade: null,
+        jogadores: 0,
+        campeonatoId: null,
+        campeonato: null,
+        protocolo: null,
+        statusInscricao: null
+      })),
+      inscricoes: 0
+    };
+  }
 
   let sql = SQL_DESTINATARIOS;
   const params = [];
@@ -594,7 +664,17 @@ function registrar(rotas) {
     if (!texto(mensagem)) throw erro400('Escreva a mensagem do e-mail.');
 
     const anexos = limparAnexos(corpoReq.anexos);
-    const alvo = resolverDestinatarios(corpoReq.campeonatoId || corpoReq.alvo || 'todos');
+
+    /* Duas formas de sinalizar lista manual: alvo='manual' explícito, ou
+       simplesmente mandar um array de destinatarios sem nomear alvo/campeonato.
+       Esta segunda deixa a rota compatível com o teste que o dono já vinha
+       fazendo (`{ destinatarios: [...] }` sem `alvo`) — antes esse payload
+       caía silenciosamente no público 'todos'; agora é lista manual. */
+    let escolhaAlvo = corpoReq.campeonatoId || corpoReq.alvo;
+    if (!escolhaAlvo && corpoReq.destinatarios !== undefined) escolhaAlvo = 'manual';
+    if (!escolhaAlvo) escolhaAlvo = 'todos';
+
+    const alvo = resolverDestinatarios(escolhaAlvo, { destinatarios: corpoReq.destinatarios });
 
     if (!alvo.destinatarios.length) {
       throw erro400(
