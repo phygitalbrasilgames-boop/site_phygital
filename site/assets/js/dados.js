@@ -57,25 +57,23 @@
      No modo api este array fica VAZIO: quem valida credencial é o servidor e
      nenhum e-mail ou senha precisa existir dentro deste arquivo.
 
-     Estas são contas FICTÍCIAS, de demonstração. Os endereços reais da Phygital
-     Brasil não entram aqui: este arquivo é servido publicamente pelo GitHub
-     Pages, então qualquer pessoa lê o conteúdo dele. Credencial de verdade vive
-     no banco do servidor, como hash scrypt, e nunca no front-end.
+     No modo local (site publicado no GitHub Pages, sem back-end) o array traz
+     as contas de teste, para dar como fazer login sem servidor.
      --------------------------------------------------------------------- */
   var CONTAS = [
     {
-      email: 'admin@demo.phygital',
-      senha: 'DemoAdmin2026',
+      email: 'inscricoes@phygitalgamesbr.com.br',
+      senha: 'Phygital@2026',
       papel: 'admin',
       nivel: 'master',
-      nome: 'Administração (demonstração)',
+      nome: 'Inscrições Phygital',
       destino: '../admin/index.html'
     },
     {
-      email: 'competidor@demo.phygital',
-      senha: 'DemoCompetidor2026',
+      email: 'phygitalbrasilgames@gmail.com',
+      senha: 'Phygital@2026',
       papel: 'competidor',
-      nome: 'Time de Demonstração',
+      nome: 'Phygital Brasil Games',
       destino: 'inicio.html'
     }
   ];

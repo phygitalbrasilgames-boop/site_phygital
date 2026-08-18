@@ -107,22 +107,6 @@
 
       </form>
 
-      <!-- Só aparece no modo local (sem backend, como no GitHub Pages), onde
-           as credenciais reais não existem — só as duas contas de demonstração. -->
-      <div class="aviso aviso--info mt-4" id="aviso-demo" hidden>
-        <div>
-          <strong>Modo demonstração.</strong>
-          Este site está rodando <b>sem backend</b>. Para entrar aqui, use:
-          <br><br>
-          <b>Administração:</b> <code>admin@demo.phygital</code> ·
-          senha <code>DemoAdmin2026</code><br>
-          <b>Competidor:</b> <code>competidor@demo.phygital</code> ·
-          senha <code>DemoCompetidor2026</code>
-          <br><br>
-          Contas de produção existem só quando o servidor está rodando.
-        </div>
-      </div>
-
       <p class="auth__rodape">
         Ainda não tem conta? <a href="cadastro.html">Criar cadastro</a><br>
         Recebeu uma senha temporária? <a href="primeiro-acesso.html">Fazer o primeiro acesso</a>
@@ -148,14 +132,6 @@
 
   var form = $('#form-login');
   var erro = $('#erro-login');
-
-  /* Aviso de "modo demonstração": no GitHub Pages não existe backend, então
-     credencial real não vai funcionar aqui. Mostrar as contas de demonstração
-     é o único jeito de a pessoa conseguir entrar sem sair para a documentação. */
-  if (D.modo && D.modo() === 'local') {
-    var aviso = $('#aviso-demo');
-    if (aviso) aviso.hidden = false;
-  }
 
   /* ---- Para onde ir depois de entrar ----
 
