@@ -31,6 +31,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
+const db = require('../db');
 const regras = require('../regras');
 const { ErroHttp, erro400, erro404, CORPO_MAX_ARQUIVO } = require('../http');
 
@@ -217,39 +218,96 @@ function dimensoesWebp(dados) {
    Versão própria de corpoBruto: quando estoura o teto ela para de acumular mas
    continua drenando, em vez de matar o soquete. Cortar a conexão faz o cliente
    ver "connection reset" no lugar do 413 e o operador não entende por que o
-   envio falhou. A memória fica presa no teto de qualquer jeito, que é o que
-   importa contra negação de serviço; a drenagem tem seu próprio limite.
+   envio falhou.
+
+   O TETO SOBE, NÃO DESCE. A leitura começa valendo o menor teto (imagem) e só
+   passa para o de vídeo quando a assinatura do conteúdo prova que é vídeo.
+
+   Antes o corpo inteiro era lido até 52 MB e a classe só era conferida depois,
+   então bastava declarar "imagem" e mandar 51 MB para prender 52 MB de memória
+   por conexão — o teto de 5 MB era só o texto da mensagem de erro. Medido na
+   revisão: 24 envios simultâneos levavam o processo de 681 MB para 925 MB.
    -------------------------------------------------------------------------- */
 
-const erro413 = () => new ErroHttp(413, 'Arquivo grande demais.');
+const erro413 = (limite) => new ErroHttp(
+  413,
+  `Arquivo grande demais: o limite é ${Math.round(limite / (1024 * 1024))} MB.`
+);
 
-function corpoDoArquivo(req, limite) {
+/* Quanto do início do corpo é vasculhado atrás da assinatura. No envio binário
+   cru ela está no byte 0; no multipart vem depois dos cabeçalhos da parte, que
+   são algumas centenas de bytes. 8 KB cobre folgado os dois casos. */
+const JANELA_ASSINATURA = 8 * 1024;
+
+/** Procura uma assinatura conhecida em qualquer deslocamento da janela. */
+function classeNaJanela(buffer) {
+  const ate = Math.min(buffer.length, JANELA_ASSINATURA);
+  for (let off = 0; off < ate; off++) {
+    const fatia = buffer.subarray(off);
+    const achada = ASSINATURAS.find((a) => a.casa(fatia));
+    if (achada) return achada.classe;
+  }
+  return null;
+}
+
+function corpoDoArquivo(req, limiteMaximo) {
   return new Promise((resolver, rejeitar) => {
     const pedacos = [];
     let tamanho = 0;
     let excedeu = false;
 
+    /* Presume o mais barato até o conteúdo dizer o contrário. */
+    let limite = Math.min(TETOS.imagem, limiteMaximo);
+    let classeConhecida = false;
+
     req.on('data', (p) => {
       tamanho += p.length;
+
+      if (!excedeu) {
+        pedacos.push(p);
+
+        /* No máximo duas varreduras: uma assim que houver bytes para o
+           cabeçalho do multipart caber, outra ao completar a janela. Vasculhar
+           a cada pedaço custaria a janela inteira vezes o número de pedaços,
+           sem achar nada que a segunda tentativa não ache. */
+        if (!classeConhecida && (tamanho >= 1024 || req.readableEnded)) {
+          const classe = classeNaJanela(Buffer.concat(pedacos));
+          if (classe) {
+            classeConhecida = true;
+            limite = Math.min(TETOS[classe] || TETOS.imagem, limiteMaximo);
+          } else if (tamanho >= JANELA_ASSINATURA) {
+            /* Passou da janela sem casar com nada da lista branca: o teto de
+               imagem fica valendo, porque continuar lendo dezenas de MB de um
+               formato que será recusado no fim não ajuda ninguém. */
+            classeConhecida = true;
+          }
+        }
+      }
 
       if (excedeu || tamanho > limite) {
         if (!excedeu) {
           excedeu = true;
           pedacos.length = 0;      /* solta o que já tinha juntado */
         }
-        /* Cliente que ignora o teto e continua despejando não merece a
-           gentileza da drenagem. */
-        if (tamanho > limite * 2) {
-          rejeitar(erro413());
+
+        /* Duas coisas diferentes, e confundi-las quebra uma delas:
+
+           MEMÓRIA está protegida acima, ao parar de acumular — drenar não custa
+           byte nenhum. Então o corte da conexão NÃO precisa acompanhar o teto da
+           classe: se acompanhasse, um envio de 20 MB marcado como imagem teria o
+           soquete morto em 10 MB e o operador veria "connection reset" no lugar
+           da mensagem dizendo que o limite é 5 MB.
+
+           O corte usa o teto absoluto do envelope, que é o ponto onde o cliente
+           deixou de ser desastrado e passou a ser abusivo. */
+        if (tamanho > limiteMaximo) {
+          rejeitar(erro413(limite));
           req.destroy();
         }
-        return;
       }
-
-      pedacos.push(p);
     });
 
-    req.on('end', () => (excedeu ? rejeitar(erro413()) : resolver(Buffer.concat(pedacos))));
+    req.on('end', () => (excedeu ? rejeitar(erro413(limite)) : resolver(Buffer.concat(pedacos))));
     req.on('error', rejeitar);
   });
 }
@@ -461,9 +519,124 @@ async function apagar(ctx) {
   return ctx.ok({ ok: true, nome });
 }
 
+/* --------------------------------------------------------------------------
+   LIMPEZA DE ÓRFÃOS
+
+   Trocar a imagem de um banner dez vezes deixava dez arquivos em enviados/: a
+   rota DELETE existia, mas ninguém a chamava. Apagar pelo front-end no momento
+   da troca não resolveria sozinho — ficariam de fora o upload abandonado antes
+   de salvar, o banner excluído e a troca feita por outro caminho.
+
+   Então a varredura é do servidor: arquivo que nenhuma linha do banco cita é
+   órfão. A carência existe porque um arquivo recém-enviado ainda não está
+   gravado em lugar nenhum — sem ela, a limpeza apagaria justamente o arquivo do
+   formulário que o administrador tem aberto na tela.
+   -------------------------------------------------------------------------- */
+
+/* Toda coluna que pode guardar um caminho de enviados/. Faltar uma aqui apaga
+   arquivo em uso, então a lista acompanha o esquema. */
+const COLUNAS_COM_ARQUIVO = [
+  ['banners_site', 'img'], ['banners_site', 'video'],
+  ['banners', 'img'],
+  ['posts', 'img'],
+  ['parceiros', 'logo'],
+  ['campeonatos', 'banner'],
+  ['times', 'escudo'],
+  ['jogadores', 'foto'],
+  ['staff', 'foto']
+];
+
+const CARENCIA_MIN = 120;
+
+function emUso() {
+  const usados = new Set();
+
+  for (const [tabela, coluna] of COLUNAS_COM_ARQUIVO) {
+    /* Nomes de tabela e coluna são constantes deste arquivo, nunca entrada de
+       usuário — não há caminho de injeção. */
+    let linhas;
+    try {
+      linhas = db.todos(`SELECT "${coluna}" AS v FROM ${tabela} WHERE "${coluna}" IS NOT NULL`);
+    } catch (_) {
+      continue;   /* tabela ainda não existe num banco a meio caminho */
+    }
+    for (const l of linhas) {
+      const v = String(l.v || '');
+      if (v.includes('assets/enviados/')) usados.add(v.split('/').pop().split(/[?#]/)[0]);
+    }
+  }
+
+  return usados;
+}
+
+/**
+ * Apaga o que ninguém referencia. NUNCA lança: é faxina, não pode derrubar a
+ * subida do servidor nem uma requisição.
+ */
+function limparOrfaos({ carenciaMin = CARENCIA_MIN } = {}) {
+  const resumo = { apagados: 0, mantidos: 0, bytes: 0, erros: 0 };
+
+  let arquivos;
+  try { arquivos = fs.readdirSync(PASTA); } catch (_) { return resumo; }
+
+  const usados = emUso();
+  const corte = Date.now() - carenciaMin * 60000;
+
+  for (const nome of arquivos) {
+    if (nome === '.gitkeep') continue;
+
+    const alvo = path.join(PASTA, nome);
+    /* Mesma checagem do resto do módulo: nada fora da pasta é tocado. */
+    if (!path.resolve(alvo).startsWith(PASTA + path.sep)) continue;
+
+    try {
+      const info = fs.statSync(alvo);
+      if (!info.isFile()) continue;
+
+      if (usados.has(nome) || info.mtimeMs > corte) { resumo.mantidos++; continue; }
+
+      fs.unlinkSync(alvo);
+      resumo.apagados++;
+      resumo.bytes += info.size;
+    } catch (_) {
+      resumo.erros++;
+    }
+  }
+
+  return resumo;
+}
+
+/** Faxina periódica. unref para o timer não segurar o processo no encerramento. */
+function iniciarFaxina({ intervaloMs = 6 * 3600000 } = {}) {
+  const relogio = setInterval(() => {
+    try { limparOrfaos(); } catch (_) { /* nunca derruba o servidor */ }
+  }, intervaloMs);
+  relogio.unref();
+  return relogio;
+}
+
+async function limpar(ctx) {
+  ctx.exigirAdmin('banners:escrever');
+  const corpo = await ctx.corpo().catch(() => ({}));
+
+  /* Carência menor a pedido do operador, mas nunca zero: um upload em curso na
+     tela de outro administrador continua protegido. */
+  const carenciaMin = Math.max(5, Number(corpo.carenciaMin) || CARENCIA_MIN);
+
+  const resumo = limparOrfaos({ carenciaMin });
+  regras.registrar(ctx, 'configuracao', 'enviados',
+    'limpou arquivos sem uso', `${resumo.apagados} apagado(s), ${Math.round(resumo.bytes / 1024)} KB`);
+
+  return ctx.ok({ ok: true, ...resumo, carenciaMin });
+}
+
 function registrar(rotas) {
   rotas.post('/api/upload', enviar);
   rotas.delete('/api/upload/:nome', apagar);
+  rotas.post('/api/upload/limpar', limpar);
 }
 
-module.exports = { registrar, PASTA, CAMINHO_PUBLICO, TETOS, ASSINATURAS };
+module.exports = {
+  registrar, PASTA, CAMINHO_PUBLICO, TETOS, ASSINATURAS,
+  limparOrfaos, iniciarFaxina, COLUNAS_COM_ARQUIVO
+};

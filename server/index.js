@@ -232,6 +232,22 @@ function subir(porta, tentativas) {
     filaEmail.iniciarDespachante({ intervaloMs: 60000 });
     const envio = filaEmail.resumoConfiguracao();
 
+    /* Faxina dos arquivos enviados que nenhuma linha do banco cita mais. Trocar
+       a imagem de um banner deixa a anterior no disco; sem isto a pasta só
+       cresce. A carência de 2 horas protege o upload que ainda está num
+       formulário aberto e não foi salvo. */
+    try {
+      const faxina = require('./rotas/upload');
+      faxina.iniciarFaxina({ intervaloMs: 6 * 3600000 });
+      const r = faxina.limparOrfaos();
+      if (r.apagados) {
+        console.log(`  Faxina: ${r.apagados} arquivo(s) sem uso removido(s)`
+          + ` (${Math.round(r.bytes / 1024)} KB).`);
+      }
+    } catch (e) {
+      console.error('[faxina] não foi possível iniciar:', e.message);
+    }
+
     const url = `http://localhost:${porta}`;
     const linha = '─'.repeat(52);
     console.log('');
