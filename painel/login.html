@@ -122,6 +122,7 @@
 
 </main>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -131,6 +132,29 @@
 
   var form = $('#form-login');
   var erro = $('#erro-login');
+
+  /* ---- Para onde ir depois de entrar ----
+
+     A guarda de sessão manda quem clicou num link protegido para cá com
+     '?retorno=<caminho>'. Sem ler esse parâmetro, todo mundo caía em
+     inicio.html e tinha que refazer a navegação na mão.
+
+     PB.retornoInterno recusa endereço de fora do site — o parâmetro vem da
+     barra de endereços, então quem manda o link escolhe o destino. Recusado,
+     vale o destino padrão da conta (inicio.html ou o painel do admin).
+
+     O retorno também precisa combinar com o perfil de quem entrou: um
+     competidor que caiu aqui por um link de /admin/ seria jogado numa tela
+     que a API dele responde 403, e ele veria o painel vazio sem entender. */
+  function paraOndeIr(conta) {
+    var pedido = PB.retornoInterno(new URLSearchParams(location.search).get('retorno'));
+    if (!pedido) return conta.destino;
+
+    var pedeAdmin = /\/admin\//.test(pedido);
+    if (pedeAdmin !== (conta.papel === 'admin')) return conta.destino;
+
+    return pedido;
+  }
 
   function mostrarErro(texto) {
     $('#erro-texto').textContent = texto;
@@ -154,8 +178,9 @@
     }
 
     D.abrirSessao(r.conta);
+    var destino = paraOndeIr(r.conta);
     PB.toast('Bem-vindo', r.conta.nome + ' · entrando no painel…', 'info');
-    setTimeout(function () { location.href = r.conta.destino; }, 700);
+    setTimeout(function () { location.href = destino; }, 700);
   });
 })();
 </script>

@@ -178,6 +178,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -236,7 +237,9 @@
       PB.confirmar('Remover categoria',
         'A categoria "' + c.nome + '" sai do filtro do blog e vai para o Histórico, de onde pode ser restaurada. Deseja remover?',
         function () {
-          D.arquivar('categorias', c.id);
+          /* Recusa do servidor já vira aviso de erro dentro do dados.js; sem
+             o corte aqui a tela ainda anunciava a remoção por cima dele. */
+          if (!D.arquivar('categorias', c.id)) return;
           PB.toast('Categoria removida', 'Ela está no Histórico e pode ser restaurada.', 'info');
           PB.recarregar();
         });
@@ -250,18 +253,25 @@
     var id = $('#c-id').value;
     var antiga = id ? D.categoria(id) : null;
 
-    D.gravar('categorias', {
+    /* Servidor recusou: o modal fica aberto com o que foi digitado, para a
+       pessoa corrigir e tentar de novo. Renomear os posts abaixo também não
+       pode acontecer: a categoria antiga continua sendo a que vale. */
+    if (!D.gravar('categorias', {
       id: id || nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'),
       nome: nome,
       descricao: $('#c-desc').value.trim(),
       cor: $('#c-cor').value
-    });
+    })) return;
 
     /* Renomear atualiza a etiqueta nos posts que usavam o nome antigo */
     if (antiga && antiga.nome !== nome) {
       var d = D.tudo();
       d.posts.forEach(function (p) { if (p.cat === antiga.nome) p.cat = nome; });
-      D.salvar();
+      /* A categoria já subiu, os posts não. dados.js desfez a etiqueta no cache
+         e avisou do erro; dizer "o blog já reflete a alteração" seria mentira.
+         O render() redesenha a lista com o nome novo da categoria — sem ele a
+         tela ficaria com o nome antigo e o banco com o novo. */
+      if (!D.salvar()) { render(); return; }
     }
 
     PB.fecharModal('modal-cat');

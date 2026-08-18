@@ -47,6 +47,7 @@
   var _modo = 'local';
   var _cache = null;
   var _conta = null;      /* conta da sessão, como o servidor a enxerga */
+  var _idiomaResolvido = null; /* idioma em que o servidor traduziu o cache */
   var _espelho = null;    /* foto do cache logo após a última sincronização */
   var _arquivados = null; /* memória curta do histórico (modo api) */
 
@@ -883,6 +884,44 @@
      DESCOBERTA E HIDRATAÇÃO
      ===================================================================== */
 
+  /* ---------------------------------------------------------------------
+     IDIOMA DA CARGA
+
+     O /api/bootstrap devolve o conteúdo cadastrado já traduzido, e quem decide
+     o idioma é o servidor. Se ninguém disser nada, ele decide pelo cookie — que
+     na primeira carga ainda é o da navegação ANTERIOR, porque quem grava o
+     cookie novo é o i18n.js. Era essa a origem da tela atrasada um carregamento
+     inteiro: abrir ?lang=en mostrava o conteúdo em português, e ?lang=es depois
+     mostrava o inglês.
+
+     Por isso o i18n.js passou a ser carregado ANTES deste arquivo nas 50
+     páginas: quando a linha abaixo roda, o idioma da URL já foi resolvido e
+     gravado, e viaja no ?lang= da requisição.
+
+     O parâmetro só viaja quando é ESCOLHA — ?lang na URL, cookie ou clique no
+     seletor. Quando o i18n apenas chutou pelo navegador, fica de fora de
+     propósito: o servidor tem uma pista melhor, que o front-end não enxerga
+     antes do bootstrap, que é a preferência gravada na conta. O idioma que ele
+     escolheu volta no corpo, e o i18n.js se alinha a ele quando o DOM fica
+     pronto.
+
+     Sem o i18n.js na página (GitHub Pages, página avulsa) nada disso acontece e
+     a requisição sai exatamente como saía antes.
+     --------------------------------------------------------------------- */
+
+  function idiomaEscolhido() {
+    var i18n = global.PB && global.PB.i18n;
+    if (!i18n || typeof i18n.escolhido !== 'function') return null;
+    try { return i18n.escolhido(); } catch (e) { return null; }
+  }
+
+  function comIdioma(caminho) {
+    var codigo = idiomaEscolhido();
+    if (!codigo) return caminho;
+    return caminho + (caminho.indexOf('?') >= 0 ? '&' : '?')
+      + 'lang=' + encodeURIComponent(codigo);
+  }
+
   /* /api/ping é a pergunta "existe back-end aqui?". Em GitHub Pages responde
      404, em file:// nem chega a sair — os dois caem no modo local. */
   function descobrir() {
@@ -897,11 +936,15 @@
      vem só conteúdo público, com login vêm os próprios times, inscrições e
      chamados. Por isso todo login e todo logout precisa passar por aqui. */
   function hidratar() {
-    var r = pedirSync('GET', '/bootstrap');
+    var r = pedirSync('GET', comIdioma('/bootstrap'));
     if (!r.ok || !r.dados || !r.dados.dados) return false;
 
     _cache = r.dados.dados;
     _conta = r.dados.conta || null;
+
+    /* Em que idioma o servidor traduziu ESTE payload. É o que o i18n.js lê para
+       alinhar a interface ao conteúdo quando quem decidiu foi o servidor. */
+    _idiomaResolvido = r.dados.idioma || null;
 
     /* As regras de elenco passam a ser as do servidor: uma cópia divergente no
        cliente deixaria o formulário aceitar o que a API recusa. */
@@ -936,11 +979,13 @@
     return _cache;
   }
 
+  /** @returns {boolean} true quando tudo foi gravado. */
   function salvar() {
-    if (_modo === 'api') { sincronizar(); return; }
+    if (_modo === 'api') return sincronizar();
     try {
       if (global.localStorage) localStorage.setItem(CHAVE, JSON.stringify(_cache));
     } catch (e) { /* modo privado / cota — segue em memória */ }
+    return true;
   }
 
   function resetar() {
@@ -1015,8 +1060,10 @@
   }
 
   function sincronizar() {
-    if (_modo !== 'api' || !_cache) return;
-    if (!_espelho) { fotografar(); return; }
+    /* true, não vazio: salvar() repassa este retorno, e sair sem valor faria uma
+       sincronização que nada tinha a enviar ser lida como recusa pela tela. */
+    if (_modo !== 'api' || !_cache) return true;
+    if (!_espelho) { fotografar(); return true; }
 
     var falhas = [];
 
@@ -1069,6 +1116,11 @@
 
     if (falhas.length) avisar(falhas[0]);
     fotografar();
+
+    /* Devolve se TUDO passou. Sem retorno, as telas que gravam por
+       tudo() + salvar() não tinham como distinguir sucesso de recusa e
+       comemoravam sempre. */
+    return falhas.length === 0;
   }
 
   /* Troca o item do cache pelo que o servidor devolveu (ids gerados, carimbos
@@ -1103,7 +1155,17 @@
     /** 'api' quando há back-end, 'local' quando o site é só estático. */
     modo: function () { return _modo; },
 
-    /** Busca o payload de novo no servidor. No modo local, relê o localStorage. */
+    /**
+     * Idioma em que o servidor traduziu o conteúdo que está em cache agora.
+     * null no modo local, onde a semente é sempre a portuguesa.
+     */
+    idiomaResolvido: function () { return _idiomaResolvido; },
+
+    /**
+     * Busca o payload de novo no servidor, no idioma vigente — o ?lang= sai
+     * junto, então trocar de idioma e recarregar traz o conteúdo já traduzido.
+     * No modo local, relê o localStorage.
+     */
     recarregar: recarregar,
 
     /* -------------------------------------------------------------------
@@ -1363,7 +1425,11 @@
         if (existia) d[colecao][i] = antes;
         else retirar(d[colecao], item);
         avisar(r.erro);
-        return item;
+        /* FALSO, não o item. Devolver o item aqui — igual ao sucesso — deixava
+           a tela sem como saber que o servidor recusou: aparecia o aviso de erro
+           E o toast verde de "salvo", e algumas telas ainda navegavam para uma
+           lista onde o registro não existe. */
+        return false;
       }
 
       absorver(colecao, r.dados, id);
@@ -1526,7 +1592,10 @@
          não tem rota própria e fica no cache até a próxima rehidratação. */
       if (caminho === 'smtp' && ehAdmin()) {
         var r = pedirSync('PUT', '/email/smtp', valor);
-        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return antes; }
+        /* FALSO no fracasso. Devolver `antes` — um objeto, portanto truthy —
+           deixava admin/email.html sem como saber que o servidor recusou: a tela
+           mostrava o erro E "Configurações salvas" logo em seguida. */
+        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return false; }
         if (r.dados && r.dados.smtp) d.smtp = r.dados.smtp;
       }
 
@@ -1957,7 +2026,7 @@
 
     /* ---- Descoberta e sessão ---- */
     ping: function () { return pedir('GET', '/ping'); },
-    bootstrap: function () { return pedir('GET', '/bootstrap'); },
+    bootstrap: function () { return pedir('GET', comIdioma('/bootstrap')); },
     entrar: function (email, senha) { return pedir('POST', '/auth/login', { email: email, senha: senha }); },
     sair: function () { return pedir('POST', '/auth/logout', {}); },
     sessao: function () { return pedir('GET', '/auth/sessao'); },

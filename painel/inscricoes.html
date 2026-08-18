@@ -343,6 +343,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -794,7 +795,11 @@
       'A inscrição em “' + (camp ? camp.nome : 'campeonato') + '” sai da sua lista e a vaga volta para a ' +
       'organização. O registro vai para o Histórico e pode ser restaurado. Deseja cancelar?',
       function () {
-        D.arquivar('minhasInscricoes', id, 'id', 'cancelada pelo responsável');
+        /* Fora do prazo o cancelamento tem de passar por chamado, e o servidor
+           recusa. A explicação dele já aparece por PB.dados; comemorar em cima
+           dava dois toasts contrários e baixava o contador de um cancelamento
+           que não aconteceu. */
+        if (!D.arquivar('minhasInscricoes', id, 'id', 'cancelada pelo responsável')) return;
         if (camp && camp.inscritos) { camp.inscritos -= 1; D.gravar('campeonatos', camp); }
         PB.toast('Inscrição cancelada', 'Você receberia o e-mail de baixa da inscrição.', 'info');
         PB.recarregar();

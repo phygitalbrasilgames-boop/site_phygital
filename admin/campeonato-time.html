@@ -329,6 +329,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/exportar.js"></script>
 <script src="../assets/js/phygital.js"></script>
@@ -345,15 +346,72 @@
   var p = new URLSearchParams(location.search);
   var campId = p.get('camp') || 'cbf-2026';
   var c = D.campeonato(campId) || D.campeonato('cbf-2026');
-  var t = D.meusTimes().filter(function (x) { return x.modalidade === c.modalidade; })[0] || D.meusTimes()[0];
+  var chave = p.get('time') || '';
+
+  /* Esta ficha é de UM time e quem manda é o parâmetro ?time=. A lista de
+     inscritos do campeonato linka pelo protocolo da inscrição e outras telas
+     linkam pelo id do time, então os dois resolvem aqui. Antes a tela pegava o
+     primeiro time da modalidade e ignorava o parâmetro: o administrador abria
+     um protocolo e conferia o elenco de outro time.
+
+     A lista crua (tudo()) em vez de minhasInscricoes() porque inscrição
+     cancelada também tem ficha para consultar — ela só não aparece nas
+     listagens. */
+  var insc = null;
+  var t = null;
+  if (chave) {
+    var todasInscricoes = D.tudo().minhasInscricoes || [];
+    insc = todasInscricoes.filter(function (x) {
+      return x.protocolo === chave || x.id === chave;
+    })[0] || null;
+
+    t = insc ? D.time(insc.time) : D.time(chave);
+
+    /* Veio o id do time: a inscrição a exibir é a dele neste campeonato. */
+    if (t && !insc) {
+      insc = todasInscricoes.filter(function (x) {
+        return x.time === t.id && x.campeonato === campId;
+      })[0] || null;
+    }
+  }
+
+  /* O segundo bloco desta página (documentação do elenco) precisa exatamente do
+     mesmo time — resolver duas vezes é como as duas metades da tela passaram a
+     divergir. */
+  window.FICHA_TIME = { campeonato: c, time: t, inscricao: insc };
+
+  if (!c || !t) {
+    document.getElementById('conteudo').innerHTML =
+      '<div class="vazio"><h3>Time não encontrado</h3><p>' +
+      (chave
+        ? 'Nenhum time ou inscrição corresponde a “' + esc(chave) + '”. O registro pode ter sido removido.'
+        : 'Abra a ficha pela lista de inscritos do campeonato: é de lá que vem o time a exibir.') +
+      '</p><a class="btn btn--primario" href="campeonato-gerenciar.html?id=' + esc(campId) +
+      '">Voltar ao campeonato</a></div>';
+    return;
+  }
+
   var m = D.modalidade(t.modalidade);
 
+  /* Escudo e fotos gravados pelo cadastro são o caminho que /api/upload
+     devolveu, relativo à raiz do site; esta tela está um nível abaixo. */
+  function midia(caminho) {
+    return /^(data:|https?:|\.\.\/)/.test(caminho) ? caminho : '../' + caminho;
+  }
+
   $('#voltar-camp').href = 'campeonato-gerenciar.html?id=' + campId;
+  $('#time-escudo').src = t.escudo ? midia(t.escudo) : '../assets/img/mock/escudo-1.svg';
   $('#time-nome').textContent = t.nome;
   $('#time-meta').textContent = m.curto + (t.categoria ? ' · ' + t.categoria : '') +
     ' · criado em ' + F.data(t.criadoEm) + ' · ' + c.nome;
-  $('#time-lista').textContent = 'Lista Oficial';
-  $('#time-protocolo').textContent = 'Protocolo ' + (p.get('time') || '2026-000418');
+
+  /* Lista e protocolo saem da inscrição de verdade. Sem inscrição, a ficha diz
+     isso em vez de afirmar "Lista Oficial" e inventar um número de protocolo. */
+  var stIns = insc ? (D.STATUS_INSCRICAO[insc.status] || D.STATUS_INSCRICAO.triagem) : null;
+  $('#time-lista').textContent = stIns ? stIns.rotulo : 'Sem inscrição neste campeonato';
+  $('#time-lista').className = 'tag ' + (stIns ? stIns.classe : 'tag--cinza');
+  $('#time-protocolo').textContent = insc ? 'Protocolo ' + insc.protocolo : 'Sem protocolo';
+
   if (c.modalidade === 'dance') $('#excecao-danca').hidden = false;
 
   var jog = t.jogadores || [];
@@ -362,7 +420,11 @@
 
   $('#tabela-elenco').innerHTML = jog.map(function (j, i) {
     return '<tr>' +
-      '<td><img class="foto-mini" src="../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg" alt="Foto de ' + esc(j.nome) + '"></td>' +
+      /* A foto enviada pelo responsável é o que a exportação usa; mostrar o mock
+         no lugar dela escondia justamente quem ainda não enviou foto. */
+      '<td><img class="foto-mini" src="' +
+        esc(j.foto ? midia(j.foto) : '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg') +
+        '" alt="Foto de ' + esc(j.nome) + '"></td>' +
       '<td><strong>' + esc(j.nome) + '</strong>' + (j.reserva ? ' <span class="tag tag--cinza">Reserva</span>' : '') + '</td>' +
       '<td>' + esc(j.apelido || '—') + '</td>' +
       '<td>' + (j.numero || '—') + '</td>' +
@@ -430,9 +492,10 @@
     });
   }
 
-  var pr = new URLSearchParams(location.search);
-  var camp = D.campeonato(pr.get('camp') || 'cbf-2026') || D.campeonato('cbf-2026');
-  var time = D.meusTimes().filter(function (x) { return x.modalidade === camp.modalidade; })[0] || D.meusTimes()[0];
+  /* Mesmo time resolvido pelo bloco de cima. Repetir a busca aqui era o que
+     fazia a documentação ser a de um time e o elenco a de outro. */
+  var ficha = window.FICHA_TIME || {};
+  var time = ficha.time;
   if (!time) return;
 
   function render() {
@@ -490,10 +553,13 @@
       var p = ap.getAttribute('data-aprovar').split(':');
       var t = D.time(time.id);
       var doc = (t.jogadores[p[0]].documentos || []).filter(function (x) { return x.tipo === p[1]; })[0];
-      D.gravarDocumento(time.id, parseInt(p[0], 10), {
+      /* Recusa do servidor já vem explicada por PB.dados; comemorar em cima dela
+         mostrava dois toasts contrários e recarregava a tela sem a aprovação —
+         e o e-mail ao responsável nunca saiu. */
+      if (!D.gravarDocumento(time.id, parseInt(p[0], 10), {
         tipo: p[1], arquivo: doc ? doc.arquivo : null,
         validade: doc ? doc.validade : null, status: 'aprovado', observacao: null
-      });
+      })) return;
       PB.toast('Documento aprovado', 'O responsável foi avisado por e-mail.', 'info');
       PB.recarregar();
       return;
@@ -518,12 +584,14 @@
     var i = parseInt($('#r-jogador').value, 10);
     var t = D.time(time.id);
     var doc = (t.jogadores[i].documentos || []).filter(function (x) { return x.tipo === $('#r-tipo').value; })[0];
-    D.gravarDocumento(time.id, i, {
+    /* Falhou: o modal continua aberto com o motivo digitado, para o admin
+       tentar de novo sem reescrever tudo. */
+    if (!D.gravarDocumento(time.id, i, {
       tipo: $('#r-tipo').value,
       arquivo: doc ? doc.arquivo : null,
       validade: doc ? doc.validade : null,
       status: 'recusado', observacao: motivo
-    });
+    })) return;
     PB.fecharModal('modal-recusa');
     PB.toast('Documento recusado', 'O responsável recebeu o motivo por e-mail.', 'info');
     PB.recarregar();

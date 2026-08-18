@@ -145,6 +145,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -187,7 +188,10 @@
     PB.confirmar('Remover publicação',
       '“' + posts[i].titulo + '” sai do blog do site. Ela vai para o Histórico e pode ser restaurada depois. Deseja remover?',
       function () {
-        D.arquivar('posts', posts[i].id);
+        /* Recusa do servidor já vira aviso de erro dentro do dados.js; sem
+           o corte aqui a lista recarregava anunciando uma remoção que não
+           aconteceu, e a publicação reaparecia. */
+        if (!D.arquivar('posts', posts[i].id)) return;
         PB.toast('Publicação removida', 'Ela está no Histórico e pode ser restaurada.', 'info');
         PB.recarregar();
       });

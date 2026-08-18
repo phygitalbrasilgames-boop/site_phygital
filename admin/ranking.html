@@ -240,6 +240,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -375,7 +376,12 @@
     t.camp = parseInt($('#l-camp').value, 10) || 0;
     t.titulos = parseInt($('#l-tit').value, 10) || 0;
     t.gotf = $('#l-gotf').value === 'sim';
-    D.salvar();
+
+    /* Servidor recusou: dados.js recolocou a lista do espelho no cache e já
+       avisou. A tabela atrás do modal não foi redesenhada, então continua
+       mostrando o que o banco tem; o modal fica aberto para nova tentativa. */
+    if (!D.salvar()) return;
+
     D.registrar('ranking', t.nome, 'corrigiu a colocação',
                 D.modalidade(mod).curto + ' · ' + t.v + 'V ' + t.e + 'E ' + t.d + 'D');
     PB.fecharModal('modal-linha');
@@ -396,7 +402,12 @@
       minCampeonatos: parseInt($('#cd-min').value, 10) || 0,
       ativo: $('#cd-ativo').checked
     };
-    D.salvar();
+
+    /* Servidor recusou: dados.js devolveu as condições anteriores ao cache e já
+       avisou. Sem este corte, o D.registrar abaixo ainda gravava na auditoria
+       uma alteração que não aconteceu. */
+    if (!D.salvar()) return;
+
     D.registrar('ranking', D.modalidade(mod).curto, 'alterou as condições de cálculo',
                 'vitória ' + d.rankingConfig[mod].pontosVitoria + ' · empate ' + d.rankingConfig[mod].pontosEmpate);
     PB.fecharModal('modal-cond');

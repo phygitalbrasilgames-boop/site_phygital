@@ -182,8 +182,19 @@
 
                 <div class="campo">
                   <label for="anexo">Anexar arquivo</label>
-                  <input type="file" id="anexo" name="anexo">
-                  <p class="campo__ajuda">Regulamentos, tabelas e comunicados em PDF.</p>
+                  <input type="file" id="anexo" name="anexo" accept="image/png,image/jpeg,image/webp,image/gif">
+                  <p class="campo__ajuda">
+                    PNG, JPG, WEBP ou GIF até 5 MB. O arquivo é guardado no servidor;
+                    a mensagem que sai leva o texto, ainda não o anexo.
+                  </p>
+                </div>
+
+                <div class="campo" id="envio" role="status" aria-live="polite" hidden>
+                  <span class="txt-peq txt-suave" id="envio-texto">Enviando o arquivo…</span>
+                  <div class="barra-ocupacao mt-2"><i id="envio-barra" style="width:0%"></i></div>
+                  <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="envio-remover" hidden>
+                    Remover anexo
+                  </button>
                 </div>
 
                 <div class="campo">
@@ -212,7 +223,7 @@
                 </div>
 
                 <div class="flex-fim mt-4">
-                  <button type="submit" class="btn btn--primario">Enviar e-mail</button>
+                  <button type="submit" class="btn btn--primario" id="btn-enviar-email">Enviar e-mail</button>
                 </div>
               </form>
 
@@ -382,6 +393,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -534,9 +546,54 @@
   $('#anexo').addEventListener('change', atualizarPrevia);
   atualizarPrevia();
 
+  /* ---- Anexo do disparo ----
+     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o caminho
+     devolvido entra no registro do disparo. Antes o arquivo era descartado: a
+     prévia mostrava o nome e nada era guardado em lugar nenhum.
+
+     Duas paradas conhecidas, as duas fora desta tela:
+     · PB.dados.gravar('emailsEnviados', …) manda ao servidor só assunto, corpo
+       e alvo — `anexos` fica no cache e some quando o histórico é relido. Com
+       back-end ligado o caminho não sobrevive ao recarregamento.
+     · server/fila-email.js não repassa anexo ao SMTP, então o arquivo não é
+       entregue nem quando o metadado chega ao servidor. */
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    $('#envio').hidden = false;
+    $('#envio-texto').textContent = texto;
+    $('#envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#envio').hidden = true;
+    $('#envio-barra').style.width = '0%';
+    $('#envio-remover').hidden = true;
+  }
+
+  /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o admin clica de
+     novo e o mesmo comunicado sai duas vezes para a lista inteira. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    var botao = $('#btn-enviar-email');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Enviar e-mail';
+  }
+
+  /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto o
+     disparo não acontece e não há como desescolher o arquivo. */
+  $('#envio-remover').addEventListener('click', function () {
+    $('#anexo').value = '';
+    esconderEnvio();
+    atualizarPrevia();
+    PB.toast('Anexo removido', 'Dispare de novo — agora só com o texto.', 'info');
+  });
+
   /* ---- Envio ---- */
   $('#form-email').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviando) return;
+
     var assunto = $('#assunto').value.trim();
     var corpo = editor.innerHTML.trim();
 
@@ -559,18 +616,70 @@
               : (alvo[0] ? alvo[0].nome : '—');
     }
 
-    var agora = new Date();
-    var pad = function (n) { return String(n).padStart(2, '0'); };
-    D.gravar('emailsEnviados', {
-      id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
-      data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
-            ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
-      status: 'entregue', corpo: corpo
-    });
+    /* O disparo acontece DENTRO da gravação: PB.dados.gravar('emailsEnviados', …)
+       chama POST /api/email/disparar e, quando o servidor recusa, tira a linha
+       do histórico. Só que essa gravação devolve o registro nos dois casos, então
+       o retorno não serve de resposta — quem sabe se o e-mail saiu é o histórico
+       relido: sem a linha, nada foi entregue. */
+    function saiu(id) {
+      if (D.modo() !== 'api') return true;            /* demonstração: não há servidor a consultar */
+      if (destino === 'Lista manual') return false;   /* sem rota: o servidor só conhece responsáveis inscritos */
+      return D.emailsEnviados().some(function (e) { return e.id === id; });
+    }
 
-    D.registrar('email', assunto, 'disparou e-mail', qtd + ' destinatário(s) · ' + destino);
-    PB.toast('E-mail enviado', qtd + ' destinatário(s) · ' + destino + '.', 'info');
-    PB.recarregar();
+    function disparar(anexos) {
+      var agora = new Date();
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      var registro = {
+        id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
+        data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
+              ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
+        status: 'entregue', corpo: corpo, anexos: anexos
+      };
+
+      D.gravar('emailsEnviados', registro);
+
+      /* Nada de "E-mail enviado" com o disparo recusado: o aviso de PB.dados já
+         está na tela e o formulário fica como está, para o admin tentar de novo. */
+      if (!saiu(registro.id)) return;
+
+      /* qtd e destino do registro, não os desta tela: quando o envio dá certo o
+         servidor devolve quantos responsáveis receberam de fato. */
+      D.registrar('email', assunto, 'disparou e-mail', registro.qtd + ' destinatário(s) · ' + registro.destino);
+      PB.toast('E-mail enviado', registro.qtd + ' destinatário(s) · ' + registro.destino + '.', 'info');
+      PB.recarregar();
+    }
+
+    var arquivo = $('#anexo').files[0];
+    if (!arquivo) { disparar([]); return; }
+
+    travarEnvio(true);
+    PB.enviarArquivo(arquivo, {
+      classe: 'imagem',
+      /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
+         que a tela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      travarEnvio(false);
+
+      if (r.cancelado) { esconderEnvio(); return; }
+
+      if (!r.ok) {
+        /* Nada é disparado: o histórico registraria um anexo que não existe e o
+           comunicado sairia sem o arquivo prometido no texto. */
+        mostrarEnvio(r.erro, 0);
+        $('#envio-remover').hidden = false;
+        PB.toast('O anexo não subiu', r.erro, 'erro');
+        return;
+      }
+
+      esconderEnvio();
+      disparar([{ nome: arquivo.name, caminho: r.caminho, tipo: r.tipo, tamanho: r.tamanho }]);
+    });
   });
 
   /* ---- Histórico ---- */
@@ -591,11 +700,27 @@
     var b = ev.target.closest('[data-ver]');
     if (!b) return;
     var e = enviados[parseInt(b.getAttribute('data-ver'), 10)];
+
+    /* Vira link só quando o caminho é o que /api/upload devolve — a restrição de
+       caracteres impede que um registro adulterado vire outro endereço no href.
+       Sem back-end o caminho é uma data: URL, que o navegador não abre por link:
+       nesse caso fica o nome, sem link. */
+    var anexos = e.anexos || [];
+
     $('#enviado-conteudo').innerHTML =
       '<div class="email-preview mt-3"><div class="email-preview__corpo">' +
         '<div class="email-preview__topo"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></div>' +
         '<div class="email-preview__conteudo"><h2>' + esc(e.assunto) + '</h2>' +
-          '<p class="txt-peq">Enviado para ' + esc(e.destino) + ' · ' + e.qtd + ' destinatários · ' + esc(e.data) + '.</p></div>' +
+          '<p class="txt-peq">Enviado para ' + esc(e.destino) + ' · ' + e.qtd + ' destinatários · ' + esc(e.data) + '.</p>' +
+          anexos.map(function (a) {
+            var noServidor = /^assets\/enviados\/[A-Za-z0-9._-]+$/.test((a && a.caminho) || '');
+            var nome = esc(a && a.nome);
+            return '<p class="txt-micro txt-suave">Anexo guardado: ' + (noServidor
+              ? '<a href="../' + a.caminho + '" target="_blank" rel="noopener" ' +
+                'style="color:var(--verde);font-weight:600">' + nome + '</a>'
+              : nome) + '</p>';
+          }).join('') +
+        '</div>' +
         '<div class="email-preview__rodape"><strong>Esportes Phygital Brasil</strong><br>contato@phygitalgamesbr.com.br</div>' +
       '</div></div>';
     PB.abrirModal('modal-enviado');
@@ -635,7 +760,11 @@
       novo[chave] = (chave === 'smtp' || chave === 'imap' || chave === 'pop3')
         ? (parseInt(el.value, 10) || 0) : el.value.trim();
     });
-    D.definir('smtp', novo);
+    /* Servidor recusou: `definir` devolve false e o aviso de erro já saiu de
+       dados.js. O formulário fica aberto com o que foi digitado — anunciar
+       "Configurações salvas" por cima do erro é o que confundia a pessoa. */
+    if (!D.definir('smtp', novo)) return;
+
     D.registrar('configuracao', 'SMTP', 'alterou as configurações de envio',
                 novo.servidorSaida + ':' + novo.smtp);
     PB.toast('Configurações salvas', 'Todos os e-mails do sistema passam a sair por ' + novo.servidorSaida + ':' + novo.smtp + '.', 'info');

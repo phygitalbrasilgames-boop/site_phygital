@@ -228,6 +228,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -283,8 +284,10 @@
     PB.confirmar('Remover usuário',
       esc(usuarios[i].nome) + ' perde o acesso ao painel imediatamente. O cadastro vai para o Histórico e pode ser restaurado. Deseja remover?',
       function () {
+        if (!D.arquivar('adminUsuarios', usuarios[i].id)) return;
+        /* O eco na auditoria vem DEPOIS do servidor aceitar: registrar antes
+           deixava no log uma remoção de acesso que não aconteceu. */
         D.registrar('usuario', usuarios[i].nome, 'removeu o acesso', usuarios[i].email + ' · nível ' + usuarios[i].nivel);
-        D.arquivar('adminUsuarios', usuarios[i].id);
         PB.toast('Usuário removido', 'O acesso foi revogado. O cadastro está no Histórico.', 'info');
         PB.recarregar();
       });

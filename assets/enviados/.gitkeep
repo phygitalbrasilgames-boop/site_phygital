@@ -1,0 +1,3 @@
+Pasta dos arquivos enviados pelo painel do administrador (POST /api/upload).
+O conteudo fica fora do controle de versao; este arquivo so garante que a
+pasta exista em um clone novo.

@@ -22,10 +22,18 @@
      Só vale no modo api. No modo local (GitHub Pages) não há sessão de verdade
      e a demonstração precisa continuar navegável.
      --------------------------------------------------------------------- */
-  var PAGINAS_ABERTAS = [
-    'login.html', 'cadastro.html', 'recuperar-senha.html',
-    'verificar-email.html', 'primeiro-acesso.html', 'index.html'
-  ];
+  /* Por AREA, nao por nome de arquivo. A lista unica deixava /admin/index.html
+     passar pela isencao que existia so para a splash de /painel/index.html — e o
+     painel administrativo inteiro abria para quem nao entrou. */
+  var PAGINAS_ABERTAS = {
+    painel: [
+      'login.html', 'cadastro.html', 'recuperar-senha.html',
+      'verificar-email.html', 'primeiro-acesso.html',
+      /* splash: decide sozinha para onde mandar */
+      'index.html'
+    ],
+    admin: []
+  };
 
   function guardarSessao() {
     if (!PB.dados || typeof PB.dados.modo !== 'function' || PB.dados.modo() !== 'api') return false;
@@ -36,17 +44,70 @@
     if (!area) return false;
 
     var arquivo = caminho.split('/').pop() || 'index.html';
-    if (PAGINAS_ABERTAS.indexOf(arquivo) >= 0) return false;
+    if ((PAGINAS_ABERTAS[area] || []).indexOf(arquivo) >= 0) return false;
 
     var conta = PB.dados.sessao && PB.dados.sessao();
-    if (conta) return false;
+
+    /* Sessão de QUALQUER papel não serve para QUALQUER área. Enquanto a
+       checagem era só "tem sessão?", um competidor logado abria o Painel do
+       Administrador inteiro: sem vazar dado, porque a API responde 403, mas com
+       a casca toda na tela e três páginas estourando erro por ler lista vazia.
+
+       Quem está na área errada vai para a própria, não para o login: mandar
+       para o login quem já entrou é pedir a senha de novo sem motivo. */
+    if (conta) {
+      var ehAdmin = conta.papel === 'admin';
+      if (ehAdmin === (area === 'admin')) return false;
+
+      global.location.replace(ehAdmin ? '../admin/index.html' : '../painel/inicio.html');
+      return true;
+    }
+
+    /* A querystring entra no retorno: sem ela, quem clicou em
+       time-detalhe.html?id=t1 voltaria para a ficha de time nenhuma. */
+    var alvo = caminho + global.location.search;
 
     /* replace, não href: a página protegida não fica no histórico, então o
        botão voltar do navegador não volta para uma tela sem dados. */
     var destino = area === 'admin' ? '../painel/login.html' : 'login.html';
-    global.location.replace(destino + '?retorno=' + encodeURIComponent(caminho));
+    global.location.replace(destino + '?retorno=' + encodeURIComponent(alvo));
     return true;
   }
+
+  /* ---------------------------------------------------------------------
+     RETORNO PÓS-LOGIN
+
+     Aceita SÓ caminho deste site. O valor chega pela barra de endereços, ou
+     seja, é escrito por quem manda o link — e o login redireciona para ele
+     depois de autenticar. Sem esta checagem, '?retorno=https://clone.exemplo'
+     transformaria a tela de login num redirecionador aberto: o endereço que a
+     vítima confere antes de clicar é o nosso, o destino não. Vetor clássico de
+     phishing de credencial.
+
+     Barrado, então: qualquer coisa que não comece em '/' (endereço absoluto de
+     outro domínio) e qualquer '//' ou '/\' logo no início — as duas formas que
+     o navegador lê como "outro host, mesmo esquema". Sobrando só um caminho
+     que começa com uma barra e continua com outra coisa, não há como escapar
+     da nossa origem.
+
+     Devolve o caminho aprovado, ou null para quem chamou usar o padrão.
+     --------------------------------------------------------------------- */
+  function retornoInterno(bruto) {
+    if (!bruto) return null;
+    var alvo = String(bruto);
+
+    if (alvo.charAt(0) !== '/') return null;
+    if (alvo.charAt(1) === '/' || alvo.charAt(1) === '\\') return null;
+
+    /* Só ASCII imprimível, e sem espaço: o navegador descarta tabulação e
+       quebra de linha ANTES de resolver o endereço, então uma checagem feita
+       apenas sobre o texto deixaria passar algo que vira outro host depois.
+       Caminho de página nossa nunca tem espaço nem caractere de controle. */
+    if (!/^[!-~]+$/.test(alvo)) return null;
+
+    return alvo;
+  }
+  PB.retornoInterno = retornoInterno;
 
   var saindo = guardarSessao();
 
@@ -96,6 +157,12 @@
     },
     iniciais: function (nome) {
       var p = String(nome || '').trim().split(/\s+/);
+      /* Só pedaços que começam com letra ou número. Sem isto, o avatar de
+         "Administração (demonstração)" sai como "A(" — o parêntese conta como
+         se fosse a inicial do sobrenome. Se sobrar nada, volta à lista bruta:
+         avatar feio ainda é melhor que avatar vazio. */
+      var uteis = p.filter(function (x) { return /^[0-9A-Za-zÀ-ÿ]/.test(x); });
+      if (uteis.length) p = uteis;
       return ((p[0] || '')[0] || '' ).toUpperCase() + ((p[p.length - 1] || '')[0] || '').toUpperCase();
     },
     diasAte: function (iso) {
@@ -106,6 +173,111 @@
     }
   };
   PB.fmt = fmt;
+
+  /* ---------------------------------------------------------------------
+     MÍDIA DE FUNDO DO BANNER
+
+     O campo `video` do banner tem três formas:
+
+       ''                        banner de imagem, o fundo sai de `img`
+       'assets/enviados/x.mp4'   arquivo enviado pelo administrador
+       'youtube:<ID>'            vídeo hospedado no YouTube
+
+     A montagem mora aqui porque a home e o painel do competidor precisam do
+     mesmo resultado e são páginas independentes — duplicar o markup faria as
+     duas divergirem no primeiro ajuste.
+     --------------------------------------------------------------------- */
+
+  function escAtr(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Aceita a forma gravada ('youtube:<ID>') e também um endereço colado
+     inteiro: o campo passa pela validação de endereço do servidor, que deixa
+     um https://youtu.be/... passar igual. Devolve '' quando não é YouTube.
+
+     O identificador é devolvido só se for [A-Za-z0-9_-] — ele entra no src do
+     iframe, e restringir o alfabeto aqui é o que impede um valor gravado no
+     banco de virar outro endereço. */
+  function idYoutube(valor) {
+    var s = String(valor || '').trim();
+    if (!s) return '';
+
+    var bruto = '';
+    var marcado = /^youtube:(.+)$/i.exec(s);
+    if (marcado) {
+      bruto = marcado[1];
+    /* O domínio precisa terminar em youtu.be / youtube.com — o grupo de
+       subdomínio só casa terminando em ponto, então um 'evil-youtube.com'
+       não passa por aqui. */
+    } else if (/^https?:\/\/([a-z0-9-]+\.)*youtu\.be\//i.test(s)) {
+      bruto = s.split(/[?#]/)[0].split('/').pop();
+    } else if (/^https?:\/\/([a-z0-9-]+\.)*youtube(-nocookie)?\.com\//i.test(s)) {
+      /* /watch?v=ID, /embed/ID, /shorts/ID e /live/ID */
+      var v = /[?&]v=([^&#]+)/.exec(s);
+      bruto = v ? v[1] : (/\/(?:embed|shorts|live)\/([^/?#]+)/.exec(s) || [])[1] || '';
+    } else {
+      return '';
+    }
+
+    bruto = String(bruto || '').trim();
+    return /^[A-Za-z0-9_-]{6,24}$/.test(bruto) ? bruto : '';
+  }
+
+  /* Parâmetros do player, na ordem em que importam:
+     mute=1      nenhum navegador dá autoplay com som;
+     loop=1      só repete acompanhado de playlist com o mesmo ID;
+     controls=0, modestbranding=1, rel=0, iv_load_policy=3, showinfo=0, fs=0,
+     disablekb=1 tiram botões, marca, anotações e sugestões — o pedido é um
+                 fundo limpo, não um player;
+     nocookie    a home não planta cookie de rastreio em quem só a abriu. */
+  function embedYoutube(id) {
+    return 'https://www.youtube-nocookie.com/embed/' + id + '?' + [
+      'autoplay=1', 'mute=1', 'loop=1', 'playlist=' + id, 'controls=0',
+      'modestbranding=1', 'rel=0', 'iv_load_policy=3', 'disablekb=1',
+      'playsinline=1', 'fs=0', 'showinfo=0'
+    ].join('&');
+  }
+
+  /* HTML do fundo de um slide.
+       banner  registro de bannersSite (home) ou de banners (painel)
+       base    caminho até a raiz do site: '' nas páginas públicas, '../'
+               dentro de painel/ e admin/
+       alt     texto alternativo da imagem; vazio marca a mídia como
+               decorativa. Vídeo é sempre decorativo. */
+  function midiaBanner(banner, base, alt) {
+    var b = banner || {};
+    var raiz = base || '';
+    var caminho = function (p) {
+      return /^assets\//.test(String(p)) ? raiz + p : String(p || '');
+    };
+
+    /* `midia` existe no banner do site; o do painel não tem o campo, então ter
+       `video` preenchido já basta. Um banner que voltou para imagem guarda o
+       vídeo antigo no registro — por isso 'imagem' vence. */
+    if (b.video && b.midia !== 'imagem') {
+      var id = idYoutube(b.video);
+      if (id) {
+        /* O iframe fica embrulhado porque é ele que vira o contêiner de
+           dimensionamento do CSS (o vídeo é 16:9 e o banner não é). */
+        return '<div class="banner-yt" aria-hidden="true">' +
+          '<iframe class="banner-yt__quadro" src="' + escAtr(embedYoutube(id)) + '" ' +
+          'title="Vídeo de fundo do banner" allow="autoplay; encrypted-media" ' +
+          'frameborder="0" tabindex="-1" aria-hidden="true"></iframe></div>';
+      }
+      return '<video src="' + escAtr(caminho(b.video)) + '" ' +
+        'autoplay muted loop playsinline aria-hidden="true"></video>';
+    }
+
+    return '<img src="' + escAtr(caminho(b.img)) + '" alt="' + escAtr(alt || '') + '"' +
+      (alt ? '' : ' aria-hidden="true"') + '>';
+  }
+
+  PB.idYoutube = idYoutube;
+  PB.embedYoutube = embedYoutube;
+  PB.midiaBanner = midiaBanner;
 
   /* ---------------------------------------------------------------------
      CABEÇALHO — sombra ao rolar + menu mobile
@@ -436,6 +608,257 @@
   };
 
   /* ---------------------------------------------------------------------
+     ENVIO DE ARQUIVO
+
+     Dez telas têm <input type="file"> e todas precisam da mesma coisa: subir
+     o arquivo para POST /api/upload e guardar o caminho que volta. Cada tela
+     resolvendo por conta própria foi o que deixou o protótipo com
+     URL.createObjectURL — um blob que só existe naquela aba e morre no
+     recarregamento — ou com o arquivo simplesmente descartado.
+
+       var envio = PB.enviarArquivo(arquivo, opcoes, aoTerminar);
+       envio.cancelar();
+
+     opcoes: { aoProgresso: function (porcento) {}, classe: 'imagem'|'video' }
+
+     `aoTerminar` recebe sempre um destes três, e nunca lança — quem chama está
+     no meio de um formulário e não pode quebrar:
+
+       { ok: true, caminho, tipo, classe, tamanho, largura, altura }
+       { ok: false, erro: '<texto pronto para o usuário>', status }
+       { cancelado: true }
+
+     `caminho` é relativo à RAIZ do site ('assets/enviados/x.png'), porque é a
+     home quem exibe. Página de painel ou de admin precisa do '../' na frente
+     para mostrar o arquivo na tela; o que vai para o banco é o caminho puro.
+
+     XMLHttpRequest e não fetch: só o XHR informa quanto do arquivo já subiu, e
+     sem esse retorno o operador acha que travou, clica de novo e o mesmo vídeo
+     de 40 MB sobe duas vezes.
+     --------------------------------------------------------------------- */
+
+  /* Os mesmos tetos de server/rotas/upload.js. Conferir aqui não substitui a
+     conferência do servidor: evita gastar a subida inteira de um arquivo que
+     vai levar 413 no fim. Só vale quando a tela informa `classe`. */
+  var TETOS_ENVIO = { imagem: 5 * 1024 * 1024, video: 50 * 1024 * 1024 };
+
+  /* Sem back-end o arquivo tem de caber no localStorage junto com o resto dos
+     dados, e o teto do navegador é de poucos megabytes. */
+  var TETO_SEM_SERVIDOR = 1.5 * 1024 * 1024;
+
+  function tamanhoLegivel(bytes) {
+    return bytes >= 1024 * 1024
+      ? (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB'
+      : Math.round(bytes / 1024) + ' KB';
+  }
+
+  function urlDoEnvio() {
+    return ((global.PB && PB.api && PB.api.BASE) || '/api') + '/upload';
+  }
+
+  /* O texto que o usuário lê. O status importa porque a saída é diferente em
+     cada caso: 401 se resolve entrando de novo, 403 não se resolve sozinho. */
+  function erroDoEnvio(status, resposta) {
+    var doServidor = resposta && resposta.erro ? String(resposta.erro) : '';
+
+    if (!status) return 'A conexão caiu durante o envio. Tente de novo.';
+    if (status === 401) return 'Sua sessão expirou. Entre de novo e repita o envio.';
+    if (status === 403) return 'Esta conta não tem permissão para enviar arquivos. Fale com um administrador master.';
+    if (status === 413) return doServidor || 'O arquivo passa do limite aceito pelo servidor.';
+    if (status === 400) return doServidor || 'O servidor não reconheceu este arquivo.';
+    return doServidor || 'O servidor recusou o arquivo (HTTP ' + status + ').';
+  }
+
+  /* Resposta imediata, antes de qualquer rede. Devolve o mesmo formato das
+     outras saídas para a tela ter um caminho só de tratamento. */
+  function envioRecusado(pronto, erro) {
+    pronto({ ok: false, status: 0, erro: erro });
+    return { cancelar: function () {} };
+  }
+
+  /* Demonstração estática (GitHub Pages, file://): não há para onde subir,
+     então o arquivo vira data: URL. Não é bonito, mas sobrevive ao
+     recarregamento — que é justamente o que o blob: de antes não fazia. */
+  function lerSemServidor(arquivo, op, avisar, pronto) {
+    if (arquivo.size > TETO_SEM_SERVIDOR) {
+      return envioRecusado(pronto,
+        'Sem servidor esta demonstração só guarda arquivos de até ' + tamanhoLegivel(TETO_SEM_SERVIDOR) +
+        ' (este tem ' + tamanhoLegivel(arquivo.size) + '). Ligue o back-end para enviar arquivos maiores.');
+    }
+
+    var leitor = new global.FileReader();
+    var respondeu = false;
+
+    function entregar(resultado) {
+      if (respondeu) return;
+      respondeu = true;
+      pronto(resultado);
+    }
+
+    leitor.onprogress = function (e) {
+      if (e.lengthComputable) avisar(Math.round((e.loaded / e.total) * 100));
+    };
+    leitor.onload = function () {
+      entregar({
+        ok: true,
+        caminho: String(leitor.result),
+        tipo: arquivo.type || '',
+        classe: op.classe || (/^video\//.test(arquivo.type) ? 'video' : 'imagem'),
+        tamanho: arquivo.size
+      });
+    };
+    leitor.onerror = function () { entregar({ ok: false, status: 0, erro: 'Não foi possível ler o arquivo escolhido.' }); };
+    leitor.onabort = function () { entregar({ cancelado: true }); };
+
+    avisar(0);
+    leitor.readAsDataURL(arquivo);
+
+    return { cancelar: function () { if (!respondeu) leitor.abort(); } };
+  }
+
+  function enviarArquivo(arquivo, opcoes, aoTerminar) {
+    var op = opcoes || {};
+    var avisar = typeof op.aoProgresso === 'function' ? op.aoProgresso : function () {};
+    var pronto = typeof aoTerminar === 'function' ? aoTerminar : function () {};
+
+    if (!arquivo) return envioRecusado(pronto, 'Nenhum arquivo foi escolhido.');
+
+    var teto = TETOS_ENVIO[op.classe];
+    if (teto && arquivo.size > teto) {
+      return envioRecusado(pronto,
+        (op.classe === 'video' ? 'O vídeo tem ' : 'A imagem tem ') + tamanhoLegivel(arquivo.size) +
+        ' e o limite é ' + tamanhoLegivel(teto) + '.');
+    }
+
+    if (!PB.dados || typeof PB.dados.modo !== 'function' || PB.dados.modo() !== 'api') {
+      return lerSemServidor(arquivo, op, avisar, pronto);
+    }
+
+    var req = new global.XMLHttpRequest();
+    var pacote = new global.FormData();
+    var respondeu = false;
+
+    /* abort dispara 'abort' e 'loadend'; erro de rede pode disparar mais de um
+       evento. A tela não pode receber duas respostas para um envio só. */
+    function entregar(resultado) {
+      if (respondeu) return;
+      respondeu = true;
+      pronto(resultado);
+    }
+
+    pacote.append('arquivo', arquivo, arquivo.name);
+
+    req.open('POST', urlDoEnvio(), true);
+    req.setRequestHeader('Accept', 'application/json');
+
+    req.upload.addEventListener('progress', function (e) {
+      if (!e.lengthComputable) return;
+      avisar(Math.round((e.loaded / e.total) * 100));
+    });
+
+    req.addEventListener('load', function () {
+      var resposta = null;
+      try { resposta = JSON.parse(req.responseText); } catch (e) { resposta = null; }
+
+      if (req.status >= 200 && req.status < 300 && resposta && resposta.caminho) {
+        entregar({
+          ok: true,
+          caminho: resposta.caminho,
+          tipo: resposta.tipo,
+          classe: resposta.classe,
+          tamanho: resposta.tamanho,
+          largura: resposta.largura,
+          altura: resposta.altura
+        });
+        return;
+      }
+      entregar({ ok: false, status: req.status, erro: erroDoEnvio(req.status, resposta) });
+    });
+
+    req.addEventListener('error', function () {
+      entregar({ ok: false, status: 0, erro: erroDoEnvio(0, null) });
+    });
+    /* Cancelamento é decisão de quem está na tela, não falha: quem chama já
+       limpou o formulário e não tem nada a avisar. */
+    req.addEventListener('abort', function () { entregar({ cancelado: true }); });
+
+    avisar(0);
+    req.send(pacote);
+
+    return { cancelar: function () { if (!respondeu) req.abort(); } };
+  }
+
+  /* Vários arquivos, um DE CADA VEZ. Dez envios simultâneos de 5 MB disputam a
+     mesma banda de subida: nenhum termina antes do último, e a barra fica
+     parada o caminho inteiro.
+
+     `aoTerminar` recebe a lista de resultados na ordem dos arquivos, sempre com
+     o mesmo tamanho da entrada. `aoProgresso` recebe o andamento do conjunto
+     (0 a 100) e ainda o índice do arquivo em curso e o total, para a tela poder
+     escrever "foto 3 de 10". */
+  function enviarVarios(arquivos, opcoes, aoTerminar) {
+    var lista = Array.prototype.slice.call(arquivos || []);
+    var op = opcoes || {};
+    var avisar = typeof op.aoProgresso === 'function' ? op.aoProgresso : function () {};
+    var pronto = typeof aoTerminar === 'function' ? aoTerminar : function () {};
+
+    var resultados = [];
+    var emCurso = null;
+    var parado = false;
+
+    function preencherResto(resultado) {
+      while (resultados.length < lista.length) resultados.push(resultado);
+    }
+
+    function seguir() {
+      if (parado || resultados.length >= lista.length) { pronto(resultados); return; }
+
+      var i = resultados.length;
+      var respondeu = false;
+
+      var envio = enviarArquivo(lista[i], {
+        classe: op.classe,
+        aoProgresso: function (pct) {
+          avisar(Math.round((i * 100 + pct) / lista.length), i, lista.length);
+        }
+      }, function (r) {
+        respondeu = true;
+        emCurso = null;
+        resultados.push(r);
+
+        /* 401 e 403 são da conta, não do arquivo: insistir nos outros nove
+           repetiria o mesmo erro nove vezes. O resto da fila é preenchido para
+           a lista continuar casando com a ordem dos arquivos. */
+        if (r.cancelado) {
+          parado = true;
+          preencherResto({ cancelado: true });
+        } else if (!r.ok && (r.status === 401 || r.status === 403)) {
+          parado = true;
+          preencherResto({ ok: false, status: r.status, erro: r.erro });
+        }
+
+        seguir();
+      });
+
+      /* Envio recusado na hora (arquivo grande demais) já respondeu e a fila
+         andou: guardar o handle agora apagaria o do arquivo seguinte. */
+      if (!respondeu) emCurso = envio;
+    }
+
+    seguir();
+
+    return {
+      cancelar: function () {
+        parado = true;
+        if (emCurso) emCurso.cancelar();
+      }
+    };
+  }
+
+  PB.enviarArquivo = enviarArquivo;
+  PB.enviarVarios = enviarVarios;
+
+  /* ---------------------------------------------------------------------
      PAINEL — menu lateral e submenus
      --------------------------------------------------------------------- */
   function iniciarPainel() {
@@ -470,6 +893,60 @@
         botao.setAttribute('aria-expanded', String(novo));
         sub.hidden = !novo;
       });
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     IDENTIDADE NO RODAPÉ DO MENU
+
+     O bloco .painel__usuario trazia "DM / Diego Martins / Responsável de time"
+     escrito no HTML de dez telas do competidor, e "IP / Inscrições Phygital /
+     Master" em todas as do admin. Quem entrasse com outra conta continuava
+     lendo o nome do vizinho — e, no admin, um nível de acesso que não é o seu.
+
+     O preenchimento mora aqui, e não no script de cada página, porque o bloco
+     é idêntico nos dois painéis: repetir o trecho em trinta arquivos garantia
+     que eles divergiriam no primeiro ajuste. As páginas continuam com o texto
+     fixo no HTML, que serve de conteúdo inicial até este passo rodar.
+     --------------------------------------------------------------------- */
+  var NIVEIS_POR_EXTENSO = {
+    master: 'Master',
+    gestor: 'Gestor de Campeonato',
+    operacao: 'Operação'
+  };
+
+  function iniciarIdentidade() {
+    var blocos = $$('.painel__usuario');
+    if (!blocos.length || !global.PB || !PB.dados) return;
+
+    var conta = (PB.dados.sessao && PB.dados.sessao()) || null;
+
+    /* Modo local (GitHub Pages): não existe sessão de servidor, e quem abre o
+       painel direto, sem passar pelo login de demonstração, não tem nada no
+       localStorage. Aí vale o usuário da semente — é o dono dos times e das
+       inscrições que a tela está mostrando, então é o nome certo. Isso só faz
+       sentido na área do competidor: a semente não tem administrador, e
+       carimbar "Responsável de time" no menu do admin seria pior que o texto
+       fixo que já está no HTML. */
+    var local = typeof PB.dados.modo !== 'function' || PB.dados.modo() !== 'api';
+    if (!conta && local && !/\/admin\//.test(global.location.pathname)) {
+      var semente = PB.dados.usuario && PB.dados.usuario();
+      if (semente && semente.nome) conta = { nome: semente.nome, papel: 'competidor' };
+    }
+
+    if (!conta || !conta.nome) return;   /* sem nome não há o que escrever */
+
+    var papel = conta.papel === 'admin'
+      ? (NIVEIS_POR_EXTENSO[conta.nivel] || 'Administração')
+      : 'Responsável de time';
+
+    blocos.forEach(function (bloco) {
+      var avatar = $('.avatar', bloco);
+      var nome = $('.nome', bloco);
+      var cargo = $('.papel', bloco);
+      if (avatar) avatar.textContent = fmt.iniciais(conta.nome);
+      if (nome) nome.textContent = conta.nome;
+      if (cargo) cargo.textContent = papel;
     });
   }
 
@@ -585,7 +1062,22 @@
     /* Validação: mensagem junto ao campo, nunca só um alerta no topo */
     $$('form[data-validar]').forEach(function (form) {
       form.setAttribute('novalidate', 'novalidate');
-      form.addEventListener('submit', function (e) {
+    });
+
+    /* CAPTURA NO DOCUMENTO, não listener no formulário.
+
+       O script inline de cada página roda no parse e registra o próprio submit
+       ANTES deste arquivo chegar ao DOMContentLoaded. Listener no formulário
+       entraria depois na fila, então preventDefault() barrava só o envio nativo
+       e a página gravava assim mesmo — em admin/blog-post.html dava para
+       publicar sem a foto principal, com o campo marcado em vermelho na tela.
+
+       Na fase de captura o documento é visitado antes do formulário, o que
+       coloca a validação na frente de qualquer listener da página, e
+       stopImmediatePropagation impede que eles cheguem a rodar. */
+    doc.addEventListener('submit', function (e) {
+      var form = e.target;
+      if (!form || !form.hasAttribute || !form.hasAttribute('data-validar')) return;
         var primeiroErro = null;
         $$('[required]', form).forEach(function (campo) {
           var wrap = campo.closest('.campo') || campo.parentElement;
@@ -613,6 +1105,7 @@
 
         if (primeiroErro) {
           e.preventDefault();
+          e.stopImmediatePropagation();
           primeiroErro.focus();
           primeiroErro.scrollIntoView({ block: 'center', behavior: reduzirMovimento ? 'auto' : 'smooth' });
           return;
@@ -625,8 +1118,7 @@
           var destino = form.getAttribute('data-ir-para');
           if (destino) setTimeout(function () { global.location.href = destino; }, 900);
         }
-      });
-    });
+    }, true);
 
     /* Campos de código (OTP): avança e volta sozinho */
     $$('.otp').forEach(function (grupo) {
@@ -803,6 +1295,7 @@
     iniciarFiltros();
     iniciarModais();
     iniciarPainel();
+    iniciarIdentidade();
     iniciarSplash();
     iniciarFormularios();
     iniciarConfirmacoes();

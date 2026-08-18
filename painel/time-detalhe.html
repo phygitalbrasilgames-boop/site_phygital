@@ -202,7 +202,7 @@
           <label for="d-arquivo">Arquivo <span class="obrigatorio">*</span></label>
           <div class="upload" data-upload>
             <span class="upload__titulo">Arraste o arquivo ou clique para escolher</span>
-            <span class="upload__specs">PDF, PNG ou JPG · até 5 MB</span>
+            <span class="upload__specs">PDF até 10 MB · PNG ou JPG até 5 MB</span>
             <span class="upload__specs" data-upload-nome></span>
             <input type="file" id="d-arquivo" accept="application/pdf,image/png,image/jpeg" class="sr-only" required>
           </div>
@@ -229,6 +229,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -257,12 +258,23 @@
     return n + ' ' + (n === 1 ? singular : pluralForma);
   }
 
+  /* Escudo e fotos gravados pelo cadastro são o caminho que /api/upload
+     devolveu, relativo à raiz do site; esta tela está um nível abaixo. */
+  function paraExibir(caminho) {
+    return /^(data:|https?:|\.\.\/)/.test(caminho) ? caminho : '../' + caminho;
+  }
+
+  /* Sem imagem enviada o time entra com o escudo neutro da federação, e o
+     atleta com a silhueta — a ficha nunca abre com espaço vazio. */
   var ESCUDOS = { t1: 1, t2: 9 };
   function escudoDe(time, i) {
-    if (time.escudo) return time.escudo;
+    if (time.escudo) return paraExibir(time.escudo);
     return '../assets/img/mock/escudo-' + (ESCUDOS[time.id] || ((i % 12) + 1)) + '.svg';
   }
-  function fotoDe(i) { return '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg'; }
+  function fotoDe(pessoa, i) {
+    if (pessoa && pessoa.foto) return paraExibir(pessoa.foto);
+    return '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg';
+  }
 
   /* ---------------------------------------------------------------------
      ELENCO
@@ -286,7 +298,7 @@
     return '' +
       '<article class="jogador' + (reserva ? ' jogador--reserva' : '') + '">' +
         '<div class="jogador__foto">' +
-          '<img src="' + fotoDe(i) + '" alt="Foto de ' + esc(j.nome) + '">' +
+          '<img src="' + esc(fotoDe(j, i)) + '" alt="Foto de ' + esc(j.nome) + '">' +
           (j.numero ? '<span class="jogador__numero">' + esc(j.numero) + '</span>' : '') +
         '</div>' +
         '<div class="jogador__corpo">' +
@@ -388,7 +400,10 @@
     h += '<div class="time-lista mt-3">' + staff.map(function (s) {
       return '' +
       '<div class="time-item time-item--estatico">' +
-        '<span class="time-item__escudo">' + esc(F.iniciais(s.nome)) + '</span>' +
+        /* Quem não enviou foto continua com as iniciais, como sempre foi */
+        (s.foto
+          ? '<img class="time-item__escudo" src="' + esc(paraExibir(s.foto)) + '" alt="Foto de ' + esc(s.nome) + '">'
+          : '<span class="time-item__escudo">' + esc(F.iniciais(s.nome)) + '</span>') +
         '<div style="min-width:0">' +
           '<div class="time-item__nome">' + esc(s.nome) + '</div>' +
           '<div class="time-item__meta">' + esc(s.papel || 'Comissão') + '</div>' +
@@ -670,7 +685,10 @@
       'O time “' + t.nome + '” sai da sua lista e das inscrições ativas. Ele vai para o Histórico e a ' +
       'organização pode restaurá-lo. Deseja remover?',
       function () {
-        D.arquivar('meusTimes', id, 'id', 'removido pelo responsável');
+        /* Time com inscrição ativa o servidor não deixa remover, e a mensagem
+           dele diz o porquê. Sem esta guarda a tela arquivava as inscrições
+           assim mesmo e ainda levava para uma lista onde o time continua lá. */
+        if (!D.arquivar('meusTimes', id, 'id', 'removido pelo responsável')) return;
         /* As inscrições do time saem junto: não faz sentido inscrição sem time */
         (D.tudo().minhasInscricoes || []).forEach(function (i) {
           if (i.time === id) D.arquivar('minhasInscricoes', i.id, 'id', 'time removido');
@@ -717,6 +735,14 @@
         '<span class="txt-peq"><strong>' + resumo.ok + '</strong> de ' + resumo.total + ' aprovados</span>' +
       '</div>';
 
+    /* O que fica gravado é o caminho devolvido pelo envio, e o nome de disco é
+       um UUID — mostrar "assets/enviados/4f3a…-….pdf" na linha do documento não
+       diz nada a ninguém. Cadastro antigo guarda o nome original e continua
+       aparecendo como sempre. */
+    function rotuloDoArquivo(valor) {
+      return /^assets\/enviados\//.test(valor) ? 'Arquivo enviado' : valor;
+    }
+
     html += (t.jogadores || []).map(function (j, i) {
       var docs = D.documentosDoJogador(j);
       var faltam = docs.filter(function (d) { return d.obrigatorio && d.status !== 'aprovado'; }).length;
@@ -739,7 +765,7 @@
               '<div class="doc-linha__nome">' + esc(d.nome) +
                 (d.obrigatorio ? '' : ' <span class="txt-micro txt-suave">(opcional)</span>') + '</div>' +
               '<div class="doc-linha__meta">' +
-                (d.arquivo ? esc(d.arquivo) : esc(d.descricao)) +
+                (d.arquivo ? esc(rotuloDoArquivo(d.arquivo)) : esc(d.descricao)) +
                 (d.validade ? ' · válido até ' + esc(PB.fmt.data(d.validade)) : '') +
               '</div>' +
               (d.observacao ? '<div class="doc-linha__meta" style="color:var(--erro)">' + esc(d.observacao) + '</div>' : '') +
@@ -773,8 +799,27 @@
     PB.abrirModal('modal-doc');
   });
 
+  /* ---- Envio do documento do jogador ----
+     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o que fica
+     gravado é o caminho devolvido. Antes gravava-se só `arq.name` e o conteúdo
+     era descartado, enquanto o toast garantia que o documento tinha "entrado em
+     conferência" — a organização abria a ficha e não havia o que conferir. */
+  var enviandoDoc = false;
+  var botaoDoc = $('#form-doc').querySelector('button[type="submit"]');
+  var rotuloDoc = botaoDoc.textContent;
+
+  /* Sem barra de progresso neste modal: o andamento vai no rótulo do próprio
+     botão, que já está travado enquanto o arquivo sobe. */
+  function travarDoc(travado, texto) {
+    enviandoDoc = travado;
+    botaoDoc.disabled = travado;
+    botaoDoc.textContent = travado ? texto : rotuloDoc;
+  }
+
   $('#form-doc').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviandoDoc) return;
+
     var arq = $('#d-arquivo').files[0];
     if (!arq) { PB.toast('Falta o arquivo', 'Escolha o documento antes de enviar.', 'alerta'); return; }
     var tipo = D.TIPOS_DOCUMENTO[$('#d-tipo').value];
@@ -784,17 +829,45 @@
       return;
     }
 
-    D.gravarDocumento(timeId, parseInt($('#d-jogador').value, 10), {
-      tipo: $('#d-tipo').value,
-      arquivo: arq.name,
-      validade: tipo.temValidade ? $('#d-validade').value : null,
-      status: 'enviado',
-      observacao: null
-    });
+    var jogador = parseInt($('#d-jogador').value, 10);
 
-    PB.fecharModal('modal-doc');
-    PB.toast('Documento enviado', 'Entrou em conferência pela organização.', 'info');
-    PB.recarregar();
+    travarDoc(true, 'Enviando…');
+    PB.enviarArquivo(arq, {
+      /* 'documento' é a classe do PDF. Escolher um PNG ou JPG continua valendo:
+         quem decide a classe é a assinatura do arquivo, no servidor. */
+      classe: 'documento',
+      aoProgresso: function (pct) {
+        travarDoc(true, pct > 0 ? 'Enviando ' + pct + '%' : 'Enviando…');
+      }
+    }, function (r) {
+      travarDoc(false);
+
+      if (r.cancelado) return;
+      if (!r.ok) {
+        /* Nada é gravado: um documento apontando para arquivo inexistente
+           entraria na fila de conferência sem nada para conferir — que é
+           exatamente o defeito que este envio veio corrigir. */
+        PB.toast('O documento não subiu', r.erro, 'erro');
+        return;
+      }
+
+      var gravou = D.gravarDocumento(timeId, jogador, {
+        tipo: $('#d-tipo').value,
+        arquivo: r.caminho,
+        validade: tipo.temValidade ? $('#d-validade').value : null,
+        status: 'enviado',
+        observacao: null
+      });
+
+      /* gravarDocumento avisa sozinho quando o servidor recusa. O toast de
+         sucesso só aparece depois de o arquivo ter subido E o registro ter
+         sido aceito. */
+      if (gravou === false) return;
+
+      PB.fecharModal('modal-doc');
+      PB.toast('Documento enviado', 'Entrou em conferência pela organização.', 'info');
+      PB.recarregar();
+    });
   });
 
   render();
