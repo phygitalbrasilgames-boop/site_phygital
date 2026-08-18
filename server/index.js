@@ -105,6 +105,25 @@ rotas.get('/api/_saude', async (ctx) => ctx.ok({
    ESTÁTICOS
    -------------------------------------------------------------------------- */
 
+/* --------------------------------------------------------------------------
+   PDF ENVIADO POR USUÁRIO
+
+   PDF é formato executável: o visualizador embutido do navegador roda o
+   JavaScript que o arquivo carrega, e roda NA NOSSA ORIGEM — o que dá a ele o
+   mesmo cookie e o mesmo localStorage das telas do painel. Como o envio agora
+   é liberado para qualquer conta autenticada (server/rotas/upload.js), o PDF
+   que chega vem de fora e não pode abrir embutido.
+
+   Content-Disposition: attachment tira o arquivo desse contexto: o navegador
+   entrega o download e não abre visualizador nenhum. Vale só para
+   assets/enviados/ — PDF do próprio repositório é conteúdo nosso.
+
+   A comparação é feita no caminho JÁ RESOLVIDO, não no texto da URL: com o
+   texto, '/assets/x/../enviados/isso.pdf' chegaria ao mesmo arquivo sem casar
+   com o prefixo, e sairia embutido.
+   -------------------------------------------------------------------------- */
+const PASTA_ENVIADOS = path.join(ESTATICOS, 'assets', 'enviados') + path.sep;
+
 function servirEstatico(req, res, caminhoUrl) {
   let relativo = decodeURIComponent(caminhoUrl);
   if (relativo.endsWith('/')) relativo += 'index.html';
@@ -123,12 +142,16 @@ function servirEstatico(req, res, caminhoUrl) {
       res.end(`<h1>404</h1><p>${relativo}</p>`);
       return;
     }
+    const extensao = path.extname(alvo).toLowerCase();
+    const baixarSempre = extensao === '.pdf' && alvo.startsWith(PASTA_ENVIADOS);
+
     res.writeHead(200, {
-      'Content-Type': TIPOS[path.extname(alvo).toLowerCase()] || 'application/octet-stream',
+      'Content-Type': TIPOS[extensao] || 'application/octet-stream',
       /* Sem cache em desenvolvimento: senão o navegador serve CSS e JS antigos
          e a alteração não aparece. */
       'Cache-Control': MODO === 'producao' ? 'public, max-age=3600' : 'no-store',
-      'X-Content-Type-Options': 'nosniff'
+      'X-Content-Type-Options': 'nosniff',
+      ...(baixarSempre ? { 'Content-Disposition': 'attachment' } : {})
     });
     res.end(dados);
   });

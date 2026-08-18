@@ -294,7 +294,9 @@
       var p = rs.getAttribute('data-restaurar').split(':');
       var cfg = COLECOES[p[0]];
       var item = D.arquivados(p[0]).filter(function (x) { return x.id === p[1]; })[0];
-      D.restaurar(p[0], p[1]);
+      /* Recusa do servidor já vem explicada por PB.dados. Comemorar em cima dela
+         dava dois toasts contrários e recarregava a tela com o item ainda aqui. */
+      if (!D.restaurar(p[0], p[1])) return;
       PB.toast('Restaurado', '“' + (item ? cfg.titulo(item) : p[1]) + '” voltou para a lista original.', 'info');
       PB.recarregar();
       return;
@@ -309,7 +311,7 @@
         'Esta ação não pode ser desfeita: “' + (it ? c2.titulo(it) : q[1]) +
         '” será apagado da base. Deseja excluir?',
         function () {
-          D.excluirDefinitivo(q[0], q[1]);
+          if (!D.excluirDefinitivo(q[0], q[1])) return;
           PB.toast('Excluído', 'O registro foi apagado em definitivo.', 'info');
           PB.recarregar();
         });

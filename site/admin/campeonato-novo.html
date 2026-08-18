@@ -395,6 +395,11 @@
           </div>
         </div>
 
+        <div class="campo" id="envio" role="status" aria-live="polite" hidden>
+          <span class="txt-peq txt-suave" id="envio-texto">Enviando o arquivo…</span>
+          <div class="barra-ocupacao"><i id="envio-barra" style="width:0%"></i></div>
+        </div>
+
         <div class="flex-fim mb-6">
           <button type="button" class="btn btn--contorno" id="voltar-edicao">Voltar para edição</button>
           <button type="button" class="btn btn--primario" id="publicar">Publicar campeonato</button>
@@ -416,6 +421,25 @@
     });
   }
   var $ = function (s) { return document.querySelector(s); };
+
+  /* O banner é gravado como o servidor de upload devolveu — 'assets/enviados/…',
+     relativo à RAIZ do site, porque quem exibe o card é inscricoes.html. Esta
+     tela mora em /admin/, então precisa do '../' para mostrar a arte. Endereço
+     com esquema (data: no modo sem servidor, http:, https:) vai inteiro. */
+  function enderecoImagem(valor) {
+    var v = String(valor == null ? '' : valor);
+    if (!v) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : '../' + v;
+  }
+
+  /* O regulamento gravado é o caminho devolvido pelo envio, e o nome de disco é
+     um UUID — não serve de rótulo. Cadastro antigo guarda o nome do PDF e
+     continua aparecendo como sempre. */
+  function rotuloRegulamento(valor) {
+    var v = String(valor == null ? '' : valor);
+    if (!v) return '';
+    return /^assets\/enviados\//.test(v) ? 'PDF enviado' : v;
+  }
 
   /* ---- Modalidade "Outra" abre campos extras e sugere limites de elenco ---- */
   var mod = $('#modalidade');
@@ -557,8 +581,11 @@
      Sem isto a tela de "editar informações" abria em branco, como se fosse
      a criação de um campeonato novo. */
   var editandoId = new URLSearchParams(location.search).get('id');
+  /* Lido uma vez: a prévia da revisão e a gravação precisam do mesmo registro,
+     e a tela não altera nada dele até o Publicar. */
+  var campeonatoAtual = editandoId ? D.campeonato(editandoId) : null;
   if (editandoId) {
-    var c = D.campeonato(editandoId);
+    var c = campeonatoAtual;
     if (!c) {
       PB.toast('Campeonato não encontrado', 'O identificador informado não existe.', 'erro');
     } else {
@@ -619,69 +646,166 @@
       /* Banner e regulamento já enviados: mostra o que está gravado */
       if (c.banner) {
         var prev = document.querySelector('#banner').closest('.upload').querySelector('[data-upload-preview]');
-        if (prev) { prev.src = '../' + c.banner; prev.hidden = false; }
+        if (prev) { prev.src = enderecoImagem(c.banner); prev.hidden = false; }
         document.querySelector('#banner').closest('.upload').querySelector('[data-upload-nome]').textContent =
           'Banner atual — envie outro arquivo apenas se quiser trocar.';
         $('#banner').removeAttribute('required');
       }
       if (c.regulamento) {
         document.querySelector('#regulamento').closest('.upload').querySelector('[data-upload-nome]').textContent =
-          'Atual: ' + c.regulamento;
+          'Atual: ' + rotuloRegulamento(c.regulamento) + ' — envie outro PDF apenas se quiser trocar.';
       }
     }
   }
 
+  /* ---- Envio do banner e do regulamento -----------------------------------
+
+     A arte escolhida sobe para POST /api/upload e o que volta é o caminho
+     público, que é o que vai para o campeonato. Antes o arquivo era descartado
+     na gravação e todo campeonato novo nascia com a arte de exemplo
+     (camp-futebol.svg), qualquer que fosse a modalidade.
+
+     O PDF do regulamento seguia o mesmo caminho: era escolhido, aparecia na
+     revisão e `gravar()` nunca incluía o campo — o campeonato ia para o ar sem
+     regulamento nenhum. Agora sobe junto, na classe 'documento'.
+
+     Quem sobe é PB.enviarArquivo, em assets/js/phygital.js. Fica aqui só o que
+     é desta tela — a barra e o botão travado. */
+
+  var enviando = false;
+  var rotuloPublicar = $('#publicar').textContent;
+
+  function mostrarEnvio(texto, pct) {
+    $('#envio').hidden = false;
+    $('#envio-texto').textContent = texto;
+    $('#envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#envio').hidden = true;
+    $('#envio-barra').style.width = '0%';
+  }
+
+  /* Trava o publicar enquanto o arquivo sobe. Sem isto o admin, sem retorno na
+     tela, clica de novo e cria dois campeonatos iguais. */
+  function travarPublicar(travado) {
+    enviando = travado;
+    $('#publicar').disabled = travado;
+    $('#publicar').textContent = travado ? 'Enviando…' : rotuloPublicar;
+  }
+
+  /* Sobe um arquivo OPCIONAL e entrega o caminho a `pronto`. Sem arquivo
+     escolhido entrega string vazia, que a gravação lê como "mantém o que já
+     está lá". Cancelamento e recusa vão para `abortar` e param a gravação
+     inteira: o campeonato apontando para um arquivo que não existe é pior do
+     que o campeonato sem o arquivo. */
+  function subirOpcional(arquivo, classe, pronto, abortar) {
+    if (!arquivo) { pronto(''); return; }
+
+    PB.enviarArquivo(arquivo, {
+      classe: classe,
+      /* Antes de o primeiro byte subir o progresso é 0: aí a barra aparece
+         zerada, dizendo que a tela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      if (r.cancelado) { abortar(null); return; }
+      if (!r.ok) { abortar(r.erro); return; }
+      pronto(r.caminho);
+    });
+  }
+
   /* ---- Publicar grava de verdade e recarrega ---- */
   $('#publicar').addEventListener('click', function () {
+    if (enviando) return;                 /* já há um arquivo subindo */
+
     PB.confirmar(
       editandoId ? 'Salvar alterações' : 'Publicar campeonato',
       editandoId
         ? 'As alterações passam a valer no site imediatamente. Deseja salvar?'
         : 'Publicar deixa o campeonato visível no site e abre as inscrições na data definida. Deseja publicar?',
       function () {
-        var v = function (id) { return $('#' + id).value; };
-        var temPremio = document.querySelector('input[name="premiacao"]:checked').value === 'sim';
-        var tipoPremio = document.querySelector('input[name="tipoPremio"]:checked').value;
-        var colocacoes = [];
-        Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el, i) {
-          if (el.value) colocacoes.push({ pos: i + 1, valor: parseFloat(el.value) });
-        });
+        var arte = $('#banner').files[0];
+        var regulamento = $('#regulamento').files[0];
 
-        var anterior = editandoId ? D.campeonato(editandoId) : null;
-        var item = {
-          id: editandoId || ('camp-' + Date.now()),
-          nome: v('nome'),
-          modalidade: mod.value === 'outra' ? 'outros' : mod.value,
-          banner: anterior ? anterior.banner : 'assets/img/mock/camp-futebol.svg',
-          vagas: parseInt(v('qtd'), 10) || 0,
-          jogadoresMin: parseInt(v('jmin'), 10) || 0,
-          jogadoresMax: parseInt(v('jmax'), 10) || 0,
-          reservas: $('#reservas').checked,
-          staffMax: parseInt(v('staff'), 10) || 0,
-          data: v('data-ini'), dataFim: v('data-fim'), local: v('local'),
-          aberturaInscricoes: v('insc-ini'), encerramentoInscricoes: v('insc-fim'),
-          descricao: v('descricao'), termos: v('termos'),
-          premiacao: temPremio
-            ? (tipoPremio === 'dinheiro'
-                ? { tipo: 'dinheiro', total: parseFloat(v('premio-total')) || 0, colocacoes: colocacoes }
-                : { tipo: 'outro', descricao: v('premio-desc') })
-            : null,
-          medalhaAte: $('#tem-medalha').checked ? $('#medalha-ate').value : null,
-          trofeuAte: $('#tem-trofeu').checked ? $('#trofeu-ate').value : null,
-          status: anterior ? anterior.status : 'inscricoes',
-          inscritos: anterior ? anterior.inscritos : 0,
-          oficial: anterior ? anterior.oficial : 0,
-          espera: anterior ? anterior.espera : 0
-        };
+        if (!arte && !regulamento) { gravar('', ''); return; }
 
-        D.gravar('campeonatos', item);
-        D.registrar('campeonato', item.nome,
-                    editandoId ? 'editou as informações' : 'publicou o campeonato',
-                    item.vagas + ' vagas · inscrições até ' + item.encerramentoInscricoes);
-        PB.toast(editandoId ? 'Campeonato atualizado' : 'Campeonato publicado',
-                 item.nome + ' foi salvo.', 'info');
-        setTimeout(function () { location.href = 'campeonatos.html'; }, 1000);
+        /* Nada é gravado e a revisão continua aberta: o card entraria no site
+           com a imagem quebrada, ou o campeonato prometeria um regulamento que
+           ninguém consegue baixar. */
+        function abortar(erro) {
+          travarPublicar(false);
+          esconderEnvio();
+          if (erro) PB.toast('O arquivo não subiu', erro, 'erro');
+        }
+
+        /* Um de cada vez: dois envios simultâneos disputam a mesma banda de
+           subida e a barra fica parada nos dois. */
+        travarPublicar(true);
+        subirOpcional(arte, 'imagem', function (caminhoArte) {
+          subirOpcional(regulamento, 'documento', function (caminhoRegulamento) {
+            travarPublicar(false);
+            esconderEnvio();
+            gravar(caminhoArte, caminhoRegulamento);
+          }, abortar);
+        }, abortar);
       });
+
+    /* Os caminhos só vêm preenchidos quando o arquivo correspondente subiu
+       agora. */
+    function gravar(caminho, caminhoRegulamento) {
+      var v = function (id) { return $('#' + id).value; };
+      var temPremio = document.querySelector('input[name="premiacao"]:checked').value === 'sim';
+      var tipoPremio = document.querySelector('input[name="tipoPremio"]:checked').value;
+      var colocacoes = [];
+      Array.prototype.forEach.call(document.querySelectorAll('.valor-colocacao'), function (el, i) {
+        if (el.value) colocacoes.push({ pos: i + 1, valor: parseFloat(el.value) });
+      });
+
+      var anterior = campeonatoAtual;
+      var item = {
+        id: editandoId || ('camp-' + Date.now()),
+        nome: v('nome'),
+        modalidade: mod.value === 'outra' ? 'outros' : mod.value,
+        /* Sem arquivo novo a edição mantém o banner que já está gravado. A arte
+           de exemplo é o último recurso: só alcança campeonato criado antes de
+           o envio existir. */
+        banner: caminho || (anterior ? anterior.banner : 'assets/img/mock/camp-futebol.svg'),
+        /* Sem PDF novo a edição mantém o regulamento gravado; campeonato criado
+           sem regulamento fica com null e a tela mostra "Não enviado". */
+        regulamento: caminhoRegulamento || (anterior ? anterior.regulamento : null),
+        vagas: parseInt(v('qtd'), 10) || 0,
+        jogadoresMin: parseInt(v('jmin'), 10) || 0,
+        jogadoresMax: parseInt(v('jmax'), 10) || 0,
+        reservas: $('#reservas').checked,
+        staffMax: parseInt(v('staff'), 10) || 0,
+        data: v('data-ini'), dataFim: v('data-fim'), local: v('local'),
+        aberturaInscricoes: v('insc-ini'), encerramentoInscricoes: v('insc-fim'),
+        descricao: v('descricao'), termos: v('termos'),
+        premiacao: temPremio
+          ? (tipoPremio === 'dinheiro'
+              ? { tipo: 'dinheiro', total: parseFloat(v('premio-total')) || 0, colocacoes: colocacoes }
+              : { tipo: 'outro', descricao: v('premio-desc') })
+          : null,
+        medalhaAte: $('#tem-medalha').checked ? $('#medalha-ate').value : null,
+        trofeuAte: $('#tem-trofeu').checked ? $('#trofeu-ate').value : null,
+        status: anterior ? anterior.status : 'inscricoes',
+        inscritos: anterior ? anterior.inscritos : 0,
+        oficial: anterior ? anterior.oficial : 0,
+        espera: anterior ? anterior.espera : 0
+      };
+
+      D.gravar('campeonatos', item);
+      D.registrar('campeonato', item.nome,
+                  editandoId ? 'editou as informações' : 'publicou o campeonato',
+                  item.vagas + ' vagas · inscrições até ' + item.encerramentoInscricoes);
+      PB.toast(editandoId ? 'Campeonato atualizado' : 'Campeonato publicado',
+               item.nome + ' foi salvo.', 'info');
+      setTimeout(function () { location.href = 'campeonatos.html'; }, 1000);
+    }
   });
 
   /* ---- Etapas ---- */
@@ -702,7 +826,11 @@
     var faltando = null;
     Array.prototype.forEach.call(this.querySelectorAll('[required]'), function (campo) {
       if (campo.offsetParent === null && campo.type !== 'file') return;  /* campo oculto não é exigido */
-      var ok = campo.type === 'file' ? true : String(campo.value).trim() !== '';
+      /* O banner agora sobe de verdade, então a falta dele é falta de arquivo
+         escolhido — antes o campo era só decorativo e o campeonato nascia com a
+         arte de exemplo. Na edição de um campeonato que já tem banner o
+         `required` é retirado do campo, e este laço nem chega nele. */
+      var ok = campo.type === 'file' ? campo.files.length > 0 : String(campo.value).trim() !== '';
       var wrap = campo.closest('.campo');
       if (wrap) wrap.classList.toggle('campo--erro', !ok);
       var er = wrap && wrap.querySelector('.campo__erro');
@@ -754,10 +882,20 @@
       linha('Inscrições', F.data(v('insc-ini')) + ' até ' + F.data(v('insc-fim'))) +
       linha('Premiação', premioTexto) +
       linha('Termos de aceite', v('termos') ? 'Preenchidos (' + v('termos').length + ' caracteres)' : '—') +
-      linha('Regulamento', $('#regulamento').files.length ? $('#regulamento').files[0].name : 'Não enviado');
+      linha('Regulamento', $('#regulamento').files.length
+        ? $('#regulamento').files[0].name
+        : (campeonatoAtual && campeonatoAtual.regulamento
+            ? rotuloRegulamento(campeonatoAtual.regulamento) + ' (mantém o atual)'
+            : 'Não enviado'));
 
     var arq = $('#banner').files[0];
-    var img = arq ? URL.createObjectURL(arq) : '../assets/img/mock/camp-futebol.svg';
+    /* Prévia blob: DE PROPÓSITO — ela só precisa durar enquanto a revisão está
+       na tela. O que vai para o campeonato é o caminho devolvido pelo envio, no
+       Publicar. Sem arquivo novo, a prévia mostra o banner já gravado. */
+    var img = arq ? URL.createObjectURL(arq)
+      : (campeonatoAtual && campeonatoAtual.banner
+          ? enderecoImagem(campeonatoAtual.banner)
+          : '../assets/img/mock/camp-futebol.svg');
     $('#previa-card').innerHTML =
       '<div class="card__midia"><img src="' + img + '" alt=""></div>' +
       '<div class="card__corpo">' +

@@ -1,7 +1,7 @@
 /* ==========================================================================
    PHYGITAL BRASIL — ENVIO DE ARQUIVO
 
-   Uma rota só: POST /api/upload recebe a imagem ou o vídeo do banner, grava em
+   Uma rota só: POST /api/upload recebe a imagem, o vídeo ou o PDF, grava em
    site/assets/enviados/ e devolve o caminho público. DELETE /api/upload/:nome
    desfaz. É o que faltava para o editor de banners — antes a tela lia o arquivo
    escolhido e descartava, ou virava blob de URL.createObjectURL, que morre no
@@ -33,7 +33,7 @@ const crypto = require('node:crypto');
 
 const db = require('../db');
 const regras = require('../regras');
-const { ErroHttp, erro400, erro404, CORPO_MAX_ARQUIVO } = require('../http');
+const { ErroHttp, erro400, erro404, erro429, CORPO_MAX_ARQUIVO } = require('../http');
 
 /* --------------------------------------------------------------------------
    DESTINO
@@ -49,19 +49,52 @@ const PASTA = path.resolve(__dirname, '..', '..', 'site', 'assets', 'enviados');
    validador de endereço de conteudo.js já aceita caminho do próprio site. */
 const CAMINHO_PUBLICO = 'assets/enviados';
 
+/* Apagar e faxinar continuam sendo do administrador: um envio só afeta quem
+   enviou, mas um DELETE alcança o arquivo de qualquer outra pessoa. */
 const PERMISSAO = 'banners:escrever';
 
 /* --------------------------------------------------------------------------
    TETOS
 
    Separados por classe: 5 MB basta para a imagem de um hero e não deixa a
-   folga de vídeo virar porta de entrada para encher o disco com PNG.
+   folga de vídeo virar porta de entrada para encher o disco com PNG. O PDF
+   fica no meio — RG digitalizado e atestado costumam passar de 5 MB quando o
+   celular escaneia em alta resolução, e regulamento com tabela e imagem
+   também.
    -------------------------------------------------------------------------- */
 
 const TETOS = {
   imagem: 5 * 1024 * 1024,
+  documento: 10 * 1024 * 1024,
   video: 50 * 1024 * 1024
 };
+
+/* Para a mensagem de 413 sair em português inteiro, e não "A imagem" para um
+   PDF. */
+const ARTIGO = { imagem: 'A imagem', documento: 'O documento', video: 'O vídeo' };
+
+/* --------------------------------------------------------------------------
+   FREIO POR CONTA
+
+   O envio deixou de exigir papel de administrador (ver `enviar`), então o teto
+   por arquivo não basta: 5 MB × mil requisições continua enchendo o disco.
+   Quarenta arquivos por hora cobre o pior caso legítimo com folga — um time de
+   futebol com elenco cheio tem 8 titulares, 3 reservas, 3 do staff, um escudo
+   e um documento por pessoa — e ainda assim limita o estrago de uma conta
+   sequestrada a 400 MB por hora.
+
+   A CONTAGEM SAI DA TABELA auditoria, não de um mapa em memória. Três razões:
+   ela já grava uma linha por envio bem-sucedido (nada novo a manter em
+   sincronia), sobrevive a reinício do processo — que é justamente o que quem
+   abusa provocaria — e, com o servidor rodando em mais de um processo, todos
+   leem o mesmo banco. O custo é um COUNT por envio, sobre um índice de data.
+
+   Só envio que deu certo conta: `registrar` roda depois da gravação. Quem toma
+   400 ou 413 não gasta cota, senão errar o formato viraria bloqueio.
+   -------------------------------------------------------------------------- */
+
+const ACAO_AUDITORIA = 'enviou arquivo';
+const ENVIOS_POR_HORA = 40;
 
 /* Um envio é um arquivo. O limite existe para um multipart com dez mil partes
    vazias não custar nada além do que já foi lido. */
@@ -124,6 +157,20 @@ const ASSINATURAS = [
     tipo: 'video/webm',
     classe: 'video',
     casa: (b) => bytes(b, 0, 0x1a, 0x45, 0xdf, 0xa3)
+  },
+  {
+    /* Documento do atleta (RG, atestado, autorização de imagem) e regulamento
+       do campeonato. Sem PDF na lista, esses dois fluxos não tinham como
+       existir: o competidor escolhia o arquivo e a tela gravava só o nome.
+
+       '%PDF-' são os cinco primeiros bytes exigidos pela especificação. Alguns
+       geradores deixam lixo antes, e leitores toleram; aqui não — assinatura
+       fora do byte 0 é exatamente o disfarce que a lista branca existe para
+       barrar. */
+    ext: '.pdf',
+    tipo: 'application/pdf',
+    classe: 'documento',
+    casa: (b) => marca(b, 0, '%PDF-')
   }
 ];
 
@@ -131,8 +178,9 @@ function reconhecer(dados) {
   const achada = ASSINATURAS.find((a) => a.casa(dados));
   if (!achada) {
     throw erro400(
-      'Formato não aceito. Envie imagem (PNG, JPEG, WEBP ou GIF) ou vídeo (MP4 ou WEBM). '
-      + 'O conteúdo do arquivo é conferido byte a byte, então renomear a extensão não resolve.'
+      'Formato não aceito. Envie imagem (PNG, JPEG, WEBP ou GIF), vídeo (MP4 ou WEBM) '
+      + 'ou documento em PDF. O conteúdo do arquivo é conferido byte a byte, então '
+      + 'renomear a extensão não resolve.'
     );
   }
   return achada;
@@ -441,8 +489,40 @@ async function gravar(dados, assinatura) {
    ROTAS
    -------------------------------------------------------------------------- */
 
+/** Quantos envios bem-sucedidos esta conta já fez na última hora. */
+function enviosNaUltimaHora(contaId) {
+  const desde = new Date(Date.now() - 3600000).toISOString();
+  return db.valor(
+    'SELECT COUNT(*) FROM auditoria WHERE conta_id = ? AND acao = ? AND em > ?',
+    contaId, ACAO_AUDITORIA, desde
+  ) || 0;
+}
+
 async function enviar(ctx) {
-  ctx.exigirAdmin(PERMISSAO);
+  /* PERMISSÃO DE SESSÃO, NÃO DE PAPEL.
+     Quem sobe escudo de time, foto de atleta e anexo de chamado é o
+     competidor, e a permissão anterior ('banners:escrever') só o master tem —
+     então o competidor levava 403 e a exportação do campeonato saía sem foto
+     nenhuma, justamente o que o briefing trata como crítico, porque é pelo
+     nome do arquivo que o organizador identifica cada pessoa no evento.
+
+     Não há papel a exigir aqui: enviar arquivo não é ação de administrador
+     nem de competidor, é ação de quem está logado. Quem pode USAR o caminho
+     devolvido continua sendo decidido pela rota que grava (banner exige
+     admin, documento de jogador exige ser dono do time). Anônimo segue em 401.
+
+     O contrapeso é o freio abaixo — sem papel restringindo, o teto por conta é
+     o que sobra entre o disco e uma conta qualquer. */
+  const conta = ctx.exigirLogin();
+
+  /* Antes de ler um byte do corpo: quem estourou a cota não deve conseguir
+     gastar banda e memória do servidor para descobrir isso. */
+  if (enviosNaUltimaHora(conta.id) >= ENVIOS_POR_HORA) {
+    throw erro429(
+      `Esta conta já enviou ${ENVIOS_POR_HORA} arquivos na última hora, que é o limite. `
+      + 'Aguarde alguns minutos e envie o restante.'
+    );
+  }
 
   /* Content-Length exagerado é recusado antes de ler um byte. */
   const declarado = Number(ctx.req.headers['content-length'] || 0);
@@ -473,14 +553,14 @@ async function enviar(ctx) {
   const teto = TETOS[assinatura.classe];
   if (dados.length > teto) {
     throw new ErroHttp(413,
-      `${assinatura.classe === 'video' ? 'O vídeo' : 'A imagem'} passa do limite de `
+      `${ARTIGO[assinatura.classe]} passa do limite de `
       + `${Math.round(teto / (1024 * 1024))} MB.`);
   }
 
   const nome = await gravar(dados, assinatura);
   const medidas = assinatura.classe === 'imagem' ? dimensoes(dados, assinatura.ext) : {};
 
-  regras.registrar(ctx, 'configuracao', nomeOriginal || nome, 'enviou arquivo',
+  regras.registrar(ctx, 'configuracao', nomeOriginal || nome, ACAO_AUDITORIA,
     `${assinatura.tipo}, ${Math.round(dados.length / 1024)} kB`);
 
   return ctx.ok({
@@ -541,6 +621,11 @@ const COLUNAS_COM_ARQUIVO = [
   ['posts', 'img'],
   ['parceiros', 'logo'],
   ['campeonatos', 'banner'],
+  /* Os dois PDF: regulamento do campeonato e documento do atleta. Sem eles
+     aqui, a faxina apagaria em duas horas o atestado que o competidor acabou
+     de enviar — a lista é o que separa órfão de arquivo em uso. */
+  ['campeonatos', 'regulamento'],
+  ['documentos', 'arquivo'],
   ['times', 'escudo'],
   ['jogadores', 'foto'],
   ['staff', 'foto']
@@ -638,5 +723,6 @@ function registrar(rotas) {
 
 module.exports = {
   registrar, PASTA, CAMINHO_PUBLICO, TETOS, ASSINATURAS,
+  ENVIOS_POR_HORA, ACAO_AUDITORIA,
   limparOrfaos, iniciarFaxina, COLUNAS_COM_ARQUIVO
 };

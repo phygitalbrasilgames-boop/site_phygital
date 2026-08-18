@@ -1,10 +1,12 @@
 /* ==========================================================================
    ENVIO DE ARQUIVO — POST /api/upload
 
-   O que a rota promete: só administrador com 'banners:escrever' grava; o tipo
+   O que a rota promete: qualquer conta AUTENTICADA grava e anônimo não (é
+   permissão de sessão, não de papel — quem sobe escudo, foto de atleta e
+   documento é o competidor), com teto de 40 arquivos por hora por conta; o tipo
    sai da assinatura do arquivo, não da extensão; o nome de disco é gerado aqui
    e o do cliente nunca vira caminho; e o que passa fica servível em
-   /assets/enviados/ com o Content-Type certo.
+   /assets/enviados/ com o Content-Type certo — o PDF, só como download.
 
    Este arquivo escreve na pasta de verdade (site/assets/enviados/), porque é
    ela que o servidor de estáticos publica — não dá para desviar para o banco
@@ -57,6 +59,13 @@ const mp4 = (recheio = 256) => Buffer.concat([
   Buffer.from([0x00, 0x00, 0x00, 0x18]),
   Buffer.from('ftypisom', 'latin1'),
   Buffer.alloc(recheio, 0x22)
+]);
+
+/** PDF: os cinco bytes '%PDF-' são o que a lista branca exige, no byte 0. */
+const pdf = (recheio = 512) => Buffer.concat([
+  Buffer.from('%PDF-1.7\n', 'latin1'),
+  Buffer.alloc(recheio, 0x20),
+  Buffer.from('\n%%EOF\n', 'latin1')
 ]);
 
 /* --------------------------------------------------------------------------
@@ -177,6 +186,45 @@ describe('envio de arquivo', () => {
     assert.equal(servidoMp4.cabecalhos.get('content-type'), 'video/mp4');
   });
 
+  it('o PDF entra como documento e o navegador é obrigado a baixá-lo', async () => {
+    const r = await enviarFormulario(mestre, pdf(), 'regulamento-copa-2026.pdf', 'application/pdf');
+
+    assert.equal(r.status, 200, 'sem PDF na lista branca, regulamento e documento de atleta não existem');
+    assert.equal(r.corpo.tipo, 'application/pdf');
+    assert.equal(r.corpo.classe, 'documento');
+    criados.push(r.corpo.nome);
+
+    assert.match(r.corpo.caminho, /^assets\/enviados\/[0-9a-f-]{36}\.pdf$/);
+    assert.equal(r.corpo.original, 'regulamento-copa-2026.pdf');
+
+    const servido = await amb.anonimo().get(`/${r.corpo.caminho}`);
+    assert.equal(servido.status, 200);
+    assert.equal(servido.cabecalhos.get('content-type'), 'application/pdf');
+
+    /* PDF carrega JavaScript e o visualizador embutido do navegador o executa
+       NA NOSSA ORIGEM — com o cookie de sessão do painel à mão. Forçar o
+       download tira o arquivo desse contexto. */
+    assert.match(
+      String(servido.cabecalhos.get('content-disposition')), /attachment/,
+      'PDF enviado por usuário não pode abrir embutido'
+    );
+
+    /* O desvio com '..' chega ao mesmo arquivo: se a decisão saísse do texto da
+       URL em vez do caminho resolvido, este aqui abriria embutido. */
+    const contornando = await amb.anonimo().get(`/assets/img/../enviados/${r.corpo.nome}`);
+    assert.equal(contornando.status, 200);
+    assert.match(String(contornando.cabecalhos.get('content-disposition')), /attachment/);
+  });
+
+  it('o "%PDF-" precisa estar no começo do arquivo', async () => {
+    /* Lixo antes da assinatura é o disfarce clássico: leitores toleram, a lista
+       branca não pode tolerar. */
+    const disfarcado = Buffer.concat([Buffer.from('\n\n\n', 'latin1'), pdf()]);
+
+    const r = await enviarFormulario(mestre, disfarcado, 'quase.pdf', 'application/pdf');
+    assert.equal(r.status, 400);
+  });
+
   it('o caminho devolvido é aceito como imagem de banner do site', async () => {
     const enviado = await enviarFormulario(mestre, png());
     criados.push(enviado.corpo.nome);
@@ -254,20 +302,94 @@ describe('envio de arquivo', () => {
     assert.ok(upload.TETOS.video > upload.TETOS.imagem);
   });
 
+  it('PDF acima de 10 MB é recusado', async () => {
+    assert.equal(upload.TETOS.documento, 10 * 1024 * 1024);
+
+    const gordo = Buffer.concat([pdf(), Buffer.alloc(upload.TETOS.documento, 0x20)]);
+
+    const r = await enviarFormulario(mestre, gordo, 'regulamento-enorme.pdf', 'application/pdf');
+    assert.equal(r.status, 413);
+
+    /* O teto do documento fica ENTRE imagem e vídeo: RG escaneado pelo celular
+       passa de 5 MB com facilidade, mas 50 MB de folga é depósito. */
+    assert.ok(upload.TETOS.documento > upload.TETOS.imagem);
+    assert.ok(upload.TETOS.documento < upload.TETOS.video);
+  });
+
   /* ------------------------------------------------------------------------
      PERMISSÃO
+
+     É de SESSÃO, não de papel. Exigir 'banners:escrever' — que só o master tem
+     — deixava o competidor em 403, e é ele quem sobe escudo do time, foto de
+     atleta e documento. Sem isso a exportação do campeonato sai sem foto
+     nenhuma, e é pelo nome do arquivo que o organizador identifica cada pessoa
+     no evento.
      ------------------------------------------------------------------------ */
 
-  it('competidor recebe 403 e anônimo recebe 401', async () => {
+  it('qualquer conta autenticada envia; anônimo continua em 401', async () => {
     const doCompetidor = await enviarFormulario(amb.comoCompetidor(), png());
-    assert.equal(doCompetidor.status, 403);
+    assert.equal(doCompetidor.status, 200, 'é o competidor quem sobe foto de atleta');
+    criados.push(doCompetidor.corpo.nome);
 
+    const oPdfDoCompetidor = await enviarFormulario(
+      amb.comoCompetidor(), pdf(), 'atestado-medico.pdf', 'application/pdf'
+    );
+    assert.equal(oPdfDoCompetidor.status, 200);
+    assert.equal(oPdfDoCompetidor.corpo.classe, 'documento');
+    criados.push(oPdfDoCompetidor.corpo.nome);
+
+    /* Gestor e operação não têm 'banners:escrever' e passavam pelo mesmo 403. */
+    const doGestor = await enviarFormulario(amb.comoGestor(), png());
+    assert.equal(doGestor.status, 200);
+    criados.push(doGestor.corpo.nome);
+
+    /* Sem conta não há cota que limite nem linha de auditoria que responda pelo
+       arquivo: anônimo segue de fora. */
     const deNinguem = await enviarFormulario(amb.anonimo(), png());
     assert.equal(deNinguem.status, 401);
+  });
 
-    /* 'banners:escrever' não está nas listas de gestor nem de operação. */
-    const doGestor = await enviarFormulario(amb.comoGestor(), png());
-    assert.equal(doGestor.status, 403);
+  it('a conta que passa de 40 arquivos na hora leva 429', async () => {
+    const dono = amb.novoCompetidor('Conta de Cota');
+
+    /* A contagem sai da tabela auditoria — que já ganha uma linha por envio
+       bem-sucedido — e não de um mapa em memória, que se perderia justamente no
+       reinício que quem abusa provocaria. Semear as linhas iniciais testa a
+       mesma leitura de janela sem gastar 40 requisições HTTP. */
+    function semear(quantos, minutosAtras) {
+      const em = new Date(Date.now() - minutosAtras * 60000).toISOString();
+      for (let i = 0; i < quantos; i++) {
+        amb.db.executar(
+          'INSERT INTO auditoria (area, alvo, acao, conta_id, autor, em) VALUES (?, ?, ?, ?, ?, ?)',
+          'configuracao', `semeado-${minutosAtras}-${i}.png`, upload.ACAO_AUDITORIA,
+          dono.id, dono.nome, em
+        );
+      }
+    }
+
+    /* A janela desliza: o que foi enviado há duas horas não pesa mais. */
+    semear(upload.ENVIOS_POR_HORA, 120);
+    const antigo = await enviarFormulario(dono.cliente, png());
+    assert.equal(antigo.status, 200, 'envio de duas horas atrás não pode consumir a cota de agora');
+    criados.push(antigo.corpo.nome);
+
+    /* Com o de agora, falta exatamente um para o teto. */
+    semear(upload.ENVIOS_POR_HORA - 2, 10);
+    const ultimo = await enviarFormulario(dono.cliente, png());
+    assert.equal(ultimo.status, 200, 'o 40º ainda está dentro do limite');
+    criados.push(ultimo.corpo.nome);
+
+    const antes = fs.readdirSync(upload.PASTA).length;
+    const estourado = await enviarFormulario(dono.cliente, png());
+
+    assert.equal(estourado.status, 429);
+    assert.match(estourado.corpo.erro, /limite/i, 'a mensagem tem que dizer o que aconteceu');
+    assert.equal(fs.readdirSync(upload.PASTA).length, antes, '429 não grava arquivo');
+
+    /* A cota é POR CONTA: o freio de um competidor não pode travar a redação. */
+    const deOutraConta = await enviarFormulario(mestre, png());
+    assert.equal(deOutraConta.status, 200);
+    criados.push(deOutraConta.corpo.nome);
   });
 
   /* ------------------------------------------------------------------------
@@ -290,6 +412,8 @@ describe('envio de arquivo', () => {
     );
     assert.equal(inexistente.status, 404);
 
+    /* Enviar virou permissão de sessão, apagar NÃO: um envio só afeta quem
+       enviou, mas um DELETE alcança o arquivo de qualquer outra pessoa. */
     assert.equal((await amb.comoCompetidor().apagar(`/api/upload/${nome}`)).status, 403);
     assert.ok(fs.existsSync(noDisco(nome)), '403 não pode apagar nada');
 

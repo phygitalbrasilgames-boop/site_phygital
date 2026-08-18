@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <form id="form-time" data-validar data-demo="Cadastro enviado para conferência (protótipo — nenhum dado foi gravado)." data-ir-para="meus-times.html">
+      <form id="form-time" data-validar>
 
         <!-- ============ ETAPA 1 — DADOS DO TIME ============ -->
         <section class="etapa" data-etapa="1" aria-labelledby="tit-etapa-1">
@@ -380,9 +380,14 @@
   var btAvancar = $('[data-avancar]', form);
   var btConcluir = $('[data-concluir]', form);
   var perguntaStaff = $('[data-pergunta-staff]', form);
+  var areaLogo = document.getElementById('time-logo').closest('[data-upload]');
 
   var atual = 0;
   var seq = 0;
+
+  /* Time já gravado, quando a tela abre em modo edição. Guarda os ids do
+     elenco: é por eles que a gravação sabe quem alterar e quem excluir. */
+  var timeSalvo = null;
 
   /* ---------------------------------------------------------------------
      TEXTOS DEPENDENTES DA MODALIDADE
@@ -766,6 +771,283 @@
   }
 
   /* ---------------------------------------------------------------------
+     ENVIO DO ESCUDO E DAS FOTOS
+
+     A prévia que aparece ao escolher o arquivo é um blob local: existe só
+     nesta aba e morre no recarregamento. O que vai para o banco é o caminho
+     que /api/upload devolve, e por isso as imagens sobem ao concluir, antes
+     de qualquer gravação. Foto que não existe no servidor sai em branco na
+     exportação do campeonato — e é pelo nome do arquivo que o organizador
+     identifica o atleta no dia do evento.
+
+     Cada área de upload guarda o caminho enviado em data-caminho.
+     --------------------------------------------------------------------- */
+
+  /* O upload responde com caminho relativo à raiz do site; esta tela está um
+     nível abaixo. data: URL do modo sem servidor já vem pronta. */
+  function paraExibir(caminho) {
+    return /^(data:|https?:|\.\.\/)/.test(caminho) ? caminho : '../' + caminho;
+  }
+
+  function areaDe(bloco) { return $('[data-upload]', bloco); }
+
+  function caminhoDe(area) {
+    return area ? (area.getAttribute('data-caminho') || null) : null;
+  }
+
+  function arquivoDe(area) {
+    var input = area ? $('input[type="file"]', area) : null;
+    return (input && input.files && input.files[0]) || null;
+  }
+
+  /* Imagem que já está gravada. A área nasce com o caminho preenchido para
+     que concluir sem escolher arquivo de novo não apague a foto do atleta. */
+  function mostrarGravada(area, caminho) {
+    if (!area || !caminho) return;
+    area.setAttribute('data-caminho', caminho);
+    var nome = $('[data-upload-nome]', area);
+    if (nome) nome.textContent = 'Imagem já enviada — escolha outra para substituir';
+    var prev = $('[data-upload-preview]', area);
+    if (prev) { prev.src = paraExibir(caminho); prev.hidden = false; }
+  }
+
+  /* Desfaz a escolha e volta ao que estava gravado. Chamado quando o envio
+     falha: deixar o nome do arquivo na tela faria o usuário concluir o
+     cadastro acreditando que a foto subiu. */
+  function limparEscolha(area) {
+    var input = $('input[type="file"]', area);
+    if (input) input.value = '';
+
+    var guardado = caminhoDe(area);
+    if (guardado) { mostrarGravada(area, guardado); return; }
+
+    var nome = $('[data-upload-nome]', area);
+    if (nome) nome.textContent = 'Nenhum arquivo selecionado';
+    var prev = $('[data-upload-preview]', area);
+    if (prev) { prev.hidden = true; prev.removeAttribute('src'); }
+  }
+
+  function areasComArquivo() {
+    return $$('[data-upload]', form).filter(function (a) { return !!arquivoDe(a); });
+  }
+
+  /* O contador de etapas é o único texto fixo perto do botão: serve de linha
+     de andamento sem inventar componente novo. */
+  function travarConcluir(travado, aviso) {
+    btConcluir.disabled = travado;
+    btConcluir.setAttribute('aria-busy', String(travado));
+    $('[data-etapa-info]').textContent = aviso || ('Etapa ' + (atual + 1) + ' de ' + etapas.length);
+  }
+
+  /* Sobe tudo o que foi escolhido e só então chama `pronto`. Ou todas as
+     imagens sobem, ou nada é gravado — meio caminho deixaria o registro
+     apontando para arquivo inexistente. */
+  function enviarImagens(pronto) {
+    var areas = areasComArquivo();
+    if (!areas.length) { pronto(true); return; }
+
+    var arquivos = areas.map(arquivoDe);
+    travarConcluir(true, 'Enviando imagem 1 de ' + arquivos.length + '…');
+
+    PB.enviarVarios(arquivos, {
+      classe: 'imagem',
+      aoProgresso: function (pct, indice, total) {
+        travarConcluir(true, 'Enviando imagem ' + (indice + 1) + ' de ' + total + ' — ' + pct + '%');
+        var nome = $('[data-upload-nome]', areas[indice]);
+        if (nome) nome.textContent = 'Enviando ' + arquivos[indice].name + '… ' + pct + '%';
+      }
+    }, function (resultados) {
+      var falha = null;
+
+      resultados.forEach(function (r, i) {
+        if (!r.ok) {
+          limparEscolha(areas[i]);
+          if (!falha && !r.cancelado) falha = r;
+          return;
+        }
+
+        areas[i].setAttribute('data-caminho', r.caminho);
+        /* Zera o input: um segundo clique em concluir subiria o mesmo arquivo. */
+        var input = $('input[type="file"]', areas[i]);
+        if (input) input.value = '';
+        var nome = $('[data-upload-nome]', areas[i]);
+        if (nome) nome.textContent = arquivos[i].name + ' · enviado';
+        var prev = $('[data-upload-preview]', areas[i]);
+        if (prev) { prev.src = paraExibir(r.caminho); prev.hidden = false; }
+      });
+
+      travarConcluir(false);
+      if (!falha) { pronto(true); return; }
+
+      /* 403 é o caso corriqueiro desta tela: /api/upload exige a permissão
+         'banners:escrever', que a conta de competidor não tem. */
+      if (falha.status === 403) {
+        PB.toast('Envio de imagem bloqueado',
+          'Esta conta não tem permissão para enviar arquivos ao servidor. As imagens escolhidas foram ' +
+          'descartadas: conclua o cadastro sem elas e peça o envio à organização.', 'erro');
+      } else {
+        PB.toast('As imagens não subiram', falha.erro + ' Nada foi gravado — confira e tente de novo.', 'erro');
+      }
+      pronto(false);
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+     GRAVAÇÃO
+     --------------------------------------------------------------------- */
+
+  /* Os campos dos blocos de pessoa nascem com id gerado ('j3-nome'); o papel
+     fixo do treinador é um input escondido, que só tem name. */
+  function valor(bloco, sufixo) {
+    var el = bloco.querySelector('[id$="-' + sufixo + '"], [name$="-' + sufixo + '"]');
+    return el ? String(el.value).trim() : '';
+  }
+
+  function dadosDoTime() {
+    var categoria = document.getElementById('time-categoria');
+    var t = {
+      /* Trocar de modalidade invalidaria o elenco: na edição vale a gravada. */
+      modalidade: timeSalvo ? timeSalvo.modalidade : modId,
+      nome: document.getElementById('time-nome').value.trim(),
+      categoria: categoria ? categoria.value : null,
+      criadoEm: document.getElementById('time-criacao').value,
+      descricao: document.getElementById('time-descricao').value.trim(),
+      historico: document.getElementById('time-historico').value.trim(),
+      escudo: caminhoDe(areaLogo)
+    };
+    if (timeSalvo) t.id = timeSalvo.id;
+    return t;
+  }
+
+  function dadosDoElenco() {
+    return $$('[data-jogador]', listaJog).map(function (b) {
+      var j = {
+        nome: valor(b, 'nome'),
+        apelido: valor(b, 'apelido'),
+        email: valor(b, 'email'),
+        tel: valor(b, 'tel'),
+        nasc: valor(b, 'nasc'),
+        insta: valor(b, 'insta'),
+        foto: caminhoDe(areaDe(b)),
+        reserva: b.getAttribute('data-tipo') === 'reserva'
+      };
+      if (M.temNumeroCamisa) j.numero = valor(b, 'numero');
+      if (M.temFuncao) j.funcao = valor(b, 'funcao');
+      if (M.temSteam) { j.steam = valor(b, 'steam'); j.faceit = valor(b, 'faceit'); }
+      if (b.getAttribute('data-id')) j.id = b.getAttribute('data-id');
+      return j;
+    }).filter(function (j) { return j.nome !== ''; });
+  }
+
+  function dadosDaComissao() {
+    if (individual && listaStaff.hidden) return [];
+    return $$('[data-staff]', listaStaff).map(function (b) {
+      var s = {
+        nome: valor(b, 'nome'),
+        papel: valor(b, 'papel'),
+        email: valor(b, 'email'),
+        tel: valor(b, 'tel'),
+        nasc: valor(b, 'nasc'),
+        insta: valor(b, 'insta'),
+        foto: caminhoDe(areaDe(b))
+      };
+      if (b.getAttribute('data-id')) s.id = b.getAttribute('data-id');
+      return s;
+    }).filter(function (s) { return s.nome !== ''; });
+  }
+
+  /* Uma requisição por vez: o servidor confere a vaga do elenco contra o que
+     já está no banco, e dois pedidos simultâneos leriam a mesma contagem.
+     Para na primeira falha e entrega a resposta que falhou. */
+  function emSerie(tarefas, pronto) {
+    var i = 0;
+    function seguir(r) {
+      if (r && !r.ok) { pronto(r); return; }
+      if (i >= tarefas.length) { pronto(null); return; }
+      tarefas[i++]().then(seguir);
+    }
+    seguir(null);
+  }
+
+  /* Ids que estavam gravados e não voltaram do formulário */
+  function removidos(gravados, naTela) {
+    var vivos = naTela.map(function (x) { return x.id; });
+    return (gravados || []).map(function (x) { return x.id; }).filter(function (id) {
+      return id && vivos.indexOf(id) === -1;
+    });
+  }
+
+  function gravarPelaApi(t, jogadores, comissao, pronto) {
+    PB.api.salvarTime(t).then(function (r) {
+      if (!r.ok) { pronto(r); return; }
+
+      var id = (r.dados && r.dados.time && r.dados.time.id) || t.id;
+      var tarefas = [];
+
+      /* Exclusões primeiro: quem saiu do formulário ainda ocupa vaga no banco,
+         e o servidor recusaria o jogador novo antes de a vaga abrir. */
+      removidos(timeSalvo && timeSalvo.jogadores, jogadores).forEach(function (jid) {
+        tarefas.push(function () { return PB.api.excluirJogador(id, jid); });
+      });
+      removidos(timeSalvo && timeSalvo.staff, comissao).forEach(function (sid) {
+        tarefas.push(function () { return PB.api.excluirStaff(id, sid); });
+      });
+      jogadores.forEach(function (j) {
+        tarefas.push(function () { return PB.api.salvarJogador(id, j); });
+      });
+      comissao.forEach(function (s) {
+        tarefas.push(function () { return PB.api.salvarStaff(id, s); });
+      });
+
+      emSerie(tarefas, function (falha) { pronto(falha || { ok: true, id: id }); });
+    });
+  }
+
+  function gravarLocalmente(t, jogadores, comissao) {
+    t.id = t.id || ('t' + Date.now());
+    t.jogadores = jogadores;
+    t.staff = comissao;
+    D.gravar('meusTimes', t);
+    return t.id;
+  }
+
+  function terminar(id) {
+    PB.toast(timeSalvo ? 'Time atualizado' : 'Time cadastrado',
+      timeSalvo
+        ? 'As alterações foram gravadas na ficha do time.'
+        : 'O time já aparece em Meus Times.', 'info');
+    setTimeout(function () {
+      window.location.href = 'time-detalhe.html?id=' + encodeURIComponent(id);
+    }, 900);
+  }
+
+  function concluir() {
+    enviarImagens(function (subiu) {
+      /* enviarImagens já explicou o motivo e devolveu o botão ao usuário */
+      if (!subiu) return;
+
+      var t = dadosDoTime();
+      var jogadores = dadosDoElenco();
+      var comissao = dadosDaComissao();
+
+      if (D.modo() !== 'api') {
+        terminar(gravarLocalmente(t, jogadores, comissao));
+        return;
+      }
+
+      travarConcluir(true, 'Salvando o time…');
+      gravarPelaApi(t, jogadores, comissao, function (r) {
+        travarConcluir(false);
+        if (!r.ok) {
+          PB.toast('O time não foi salvo', r.erro || 'O servidor recusou a gravação.', 'erro');
+          return;
+        }
+        terminar(r.id);
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------------
      EVENTOS (delegação — os blocos nascem depois do boot do phygital.js)
      --------------------------------------------------------------------- */
   function ligarEventos() {
@@ -886,19 +1168,23 @@
        Ouvinte em captura no document: roda antes do handler de form do phygital.js. */
     document.addEventListener('submit', function (e) {
       if (e.target !== form) return;
-      if (atual !== etapas.length - 1) { e.preventDefault(); e.stopPropagation(); return; }
-      /* Última etapa: revalida as três antes de deixar o phygital.js concluir */
+      e.preventDefault();
+      e.stopPropagation();
+      if (atual !== etapas.length - 1) return;
+      if (btConcluir.disabled) return;
+
+      /* Última etapa: revalida as três antes de subir imagem ou gravar nada */
       for (var i = 0; i < etapas.length; i++) {
         var camposOk = validarCampos(etapas[i]) === null;
         var elencoOk = i === 1 ? validarElenco() : true;
         if (camposOk && elencoOk) continue;
-        e.preventDefault();
-        e.stopPropagation();
         PB.toast('Falta pouco', 'Ainda há pendências na etapa ' + (i + 1) + '. Levamos você até lá.', 'alerta');
         irPara(i);
         validarEtapa(i);
         return;
       }
+
+      concluir();
     }, true);
   }
 
@@ -958,6 +1244,7 @@
     var time = id ? D.time(id) : null;
 
     if (!time) { irPara(0); return; }
+    timeSalvo = time;
 
     /* Cabeçalho da tela deixa claro que é edição */
     var h1 = document.querySelector('.painel__topo h1');
@@ -976,6 +1263,7 @@
     v('time-descricao', time.descricao);
     v('time-criacao', time.criadoEm);
     v('time-historico', time.historico);
+    mostrarGravada(areaLogo, time.escudo);
 
     /* ---- Etapa 2: cria os blocos necessários e preenche ---- */
     var jogadores = (time.jogadores || []).filter(function (j) { return !j.reserva; });
@@ -1001,6 +1289,10 @@
     blocos.forEach(function (bloco, i) {
       var j = todos[i];
       if (!j) return;
+      /* O id gravado acompanha o bloco: é assim que a gravação distingue
+         alterar de incluir, e sabe quem o formulário deixou de fora. */
+      if (j.id) bloco.setAttribute('data-id', j.id);
+      mostrarGravada(areaDe(bloco), j.foto);
       var set = function (sufixo, valor) {
         var el = bloco.querySelector('[id$="-' + sufixo + '"]');
         if (el && valor != null && valor !== '') el.value = valor;
@@ -1028,6 +1320,8 @@
       $$('[data-staff]', listaStaff).forEach(function (bloco, i) {
         var st = staff[i];
         if (!st) return;
+        if (st.id) bloco.setAttribute('data-id', st.id);
+        mostrarGravada(areaDe(bloco), st.foto);
         var set = function (sufixo, valor) {
           var el = bloco.querySelector('[id$="-' + sufixo + '"]');
           if (el && valor != null && valor !== '') el.value = valor;

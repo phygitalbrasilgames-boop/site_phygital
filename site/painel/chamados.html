@@ -20,6 +20,11 @@
   .chamado-item__seta { width: 18px; height: 18px; color: var(--cinza-40); flex: none; }
   .chamado-item__quando { text-align: right; }
   .chamado-item--novo { cursor: default; background: rgba(0,155,74,.06); }
+
+  /* .vagas__barra é flex:1 no painel.css, feita para viver numa linha ao lado
+     do rótulo; aqui ela ocupa a largura toda, embaixo do texto do envio. */
+  #ch-envio { margin-top: var(--e-2); }
+  #ch-envio .vagas__barra { display: block; width: 100%; margin-top: 6px; }
   .lista-vazia { padding: var(--e-4); }
   /* Em telas estreitas a ação principal desce para a segunda linha do topo */
   @media (max-width: 640px) {
@@ -239,10 +244,18 @@
           <div class="upload" data-upload aria-describedby="rot-anexo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--cinza)"><path d="M21 12.5V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h6"/><path d="M16 3h5v5M21 3l-9 9"/></svg>
             <span class="upload__titulo">Arraste um arquivo ou clique para escolher</span>
-            <span class="upload__specs">PDF, JPG ou PNG até 5 MB — atestado, comprovante ou print do erro</span>
+            <span class="upload__specs">PNG, JPG, WEBP ou GIF até 5 MB — foto do atestado, comprovante ou print do erro</span>
             <button class="btn btn--contorno btn--pequeno" type="button">Escolher arquivo</button>
             <span class="txt-micro txt-suave" data-upload-nome>Nenhum arquivo selecionado</span>
-            <input type="file" id="ch-anexo" name="anexo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+            <input type="file" id="ch-anexo" name="anexo"
+                   accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          </div>
+          <div id="ch-envio" role="status" aria-live="polite" hidden>
+            <span class="txt-micro txt-suave" id="ch-envio-texto">Enviando o arquivo…</span>
+            <span class="vagas__barra"><i id="ch-envio-barra" style="width:0%"></i></span>
+            <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="ch-envio-remover" hidden>
+              Remover anexo
+            </button>
           </div>
         </div>
 
@@ -407,46 +420,152 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
+  /* ---- Anexo do chamado ----
+     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o caminho
+     devolvido entra no texto da primeira mensagem — é o único campo que o
+     chamado carrega até a organização. Antes o arquivo era descartado no
+     fechamento do modal, sem nem o nome sobrar. */
+  var envioAtual = null;
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    document.getElementById('ch-envio').hidden = false;
+    document.getElementById('ch-envio-texto').textContent = texto;
+    document.getElementById('ch-envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    document.getElementById('ch-envio').hidden = true;
+    document.getElementById('ch-envio-barra').style.width = '0%';
+    document.getElementById('ch-envio-remover').hidden = true;
+  }
+
+  /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o usuário clica
+     de novo e abre dois protocolos para o mesmo pedido. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    var botao = document.querySelector('#form-chamado button[type="submit"]');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Enviar chamado';
+  }
+
+  /* Fechar o modal no meio do envio (Cancelar, clique fora ou Esc) corta o
+     envio — senão o arquivo continuaria subindo depois da desistência. */
+  function cancelarEnvio() {
+    if (!envioAtual) return;
+    envioAtual.cancelar();
+    envioAtual = null;
+    travarEnvio(false);
+    esconderEnvio();
+  }
+
+  document.addEventListener('click', function (e) {
+    var fechou = (e.target.closest && e.target.closest('[data-fechar-modal]')) ||
+                 (e.target.classList && e.target.classList.contains('modal'));
+    if (fechou) cancelarEnvio();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') cancelarEnvio();
+  });
+
+  /* Sem back-end (demonstração estática) o helper devolve data: URL. Serve para
+     um <img src>, não para dentro do texto de uma mensagem: são centenas de
+     milhares de caracteres que apareceriam crus na conversa e ainda iriam para
+     o servidor no dia em que a demonstração virar produção. Ali fica só o nome,
+     como no protótipo. */
+  function marcaDoAnexo(nome, caminho) {
+    return /^assets\/enviados\//.test(caminho)
+      ? '\n[anexo: ' + nome + ' — ' + caminho + ']'
+      : '\n[anexo: ' + nome + ']';
+  }
+
   /* Registrado depois que phygital.js já ligou a validação:
      se a validação barrou o envio, e.defaultPrevented já vem verdadeiro. */
   PB.aoIniciar = function () {
     var form = document.getElementById('form-chamado');
 
+    /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto o
+       chamado não é aberto e não há como desescolher o arquivo. O botão fica
+       FORA da área .upload de propósito — lá dentro qualquer clique reabre o
+       seletor de arquivo. */
+    document.getElementById('ch-envio-remover').addEventListener('click', function () {
+      document.getElementById('ch-anexo').value = '';
+      var rotulo = form.querySelector('[data-upload-nome]');
+      if (rotulo) rotulo.textContent = 'Nenhum arquivo selecionado';
+      esconderEnvio();
+      PB.toast('Anexo removido', 'Envie o chamado de novo — agora só com o texto.', 'info');
+    });
+
     form.addEventListener('submit', function (e) {
       if (e.defaultPrevented) return;
       e.preventDefault();
+      if (enviando) return;
 
-      var protocolo = novoProtocolo();
-      var campo = document.getElementById('ch-camp');
-      var novo = {
-        id: 'novo',
-        protocolo: protocolo,
-        assunto: document.getElementById('ch-assunto').value,
-        campeonato: campo.value === 'geral' ? '' : campo.value,
-        status: 'aberto',
-        abertoEm: hojeISO(),
-        atualizadoEm: hojeISO(),
-        mensagens: [{ de: 'usuario' }]
-      };
+      function abrir(marca) {
+        var protocolo = novoProtocolo();
+        var campo = document.getElementById('ch-camp');
+        var novo = {
+          id: 'novo',
+          protocolo: protocolo,
+          assunto: document.getElementById('ch-assunto').value,
+          campeonato: campo.value === 'geral' ? '' : campo.value,
+          status: 'aberto',
+          abertoEm: hojeISO(),
+          atualizadoEm: hojeISO(),
+          mensagens: [{ de: 'usuario', texto: document.getElementById('ch-msg').value + marca }]
+        };
 
-      var lista = document.getElementById('lista-abertos');
-      var vazioAtual = lista.querySelector('.vazio');
-      if (vazioAtual) lista.innerHTML = '';
-      lista.insertAdjacentHTML('afterbegin', item(novo, true));
+        var lista = document.getElementById('lista-abertos');
+        var vazioAtual = lista.querySelector('.vazio');
+        if (vazioAtual) lista.innerHTML = '';
+        lista.insertAdjacentHTML('afterbegin', item(novo, true));
 
-      var conta = document.getElementById('conta-abertos');
-      conta.textContent = String(parseInt(conta.textContent, 10) + 1);
+        var conta = document.getElementById('conta-abertos');
+        conta.textContent = String(parseInt(conta.textContent, 10) + 1);
 
-      document.getElementById('aba-abertos').click();
+        document.getElementById('aba-abertos').click();
 
-      PB.fecharModal('modal-chamado');
-      form.reset();
-      var nomeArquivo = form.querySelector('[data-upload-nome]');
-      if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
+        PB.fecharModal('modal-chamado');
+        form.reset();
+        esconderEnvio();
+        var nomeArquivo = form.querySelector('[data-upload-nome]');
+        if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
 
-      PB.toast('Chamado registrado',
-        'Protocolo ' + protocolo + '. A confirmação foi enviada para ' + usuario.email +
-        ' e a organização responde em até 2 dias úteis.', 'info');
+        PB.toast('Chamado registrado',
+          'Protocolo ' + protocolo + '. A confirmação foi enviada para ' + usuario.email +
+          ' e a organização responde em até 2 dias úteis.', 'info');
+      }
+
+      var anexo = document.getElementById('ch-anexo').files[0];
+      if (!anexo) { abrir(''); return; }
+
+      travarEnvio(true);
+      envioAtual = PB.enviarArquivo(anexo, {
+        classe: 'imagem',
+        /* Antes do primeiro byte o progresso é 0: a barra aparece zerada,
+           dizendo que o modal não travou. */
+        aoProgresso: function (pct) {
+          mostrarEnvio(pct > 0
+            ? 'Enviando ' + anexo.name + ' — ' + pct + '%'
+            : 'Preparando o envio de ' + anexo.name + '…', pct);
+        }
+      }, function (r) {
+        envioAtual = null;
+        if (r.cancelado) return;      /* cancelarEnvio() já destravou o modal */
+
+        travarEnvio(false);
+
+        if (!r.ok) {
+          /* O chamado não é aberto: ele citaria um arquivo que não existe. O
+             formulário fica em pé para reenviar ou tirar o anexo. */
+          mostrarEnvio(r.erro, 0);
+          document.getElementById('ch-envio-remover').hidden = false;
+          PB.toast('O anexo não subiu', r.erro, 'erro');
+          return;
+        }
+
+        abrir(marcaDoAnexo(anexo.name, r.caminho));
+      });
     });
   };
 })();

@@ -167,10 +167,8 @@
               <div class="form-grade">
                 <div class="campo">
                   <label for="categoria">Categoria</label>
-                  <select id="categoria" name="categoria">
-                    <option>Campeonatos</option><option>Regulamento</option><option>Institucional</option>
-                    <option>Inscrições</option><option>Eventos</option>
-                  </select>
+                  <!-- Opções montadas no script a partir das categorias cadastradas -->
+                  <select id="categoria" name="categoria"></select>
                 </div>
                 <div class="campo">
                   <label for="autor">Autor</label>
@@ -188,6 +186,11 @@
                   <input type="file" id="capa" name="capa" accept="image/png,image/jpeg" class="sr-only" required>
                 </div>
                 <p class="campo__erro" hidden>Escolha a foto principal.</p>
+              </div>
+
+              <div class="campo" id="envio-capa" role="status" aria-live="polite" hidden>
+                <span class="txt-peq txt-suave" id="envio-capa-texto">Enviando a foto…</span>
+                <span class="barra-ocupacao"><i id="envio-capa-barra" style="width:0%"></i></span>
               </div>
 
               <div class="campo">
@@ -226,6 +229,11 @@
                 <span class="upload__specs">Selecione uma ou várias · PNG ou JPG</span>
                 <input type="file" id="galeria" name="galeria" accept="image/png,image/jpeg" multiple class="sr-only">
               </div>
+              <div class="campo mt-3" id="envio-galeria" role="status" aria-live="polite" hidden>
+                <span class="txt-peq txt-suave" id="envio-galeria-texto">Enviando as fotos…</span>
+                <span class="barra-ocupacao"><i id="envio-galeria-barra" style="width:0%"></i></span>
+              </div>
+
               <div class="galeria-miniaturas mt-3" id="miniaturas"></div>
             </div>
           </div>
@@ -233,7 +241,7 @@
           <div class="flex-fim mb-6">
             <a class="btn btn--fantasma" href="blog.html">Cancelar</a>
             <button type="button" class="btn btn--contorno" id="rascunho">Salvar rascunho</button>
-            <button type="submit" class="btn btn--primario">Publicar</button>
+            <button type="submit" class="btn btn--primario" id="publicar">Publicar</button>
           </div>
         </form>
 
@@ -272,19 +280,46 @@
     });
   }
 
+  /* Fotos da galeria, já gravadas ou recém-enviadas: { nome, caminho }. O
+     caminho é o que o servidor devolveu, relativo à raiz do site. */
+  var fotos = [];
+
+  /* A lista sai do CRUD de Categorias, não de <option> escritos à mão: categoria
+     criada, renomeada ou arquivada lá nunca chegava neste editor.
+
+     O value é o NOME da categoria porque é o nome que fica gravado em post.cat —
+     é por ele que a página de categorias renomeia em massa e que o blog filtra. */
+  function montarCategorias(atual) {
+    var nomes = D.categorias().map(function (c) { return c.nome; });
+
+    /* Publicação antiga cuja categoria foi arquivada depois: sem manter o valor
+       gravado, abrir o post selecionaria outra categoria e o próximo salvar
+       trocaria a dele sem ninguém pedir. */
+    if (atual && nomes.indexOf(atual) < 0) nomes.unshift(atual);
+
+    $('#categoria').innerHTML = nomes.length
+      ? nomes.map(function (n) {
+          return '<option value="' + esc(n) + '">' + esc(n) + '</option>';
+        }).join('')
+      : '<option value="">Nenhuma categoria cadastrada</option>';
+
+    if (atual) $('#categoria').value = atual;
+  }
+
   /* Modo edição quando vem ?id= */
   var id = new URLSearchParams(location.search).get('id');
-  if (id) {
-    var p = D.post(id);
-    if (p) {
-      $('#titulo').value = p.titulo;
-      $('#categoria').value = p.cat;
-      $('#autor').value = p.autor;
-      $('#texto').innerHTML = p.corpo ||
-        ('<p>' + p.resumo + '</p><h2>Contexto</h2><p>Complete o texto desta publicação.</p>');
-      $('#previa-img').src = '../' + p.img;
-      document.querySelector('h1').textContent = 'Atualizar Postagem';
-    }
+  var postAtual = id ? D.post(id) : null;
+
+  montarCategorias(postAtual ? postAtual.cat : '');
+
+  if (postAtual) {
+    $('#titulo').value = postAtual.titulo;
+    $('#autor').value = postAtual.autor;
+    $('#texto').innerHTML = separarGaleria(postAtual.corpo ||
+      ('<p>' + postAtual.resumo + '</p><h2>Contexto</h2><p>Complete o texto desta publicação.</p>'));
+    $('#previa-img').src = enderecoMidia(postAtual.img);
+    renderMiniaturas();
+    document.querySelector('h1').textContent = 'Atualizar Postagem';
   }
 
   function atualizarPrevia() {
@@ -307,13 +342,103 @@
     $('#' + campo).addEventListener('change', atualizarPrevia);
   });
 
+  /* ---- Envio dos arquivos ---------------------------------------------
+
+     A foto principal e as fotos da galeria sobem para POST /api/upload, e o que
+     fica gravado na publicação é o caminho devolvido pelo servidor. Antes as
+     duas viravam URL.createObjectURL — um blob que só existe na aba que o criou:
+     a imagem aparecia na tela e sumia no recarregamento.
+
+     Quem sobe é PB.enviarArquivo/PB.enviarVarios, em assets/js/phygital.js. Fica
+     aqui só o que é desta tela: as barras, os botões travados e a troca de
+     arquivo no meio de um envio.
+
+     O arquivo sobe na ESCOLHA e não no salvar porque esta tela é feita de prévia
+     — a capa aparece no card ao lado e cada foto vira miniatura. Exibir o que o
+     servidor devolveu é a prova de que o arquivo subiu.
+     ------------------------------------------------------------------- */
+
+  var envioCapa = null;
+  var envioGaleria = null;
+  /* Caminho da capa nova. Vazio significa capa não trocada: na edição continua
+     valendo a que já estava gravada. */
+  var caminhoCapa = '';
+  var rotuloPublicar = $('#publicar').textContent;
+
+  function enviando() { return !!(envioCapa || envioGaleria); }
+
+  /* O caminho gravado é relativo à RAIZ do site ('assets/enviados/…'), porque
+     quem exibe é o blog público. Esta tela mora em /admin/, então precisa do
+     '../'. Endereço com esquema (o data: do modo sem servidor) vai inteiro. */
+  function enderecoMidia(valor) {
+    var v = String(valor == null ? '' : valor);
+    if (!v) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : '../' + v;
+  }
+
+  function mostrarEnvio(qual, texto, pct) {
+    $('#envio-' + qual).hidden = false;
+    $('#envio-' + qual + '-texto').textContent = texto;
+    $('#envio-' + qual + '-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio(qual) {
+    $('#envio-' + qual).hidden = true;
+    $('#envio-' + qual + '-barra').style.width = '0%';
+  }
+
+  /* Trava as duas gravações enquanto algum arquivo sobe. Sem isto o admin
+     publica antes de a foto chegar e a publicação vai ao ar sem imagem. */
+  function travarSalvar(travado) {
+    $('#publicar').disabled = travado;
+    $('#rascunho').disabled = travado;
+    $('#publicar').textContent = travado ? 'Enviando…' : rotuloPublicar;
+  }
+
   $('#capa').addEventListener('change', function () {
     var arq = this.files[0];
     if (!arq) return;
-    var url = URL.createObjectURL(arq);
-    $('#previa-img').src = url;
-    var prev = document.querySelector('#capa').closest('.upload').querySelector('[data-upload-preview]');
-    if (prev) { prev.src = url; prev.hidden = false; }
+
+    /* Trocar a imagem no meio do envio: a anterior não interessa mais. */
+    if (envioCapa) envioCapa.cancelar();
+
+    caminhoCapa = '';
+    travarSalvar(true);
+
+    var respondeu = false;
+    var envio = PB.enviarArquivo(arq, {
+      classe: 'imagem',
+      /* Antes de o primeiro byte subir o progresso é 0: a barra zerada já diz
+         que a tela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio('capa', pct > 0
+          ? 'Enviando ' + arq.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arq.name + '…', pct);
+      }
+    }, function (r) {
+      respondeu = true;
+      envioCapa = null;
+      travarSalvar(enviando());
+      esconderEnvio('capa');
+
+      if (r.cancelado) return;
+      if (!r.ok) {
+        PB.toast('A foto principal não subiu', r.erro, 'erro');
+        return;
+      }
+
+      caminhoCapa = r.caminho;
+      var endereco = enderecoMidia(r.caminho);
+      $('#previa-img').src = endereco;
+      /* [data-upload] já mostrou a prévia em blob; trocar pelo endereço do
+         servidor é o que mostra que o arquivo chegou lá. */
+      var prev = $('#capa').closest('.upload').querySelector('[data-upload-preview]');
+      if (prev) { prev.src = endereco; prev.hidden = false; }
+    });
+
+    /* Imagem acima do teto é recusada na hora: o envio já respondeu e guardar o
+       handle agora deixaria a tela achando que ainda há arquivo subindo. */
+    if (!respondeu) envioCapa = envio;
   });
 
   /* ---- Editor de texto rico ----------------------------------------
@@ -379,18 +504,55 @@
     if (cmd) { e.preventDefault(); comandar(cmd); }
   });
 
-  /* Galeria com miniaturas removíveis */
-  var fotos = [];
+  /* Galeria com miniaturas removíveis. As fotos sobem uma de cada vez e a
+     miniatura só aparece depois que o servidor devolveu o caminho. */
   $('#galeria').addEventListener('change', function () {
-    Array.prototype.forEach.call(this.files, function (f) {
-      fotos.push({ nome: f.name, url: URL.createObjectURL(f) });
+    var escolhidas = Array.prototype.slice.call(this.files);
+    var campo = this;
+    if (!escolhidas.length) return;
+
+    if (envioGaleria) envioGaleria.cancelar();
+    travarSalvar(true);
+
+    var respondeu = false;
+    var envio = PB.enviarVarios(escolhidas, {
+      classe: 'imagem',
+      aoProgresso: function (pct, i, total) {
+        mostrarEnvio('galeria', 'Enviando foto ' + (i + 1) + ' de ' + total + ' — ' + pct + '%', pct);
+      }
+    }, function (lista) {
+      respondeu = true;
+      envioGaleria = null;
+      travarSalvar(enviando());
+      esconderEnvio('galeria');
+      /* Limpar o campo devolve a chance de reescolher o mesmo arquivo depois de
+         um erro: o navegador não dispara 'change' duas vezes para o mesmo nome. */
+      campo.value = '';
+
+      var recusadas = [];
+      var motivo = '';
+      lista.forEach(function (r, i) {
+        if (r.ok) { fotos.push({ nome: escolhidas[i].name, caminho: r.caminho }); return; }
+        if (r.cancelado) return;
+        recusadas.push(escolhidas[i].name);
+        if (!motivo) motivo = r.erro;
+      });
+      renderMiniaturas();
+
+      if (recusadas.length) {
+        PB.toast(recusadas.length === 1 ? 'Uma foto não subiu' : recusadas.length + ' fotos não subiram',
+                 recusadas.join(', ') + ' — ' + motivo, 'erro');
+      }
     });
-    renderMiniaturas();
+
+    /* Lista inteira recusada de saída (foto acima do teto) já respondeu aqui em
+       cima: guardar o handle depois disso travaria o salvar para sempre. */
+    if (!respondeu) envioGaleria = envio;
   });
 
   function renderMiniaturas() {
     $('#miniaturas').innerHTML = fotos.map(function (f, i) {
-      return '<figure class="miniatura"><img src="' + f.url + '" alt="' + esc(f.nome) + '">' +
+      return '<figure class="miniatura"><img src="' + esc(enderecoMidia(f.caminho)) + '" alt="' + esc(f.nome) + '">' +
         '<button type="button" data-tirar="' + i + '" aria-label="Remover ' + esc(f.nome) + '">×</button></figure>';
     }).join('');
   }
@@ -404,12 +566,36 @@
 
   /* ---- Gravação -------------------------------------------------------
      Antes o formulário era apenas demonstrativo: editar uma publicação não
-     alterava nada. Agora grava título, categoria, autor, imagem e corpo. */
-  var imagemNova = null;
-  $('#capa').addEventListener('change', function () {
-    var arq = this.files[0];
-    if (arq) imagemNova = URL.createObjectURL(arq);
-  });
+     alterava nada. Agora grava título, categoria, autor, imagem e corpo.
+
+     A galeria vai gravada DENTRO do corpo, como <figure class="artigo__galeria">
+     — a mesma marcação que post.html usa nas publicações que já existem. É o que
+     faz a galeria sobreviver ao recarregamento sem coluna nova no banco: a
+     tabela posts tem `corpo`, não tem `galeria`. */
+
+  function corpoComGaleria() {
+    if (!fotos.length) return editor.innerHTML;
+    /* Caminho puro, sem o '../': o corpo é lido pelo blog público, que está na
+       raiz do site. */
+    return editor.innerHTML + '<figure class="artigo__galeria">' + fotos.map(function (f) {
+      return '<img src="' + esc(f.caminho) + '" alt="' + esc(f.nome) + '">';
+    }).join('') + '</figure>';
+  }
+
+  /* Na abertura o caminho inverso: tirar a galeria do corpo evita que o editor
+     mostre as fotos como texto e que a gravação seguinte empilhe uma segunda
+     galeria embaixo da primeira. */
+  function separarGaleria(html) {
+    var caixa = document.createElement('div');
+    caixa.innerHTML = html || '';
+    Array.prototype.forEach.call(caixa.querySelectorAll('figure.artigo__galeria'), function (fig) {
+      Array.prototype.forEach.call(fig.querySelectorAll('img'), function (img) {
+        fotos.push({ nome: img.getAttribute('alt') || '', caminho: img.getAttribute('src') || '' });
+      });
+      fig.parentNode.removeChild(fig);
+    });
+    return caixa.innerHTML;
+  }
 
   function montarPost(publicado) {
     var texto = (editor.textContent || '').trim();
@@ -420,14 +606,28 @@
       cat: $('#categoria').value,
       autor: $('#autor').value.trim() || 'Redação Phygital',
       data: (atual && atual.data) || new Date().toISOString().slice(0, 10),
-      img: imagemNova || (atual ? atual.img : 'assets/img/mock/post-1.svg'),
+      img: caminhoCapa || (atual ? atual.img : 'assets/img/mock/post-1.svg'),
       resumo: texto.slice(0, 180) + (texto.length > 180 ? '…' : ''),
-      corpo: editor.innerHTML,
+      corpo: corpoComGaleria(),
       rascunho: !publicado
     };
   }
 
   function salvar(publicado) {
+    if (enviando()) {
+      PB.toast('Envio em andamento', 'Espere as fotos terminarem de subir para salvar a publicação.', 'alerta');
+      return false;
+    }
+
+    /* Capa escolhida que não subiu: gravar agora deixaria a publicação
+       apontando para um arquivo que não existe, e o blog abriria com o card
+       quebrado. */
+    if ($('#capa').files.length && !caminhoCapa) {
+      PB.toast('A foto principal não subiu',
+               'Escolha a imagem de novo antes de salvar.', 'erro');
+      return false;
+    }
+
     if (!$('#titulo').value.trim()) {
       var w = $('#titulo').closest('.campo');
       w.classList.add('campo--erro');

@@ -122,7 +122,7 @@
         <h1>Alterar Banner</h1>
         <p class="sub">Banners da home do site e do Painel do Competidor</p>
       </div>
-      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><button class="btn btn--primario btn--pequeno" data-abrir-modal="modal-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Novo Banner</button></div>
+      <div class="flex-fim"><a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a><button class="btn btn--primario btn--pequeno" data-novo><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Novo Banner</button></div>
     </header>
 
     <main class="painel__corpo" id="conteudo">
@@ -167,7 +167,9 @@
               </div>
             </div>
 
-            <form data-validar data-demo="Banner enviado e publicado na primeira posição (protótipo).">
+            <form id="form-banner" data-validar>
+              <input type="hidden" id="b-id">
+
               <div class="campo">
                 <label for="banner-arquivo">Arquivo do banner <span class="obrigatorio">*</span></label>
                 <div class="upload" data-upload>
@@ -192,9 +194,14 @@
                 <p class="campo__ajuda">Para onde o visitante vai ao clicar no banner. Deixe vazio para um banner apenas informativo.</p>
               </div>
 
+              <div class="campo" id="b-envio" role="status" aria-live="polite" hidden>
+                <span class="txt-peq txt-suave" id="b-envio-texto">Enviando o arquivo…</span>
+                <div class="barra-ocupacao"><i id="b-envio-barra" style="width:0%"></i></div>
+              </div>
+
               <div class="modal__acoes">
                 <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
-                <button type="submit" class="btn btn--primario">Publicar banner</button>
+                <button type="submit" class="btn btn--primario" id="b-salvar">Publicar banner</button>
               </div>
             </form>
           </div>
@@ -210,6 +217,7 @@
 <script>
 (function () {
   var D = PB.dados;
+  var $ = function (s) { return document.querySelector(s); };
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -218,13 +226,24 @@
 
   var banners = D.banners();
 
+  /* O que fica gravado é o caminho que o servidor de upload devolveu,
+     'assets/enviados/<arquivo>', relativo à RAIZ do site — porque quem exibe o
+     banner é painel/inicio.html. Esta tela mora em /admin/, então precisa do
+     '../' para mostrar a arte. Endereço com esquema (data: no modo sem
+     servidor, http:, https:) vai inteiro. */
+  function enderecoImagem(valor) {
+    var v = String(valor == null ? '' : valor);
+    if (!v) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : '../' + v;
+  }
+
   function render() {
     var alvo = document.getElementById('lista-banners');
     if (!banners.length) {
       alvo.innerHTML =
         '<div class="vazio"><h3>Nenhum banner publicado</h3>' +
         '<p>Sem banner cadastrado, a home mostra apenas a arte padrão da temporada.</p>' +
-        '<button class="btn btn--primario" data-abrir-modal="modal-banner">Enviar o primeiro banner</button></div>';
+        '<button class="btn btn--primario" data-novo>Enviar o primeiro banner</button></div>';
       document.getElementById('conta-banners').textContent = 'nenhum banner';
       return;
     }
@@ -235,7 +254,7 @@
       return '' +
       '<div class="banner-item">' +
         '<div class="banner-item__arrastar" aria-hidden="true">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>' + '</div>' +
-        '<img class="banner-item__thumb" src="../' + esc(b.img) + '" alt="Banner: ' + esc(b.titulo) + '">' +
+        '<img class="banner-item__thumb" src="' + esc(enderecoImagem(b.img)) + '" alt="Banner: ' + esc(b.titulo) + '">' +
         '<div>' +
           '<div style="font-family:var(--fonte-display);font-weight:700">' + esc(b.titulo) + '</div>' +
           '<div class="txt-micro txt-suave">Posição ' + (i + 1) + ' de ' + banners.length + ' · destino: ' + esc(b.link || 'sem link') + '</div>' +
@@ -243,12 +262,173 @@
         '<div class="linha-acoes">' +
           '<button class="btn btn--fantasma btn--pequeno" data-mover="' + i + '" data-dir="-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="Mover para cima">↑</button>' +
           '<button class="btn btn--fantasma btn--pequeno" data-mover="' + i + '" data-dir="1"' + (i === banners.length - 1 ? ' disabled' : '') + ' aria-label="Mover para baixo">↓</button>' +
-          '<button class="btn btn--contorno btn--pequeno" data-abrir-modal="modal-banner">Editar</button>' +
+          '<button class="btn btn--contorno btn--pequeno" data-editar="' + esc(b.id) + '">Editar</button>' +
           '<button class="btn btn--perigo btn--pequeno" data-remover="' + i + '">Remover</button>' +
         '</div>' +
       '</div>';
     }).join('');
   }
+
+  /* ---- Envio do arquivo ---------------------------------------------------
+
+     A arte escolhida sobe para POST /api/upload e o que volta é o caminho
+     público, que é o que fica gravado no banner. Antes esta tela era só
+     demonstração: o formulário mostrava um aviso de protótipo, o arquivo era
+     descartado e nada chegava ao painel do competidor.
+
+     Quem sobe é PB.enviarArquivo, em assets/js/phygital.js. Fica aqui só o que
+     é desta tela — a barra, o botão travado e o cancelamento ao fechar. */
+
+  var enviando = false;
+  var envioAtual = null;
+  var rotuloSalvar = $('#b-salvar').textContent;
+
+  function mostrarEnvio(texto, pct) {
+    $('#b-envio').hidden = false;
+    $('#b-envio-texto').textContent = texto;
+    $('#b-envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#b-envio').hidden = true;
+    $('#b-envio-barra').style.width = '0%';
+  }
+
+  /* Trava o salvar enquanto o arquivo sobe. Sem isto o admin, sem retorno na
+     tela, clica de novo e publica o mesmo banner duas vezes. */
+  function travarSalvar(travado) {
+    enviando = travado;
+    $('#b-salvar').disabled = travado;
+    $('#b-salvar').textContent = travado ? 'Enviando…' : rotuloSalvar;
+  }
+
+  /* Fechar a janela no meio do envio (Cancelar, clique fora ou Esc) corta o
+     envio: sem isto o arquivo continuaria subindo e o banner seria publicado
+     depois de o admin ter desistido. */
+  function cancelarEnvio() {
+    if (!envioAtual) return;
+    envioAtual.cancelar();
+    envioAtual = null;
+    travarSalvar(false);
+    esconderEnvio();
+  }
+
+  document.addEventListener('click', function (e) {
+    var fechou = (e.target.closest && e.target.closest('[data-fechar-modal]')) ||
+                 (e.target.classList && e.target.classList.contains('modal'));
+    if (fechou) cancelarEnvio();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') cancelarEnvio();
+  });
+
+  /* ---- Formulário ---- */
+  function limparErros() {
+    Array.prototype.forEach.call(document.querySelectorAll('#form-banner .campo'), function (campo) {
+      campo.classList.remove('campo--erro');
+      var erro = campo.querySelector('.campo__erro');
+      if (erro) erro.hidden = true;
+    });
+  }
+
+  function abrirFormulario(id) {
+    var b = id ? banners.filter(function (x) { return x.id === id; })[0] : null;
+    var arquivo = $('#banner-arquivo');
+
+    $('#banner-titulo').textContent = b ? 'Editar banner' : 'Novo banner';
+    $('#b-id').value = b ? b.id : '';
+    $('#banner-titulo-campo').value = b ? (b.titulo || '') : '';
+    $('#banner-link').value = b ? (b.link || '') : 'inscricoes.html';
+
+    /* O <input type="file"> guarda a escolha entre uma abertura e outra: sem
+       limpar, editar um banner depois de outro reenviaria a arte do primeiro. */
+    arquivo.value = '';
+    if (b) arquivo.removeAttribute('required');
+    else arquivo.setAttribute('required', 'required');
+
+    $('#form-banner [data-upload-nome]').textContent = b
+      ? 'Arte atual — envie outro arquivo apenas se quiser trocar.' : '';
+
+    var previa = $('#form-banner [data-upload-preview]');
+    if (b && b.img) { previa.src = enderecoImagem(b.img); previa.hidden = false; }
+    else { previa.removeAttribute('src'); previa.hidden = true; }
+
+    limparErros();
+    travarSalvar(false);
+    esconderEnvio();
+    PB.abrirModal('modal-banner');
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-novo]')) { abrirFormulario(null); return; }
+    var ed = e.target.closest('[data-editar]');
+    if (ed) abrirFormulario(ed.getAttribute('data-editar'));
+  });
+
+  $('#form-banner').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (enviando) return;                 /* já há um arquivo subindo */
+
+    var id = $('#b-id').value;
+    var existente = id ? banners.filter(function (x) { return x.id === id; })[0] : null;
+    var titulo = $('#banner-titulo-campo').value.trim();
+    var arquivo = $('#banner-arquivo').files[0];
+
+    /* Arte que o banner já tem, aproveitada SÓ quando nada novo foi escolhido. */
+    var imgAtual = existente ? (existente.img || '') : '';
+
+    if (!titulo) return;                  /* o data-validar já destacou o campo */
+
+    if (!arquivo && !imgAtual) {
+      PB.toast('Falta a imagem', 'Escolha a arte do banner antes de publicar.', 'alerta');
+      return;
+    }
+
+    /* Grava o banner. `caminho` só vem preenchido quando um arquivo subiu. */
+    function concluir(caminho) {
+      D.gravar('banners', {
+        id: id || ('b' + Date.now()),
+        titulo: titulo,
+        img: caminho || imgAtual,
+        link: $('#banner-link').value.trim(),
+        ordem: existente ? existente.ordem : banners.length + 1,
+        ativo: true
+      });
+
+      PB.fecharModal('modal-banner');
+      PB.toast(existente ? 'Banner atualizado' : 'Banner publicado',
+               'O painel do competidor já reflete a alteração.', 'info');
+      PB.recarregar();
+    }
+
+    if (!arquivo) { concluir(''); return; }
+
+    travarSalvar(true);
+    envioAtual = PB.enviarArquivo(arquivo, {
+      classe: 'imagem',
+      /* Antes de o primeiro byte subir o progresso é 0: aí a barra aparece
+         zerada, dizendo que a janela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      envioAtual = null;
+      if (r.cancelado) return;            /* cancelarEnvio() já destravou a tela */
+
+      travarSalvar(false);
+      esconderEnvio();
+
+      if (!r.ok) {
+        /* Nada é gravado: o banner ficaria apontando para um arquivo que não
+           existe e o painel do competidor abriria com a arte quebrada. */
+        PB.toast('O arquivo não subiu', r.erro, 'erro');
+        return;
+      }
+      concluir(r.caminho);
+    });
+  });
 
   document.getElementById('lista-banners').addEventListener('click', function (e) {
     var mover = e.target.closest('[data-mover]');

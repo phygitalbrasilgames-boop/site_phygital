@@ -172,11 +172,21 @@
                 </div>
                 <div class="campo">
                   <label for="anexo">Anexo (opcional)</label>
-                  <input type="file" id="anexo" name="anexo">
-                  <p class="campo__ajuda">Anexos são enviados junto com o e-mail de notificação.</p>
+                  <input type="file" id="anexo" name="anexo" accept="image/png,image/jpeg,image/webp,image/gif">
+                  <p class="campo__ajuda">
+                    PNG, JPG, WEBP ou GIF até 5 MB. O arquivo fica guardado no protocolo e vira um
+                    link na conversa — o e-mail de aviso não leva o arquivo junto.
+                  </p>
+                </div>
+                <div class="campo" id="envio" role="status" aria-live="polite" hidden>
+                  <span class="txt-peq txt-suave" id="envio-texto">Enviando o arquivo…</span>
+                  <div class="barra-ocupacao mt-2"><i id="envio-barra" style="width:0%"></i></div>
+                  <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="envio-remover" hidden>
+                    Remover anexo
+                  </button>
                 </div>
                 <div class="flex-fim">
-                  <button type="submit" class="btn btn--primario">Enviar resposta</button>
+                  <button type="submit" class="btn btn--primario" id="btn-responder">Enviar resposta</button>
                 </div>
               </form>
             </div>
@@ -260,6 +270,22 @@
     { de: 'sistema', texto: 'Chamado recebido — protocolo ' + ch.protocolo + '. Status: ' + st.rotulo + '.', hora: ch.abertoEm }
   ];
 
+  /* O anexo viaja DENTRO do texto da mensagem porque chamado_mensagens só tem a
+     coluna `texto`: qualquer campo extra posto no objeto da mensagem some na
+     releitura que PB.dados.atualizarChamado faz do servidor. O marcador é
+     gravado por esta tela e pela do competidor no mesmo formato, e aqui volta a
+     ser um link. O caminho é restrito a letras, números, ponto, hífen e
+     sublinhado — é o nome que /api/upload devolve, e limitá-lo aqui garante que
+     nada de dentro da mensagem escape para o href. */
+  var MARCA_ANEXO = /\[anexo:\s([^\]]*?)\s—\s(assets\/enviados\/[A-Za-z0-9._-]+)\]/g;
+
+  function corpoDaMensagem(texto) {
+    return esc(texto).replace(MARCA_ANEXO, function (tudo, nome, caminho) {
+      return '<a href="../' + caminho + '" target="_blank" rel="noopener" ' +
+             'style="color:var(--verde);font-weight:600">Anexo: ' + nome + '</a>';
+    });
+  }
+
   $('#conversa').innerHTML = msgs.map(function (m) {
     if (m.de === 'sistema') {
       return '<div class="msg msg--sistema">' + esc(m.texto) + '<div class="msg__hora">' + esc(m.hora) + '</div></div>';
@@ -267,7 +293,7 @@
     var org = m.de === 'org';
     return '<div class="msg msg--' + (org ? 'org' : 'usuario') + '">' +
       '<div class="msg__autor">' + esc(m.autor || (org ? 'Organização Phygital' : ch.time)) + '</div>' +
-      esc(m.texto) +
+      corpoDaMensagem(m.texto) +
       '<div class="msg__hora">' + esc(m.hora) + '</div>' +
     '</div>';
   }).join('');
@@ -302,9 +328,58 @@
            ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
+  /* ---- Anexo da resposta ----
+     O arquivo escolhido sobe para POST /api/upload por PB.enviarArquivo e o que
+     fica gravado é o caminho devolvido. Antes o arquivo era descartado e só o
+     nome entrava no texto: a conversa dizia "[anexo: laudo.png]" e não havia
+     laudo nenhum para abrir. */
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    $('#envio').hidden = false;
+    $('#envio-texto').textContent = texto;
+    $('#envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#envio').hidden = true;
+    $('#envio-barra').style.width = '0%';
+    $('#envio-remover').hidden = true;
+  }
+
+  /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o operador clica
+     de novo e a mesma resposta entra duas vezes no protocolo. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    var botao = $('#btn-responder');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Enviar resposta';
+  }
+
+  /* Sem back-end (demonstração estática) o helper devolve data: URL. Serve para
+     um <img src>, não para dentro do texto de uma mensagem: são centenas de
+     milhares de caracteres que apareceriam crus na conversa e ainda iriam para
+     o servidor no dia em que a demonstração virar produção. Ali fica só o nome,
+     como no protótipo. */
+  function marcaDoAnexo(nome, caminho) {
+    return /^assets\/enviados\//.test(caminho)
+      ? '\n[anexo: ' + nome + ' — ' + caminho + ']'
+      : '\n[anexo: ' + nome + ']';
+  }
+
+  /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto a
+     resposta não é gravada com o anexo e não há como desescolher o arquivo. */
+  $('#envio-remover').addEventListener('click', function () {
+    $('#anexo').value = '';
+    esconderEnvio();
+    PB.toast('Anexo removido', 'Envie a resposta de novo — agora só com o texto.', 'info');
+  });
+
   /* ---- Responder: grava a mensagem, muda o status e recarrega ---- */
   $('#form-resposta').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviando) return;
+
     var texto = $('#resposta').value.trim();
     if (!texto) {
       $('#resposta').closest('.campo').classList.add('campo--erro');
@@ -312,20 +387,53 @@
       $('#resposta').focus();
       return;
     }
+
+    function gravar(marca) {
+      D.atualizarChamado(ch.protocolo, {
+        status: 'respondido',
+        atualizadoEm: agora(),
+        mensagem: {
+          de: 'org', autor: 'Organização Phygital',
+          texto: texto + marca,
+          hora: agora()
+        }
+      });
+      D.registrar('chamado', ch.protocolo, 'respondeu', ch.time + ' · ' + ch.assunto);
+      PB.toast('Resposta enviada',
+        'O chamado passou para "Respondido" e um e-mail foi disparado ao responsável.', 'info');
+      PB.recarregar();
+    }
+
     var anexo = $('#anexo').files[0];
-    D.atualizarChamado(ch.protocolo, {
-      status: 'respondido',
-      atualizadoEm: agora(),
-      mensagem: {
-        de: 'org', autor: 'Organização Phygital',
-        texto: texto + (anexo ? ' [anexo: ' + anexo.name + ']' : ''),
-        hora: agora()
+    if (!anexo) { gravar(''); return; }
+
+    travarEnvio(true);
+    PB.enviarArquivo(anexo, {
+      classe: 'imagem',
+      /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
+         que a tela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + anexo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + anexo.name + '…', pct);
       }
+    }, function (r) {
+      travarEnvio(false);
+
+      if (r.cancelado) { esconderEnvio(); return; }
+
+      if (!r.ok) {
+        /* Nada é gravado: o protocolo ficaria com um link para um arquivo que
+           não existe. O texto continua na tela para reenviar ou tirar o anexo. */
+        mostrarEnvio(r.erro, 0);
+        $('#envio-remover').hidden = false;
+        PB.toast('O anexo não subiu', r.erro, 'erro');
+        return;
+      }
+
+      esconderEnvio();
+      gravar(marcaDoAnexo(anexo.name, r.caminho));
     });
-    D.registrar('chamado', ch.protocolo, 'respondeu', ch.time + ' · ' + ch.assunto);
-    PB.toast('Resposta enviada',
-      'O chamado passou para "Respondido" e um e-mail foi disparado ao responsável.', 'info');
-    PB.recarregar();
   });
 
   /* ---- Alterar o status manualmente ---- */

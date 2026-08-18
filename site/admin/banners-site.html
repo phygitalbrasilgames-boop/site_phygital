@@ -462,20 +462,15 @@
      público, que é o que fica gravado no banner. Antes desta tela nada subia:
      a imagem escolhida era descartada e o vídeo virava URL.createObjectURL —
      um blob que só existe naquela aba e morre no recarregamento.
+
+     Quem sobe é PB.enviarArquivo, em assets/js/phygital.js: são dez telas com
+     <input type="file"> e uma cópia da rotina em cada uma divergiria no
+     primeiro ajuste. Fica aqui só o que é desta tela — a barra, o botão
+     travado e o cancelamento ao fechar a janela.
      ---------------------------------------------------------------------- */
 
   var enviando = false;
   var envioAtual = null;
-
-  /* Sem back-end o arquivo tem de caber no localStorage junto com o resto dos
-     dados, e o teto do navegador é de poucos megabytes. */
-  var TETO_SEM_SERVIDOR = 1.5 * 1024 * 1024;
-
-  function tamanhoLegivel(bytes) {
-    return bytes >= 1024 * 1024
-      ? (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB'
-      : Math.round(bytes / 1024) + ' KB';
-  }
 
   function mostrarEnvio(texto, pct) {
     $('#b-envio').hidden = false;
@@ -497,60 +492,12 @@
     botao.textContent = travado ? 'Enviando…' : 'Salvar banner';
   }
 
-  /* XMLHttpRequest e não fetch: só o XHR informa quanto do arquivo já subiu, e
-     um vídeo de 30 MB sobe por um bom tempo. `aoTerminar` recebe sempre
-     { ok: true, caminho } ou { ok: false, erro } — nunca lança. */
-  function enviarArquivo(arquivo, aoTerminar) {
-    if (D.modo() !== 'api') { guardarSemServidor(arquivo, aoTerminar); return; }
-
-    var req = new XMLHttpRequest();
-    var pacote = new FormData();
-    pacote.append('arquivo', arquivo, arquivo.name);
-
-    req.open('POST', '/api/upload', true);
-    req.setRequestHeader('Accept', 'application/json');
-
-    req.upload.addEventListener('progress', function (e) {
-      if (!e.lengthComputable) return;
-      var pct = Math.round((e.loaded / e.total) * 100);
-      mostrarEnvio('Enviando ' + arquivo.name + ' — ' + pct + '%', pct);
-    });
-
-    req.addEventListener('load', function () {
-      var resposta = null;
-      try { resposta = JSON.parse(req.responseText); } catch (err) { resposta = null; }
-
-      if (req.status >= 200 && req.status < 300 && resposta && resposta.caminho) {
-        aoTerminar({ ok: true, caminho: resposta.caminho });
-        return;
-      }
-      aoTerminar({
-        ok: false,
-        erro: (resposta && resposta.erro) ||
-              'O servidor recusou o arquivo (HTTP ' + req.status + ').'
-      });
-    });
-
-    req.addEventListener('error', function () {
-      envioAtual = null;
-      aoTerminar({ ok: false, erro: 'A conexão caiu durante o envio. Tente de novo.' });
-    });
-    /* Cancelamento é decisão do admin, não falha: quem chama já limpou a tela e
-       não tem nada a avisar. */
-    req.addEventListener('abort', function () { aoTerminar({ cancelado: true }); });
-    req.addEventListener('loadend', function () { envioAtual = null; });
-
-    envioAtual = req;
-    mostrarEnvio('Preparando o envio de ' + arquivo.name + '…', 0);
-    req.send(pacote);
-  }
-
   /* Fechar a janela no meio do envio (botão Cancelar, clique fora ou Esc) corta
      o envio. Sem isto o arquivo continuaria subindo e o banner seria gravado
      depois de o admin ter desistido. */
   function cancelarEnvio() {
     if (!envioAtual) return;
-    envioAtual.abort();
+    envioAtual.cancelar();
     envioAtual = null;
     travarSalvar(false);
     esconderEnvio();
@@ -564,26 +511,6 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') cancelarEnvio();
   });
-
-  /* Demonstração estática (GitHub Pages, file://): não há para onde subir, então
-     o arquivo vira data: URL. Não é bonito, mas sobrevive ao recarregamento —
-     que é justamente o que o blob: de antes não fazia. */
-  function guardarSemServidor(arquivo, aoTerminar) {
-    if (arquivo.size > TETO_SEM_SERVIDOR) {
-      aoTerminar({
-        ok: false,
-        erro: 'Sem servidor esta tela só guarda arquivos de até 1,5 MB (este tem ' +
-              tamanhoLegivel(arquivo.size) + '). Use o link do YouTube ou publique com o back-end ligado.'
-      });
-      return;
-    }
-
-    var leitor = new FileReader();
-    mostrarEnvio('Lendo ' + arquivo.name + '…', 40);
-    leitor.onload = function () { aoTerminar({ ok: true, caminho: String(leitor.result) }); };
-    leitor.onerror = function () { aoTerminar({ ok: false, erro: 'Não foi possível ler o arquivo escolhido.' }); };
-    leitor.readAsDataURL(arquivo);
-  }
 
   /* ---- Formulário ---- */
   function midiaSelecionada() {
@@ -843,7 +770,17 @@
     if (!arquivo) { concluir(''); return; }
 
     travarSalvar(true);
-    enviarArquivo(arquivo, function (r) {
+    envioAtual = PB.enviarArquivo(arquivo, {
+      classe: arqImg ? 'imagem' : 'video',
+      /* Antes de o primeiro byte subir o progresso é 0: aí a barra aparece
+         zerada, dizendo que a janela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      envioAtual = null;
       if (r.cancelado) return;          /* cancelarEnvio() já destravou a tela */
 
       travarSalvar(false);

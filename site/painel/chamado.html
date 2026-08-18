@@ -37,6 +37,11 @@
 
   .conversa-wrap { max-height: 560px; overflow-y: auto; padding: var(--e-4); }
 
+  /* .vagas__barra é flex:1 no painel.css, feita para viver numa linha ao lado
+     do rótulo; aqui ela ocupa a largura toda, embaixo do texto do envio. */
+  #resp-envio { margin-top: var(--e-2); }
+  #resp-envio .vagas__barra { display: block; width: 100%; margin-top: 6px; }
+
   /* Em telas estreitas a ação do topo desce para a segunda linha */
   @media (max-width: 640px) {
     .painel__topo { flex-wrap: wrap; }
@@ -166,10 +171,18 @@
                     <div class="upload" data-upload aria-describedby="rot-anexo-resp">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--cinza)"><path d="M21 12.5V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h6"/><path d="M16 3h5v5M21 3l-9 9"/></svg>
                       <span class="upload__titulo">Arraste um arquivo ou clique para escolher</span>
-                      <span class="upload__specs">PDF, JPG ou PNG até 5 MB</span>
+                      <span class="upload__specs">PNG, JPG, WEBP ou GIF até 5 MB — foto do atestado, comprovante ou print do erro</span>
                       <button class="btn btn--contorno btn--pequeno" type="button">Escolher arquivo</button>
                       <span class="txt-micro txt-suave" data-upload-nome>Nenhum arquivo selecionado</span>
-                      <input type="file" id="resp-anexo" name="anexo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                      <input type="file" id="resp-anexo" name="anexo"
+                             accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                    </div>
+                    <div id="resp-envio" role="status" aria-live="polite" hidden>
+                      <span class="txt-micro txt-suave" id="resp-envio-texto">Enviando o arquivo…</span>
+                      <span class="vagas__barra"><i id="resp-envio-barra" style="width:0%"></i></span>
+                      <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="resp-envio-remover" hidden>
+                        Remover anexo
+                      </button>
                     </div>
                   </div>
 
@@ -338,6 +351,22 @@
     '<div><dt>Última atualização</dt><dd class="num" id="ch-ficha-atualizado">' + esc(F.data(c.atualizadoEm)) + '</dd></div>' +
     '<div><dt>Aberto por</dt><dd>' + esc(c.autor || usuario.nome) + '</dd></div>';
 
+  /* O anexo viaja DENTRO do texto da mensagem porque chamado_mensagens só tem a
+     coluna `texto`: qualquer campo extra posto no objeto da mensagem some na
+     releitura que PB.dados.atualizarChamado faz do servidor. O marcador é
+     gravado por esta tela e pela do administrador no mesmo formato, e aqui volta
+     a ser um link. O caminho é restrito a letras, números, ponto, hífen e
+     sublinhado — é o nome que /api/upload devolve, e limitá-lo aqui garante que
+     nada de dentro da mensagem escape para o href. */
+  var MARCA_ANEXO = /\[anexo:\s([^\]]*?)\s—\s(assets\/enviados\/[A-Za-z0-9._-]+)\]/g;
+
+  function corpoDaMensagem(texto) {
+    return esc(texto).replace(MARCA_ANEXO, function (tudo, nome, caminho) {
+      return '<a href="../' + caminho + '" target="_blank" rel="noopener" ' +
+             'style="color:var(--verde);font-weight:600">Anexo: ' + nome + '</a>';
+    });
+  }
+
   /* ---- Conversa, na ordem cronológica dos dados ---- */
   function bloco(m) {
     if (m.de === 'sistema') {
@@ -348,7 +377,7 @@
     var org = m.de === 'org';
     return '<div class="msg ' + (org ? 'msg--org' : 'msg--usuario') + '">' +
       '<div class="msg__autor">' + esc(m.autor || (org ? 'Organização Phygital' : usuario.nome)) + '</div>' +
-      '<div>' + esc(m.texto) + '</div>' +
+      '<div>' + corpoDaMensagem(m.texto) + '</div>' +
       (m.hora ? '<div class="msg__hora">' + esc(m.hora) + '</div>' : '') +
     '</div>';
   }
@@ -432,14 +461,65 @@
     });
   }
 
+  /* ---- Anexo da resposta ----
+     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o que fica
+     gravado é o caminho devolvido. Antes o arquivo era descartado sem nem
+     aparecer na conversa: o competidor anexava o atestado e a organização
+     recebia só o texto. */
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    document.getElementById('resp-envio').hidden = false;
+    document.getElementById('resp-envio-texto').textContent = texto;
+    document.getElementById('resp-envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    document.getElementById('resp-envio').hidden = true;
+    document.getElementById('resp-envio-barra').style.width = '0%';
+    document.getElementById('resp-envio-remover').hidden = true;
+  }
+
+  /* O botão tem ícone: trocar o texto apagaria o SVG, então só desabilita — o
+     recado de andamento é da barra. Travar evita a resposta entrar duas vezes
+     no protocolo por dois cliques. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    document.querySelector('#form-resposta button[type="submit"]').disabled = travado;
+  }
+
+  /* Sem back-end (demonstração estática) o helper devolve data: URL. Serve para
+     um <img src>, não para dentro do texto de uma mensagem: são centenas de
+     milhares de caracteres que apareceriam crus na conversa e ainda iriam para
+     o servidor no dia em que a demonstração virar produção. Ali fica só o nome,
+     como no protótipo. */
+  function marcaDoAnexo(nome, caminho) {
+    return /^assets\/enviados\//.test(caminho)
+      ? '\n[anexo: ' + nome + ' — ' + caminho + ']'
+      : '\n[anexo: ' + nome + ']';
+  }
+
   /* ---- Envio de resposta (registrado depois da validação do phygital.js) ---- */
   PB.aoIniciar = function () {
     if (encerrado) return;
     var form = document.getElementById('form-resposta');
 
+    /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto a
+       resposta não é gravada com o anexo e não há como desescolher o arquivo.
+       O botão fica FORA da área .upload de propósito — lá dentro qualquer
+       clique reabre o seletor de arquivo. */
+    document.getElementById('resp-envio-remover').addEventListener('click', function () {
+      document.getElementById('resp-anexo').value = '';
+      var rotulo = form.querySelector('[data-upload-nome]');
+      if (rotulo) rotulo.textContent = 'Nenhum arquivo selecionado';
+      esconderEnvio();
+      PB.toast('Anexo removido', 'Envie a resposta de novo — agora só com o texto.', 'info');
+    });
+
     form.addEventListener('submit', function (e) {
       if (e.defaultPrevented) return;
       e.preventDefault();
+      if (enviando) return;
 
       var texto = document.getElementById('resp-texto').value;
       var agora = new Date();
@@ -449,36 +529,72 @@
                     String(agora.getHours()).padStart(2, '0') + ':' +
                     String(agora.getMinutes()).padStart(2, '0');
 
-      var conversa = document.getElementById('ch-conversa');
-      conversa.insertAdjacentHTML('beforeend',
-        bloco({ de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }) +
-        bloco({ de: 'sistema', texto: 'Resposta registrada no protocolo ' + c.protocolo + '. Status: Em andamento.', hora: carimbo })
-      );
+      function gravar(marca) {
+        var completo = texto + marca;
 
-      var qtd = conversa.querySelectorAll('.msg').length;
-      document.getElementById('ch-qtd-msg').textContent = qtd + ' mensagens no protocolo';
-      document.getElementById('ch-ficha-status').innerHTML = tag('andamento');
-      document.getElementById('ch-tag-topo').innerHTML = tag('andamento');
-      document.getElementById('ch-ficha-atualizado').textContent = F.data(
-        agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
-      );
-      renderTimeline('andamento');
+        var conversa = document.getElementById('ch-conversa');
+        conversa.insertAdjacentHTML('beforeend',
+          bloco({ de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }) +
+          bloco({ de: 'sistema', texto: 'Resposta registrada no protocolo ' + c.protocolo + '. Status: Em andamento.', hora: carimbo })
+        );
 
-      /* Grava de verdade: a mensagem e o novo status ficam salvos e a
-         organização vê a resposta na fila de atendimento. */
-      D.atualizarChamado(c.protocolo, {
-        status: 'andamento',
-        atualizadoEm: carimbo,
-        mensagem: { de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }
+        var qtd = conversa.querySelectorAll('.msg').length;
+        document.getElementById('ch-qtd-msg').textContent = qtd + ' mensagens no protocolo';
+        document.getElementById('ch-ficha-status').innerHTML = tag('andamento');
+        document.getElementById('ch-tag-topo').innerHTML = tag('andamento');
+        document.getElementById('ch-ficha-atualizado').textContent = F.data(
+          agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
+        );
+        renderTimeline('andamento');
+
+        /* Grava de verdade: a mensagem e o novo status ficam salvos e a
+           organização vê a resposta na fila de atendimento. */
+        D.atualizarChamado(c.protocolo, {
+          status: 'andamento',
+          atualizadoEm: carimbo,
+          mensagem: { de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }
+        });
+
+        form.reset();
+        var nomeArquivo = form.querySelector('[data-upload-nome]');
+        if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
+
+        PB.toast('Resposta enviada',
+          'Sua mensagem entrou no protocolo ' + c.protocolo + '. A organização foi notificada por e-mail.', 'info');
+        PB.recarregar();
+      }
+
+      var anexo = document.getElementById('resp-anexo').files[0];
+      if (!anexo) { gravar(''); return; }
+
+      travarEnvio(true);
+      PB.enviarArquivo(anexo, {
+        classe: 'imagem',
+        /* Antes do primeiro byte o progresso é 0: a barra aparece zerada,
+           dizendo que a tela não travou. */
+        aoProgresso: function (pct) {
+          mostrarEnvio(pct > 0
+            ? 'Enviando ' + anexo.name + ' — ' + pct + '%'
+            : 'Preparando o envio de ' + anexo.name + '…', pct);
+        }
+      }, function (r) {
+        travarEnvio(false);
+
+        if (r.cancelado) { esconderEnvio(); return; }
+
+        if (!r.ok) {
+          /* Nada é gravado: o protocolo ficaria com um link para um arquivo que
+             não existe. O texto continua na tela para reenviar ou tirar o
+             anexo. */
+          mostrarEnvio(r.erro, 0);
+          document.getElementById('resp-envio-remover').hidden = false;
+          PB.toast('O anexo não subiu', r.erro, 'erro');
+          return;
+        }
+
+        esconderEnvio();
+        gravar(marcaDoAnexo(anexo.name, r.caminho));
       });
-
-      form.reset();
-      var nomeArquivo = form.querySelector('[data-upload-nome]');
-      if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
-
-      PB.toast('Resposta enviada',
-        'Sua mensagem entrou no protocolo ' + c.protocolo + '. A organização foi notificada por e-mail.', 'info');
-      PB.recarregar();
     });
   };
 })();
