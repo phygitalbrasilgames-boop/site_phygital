@@ -57,15 +57,18 @@ const PERMISSAO = 'banners:escrever';
    TETOS
 
    Separados por classe: 5 MB basta para a imagem de um hero e não deixa a
-   folga de vídeo virar porta de entrada para encher o disco com PNG. O PDF
-   fica no meio — RG digitalizado e atestado costumam passar de 5 MB quando o
-   celular escaneia em alta resolução, e regulamento com tabela e imagem
-   também.
+   folga de vídeo virar porta de entrada para encher o disco com PNG. O
+   documento é o mais alto porque é o único que o operador manda de fora com
+   frequência — regulamento com tabelas e imagens, Word institucional com
+   fotos embutidas e anexo de e-mail passam de 50 MB sem esforço; 100 MB é o
+   pedido do briefing e cobre com folga. O vídeo continua em 50 MB: quem quer
+   filme longo sobe para o YouTube e cola o link, é como o banner de vídeo já
+   funciona.
    -------------------------------------------------------------------------- */
 
 const TETOS = {
   imagem: 5 * 1024 * 1024,
-  documento: 10 * 1024 * 1024,
+  documento: 100 * 1024 * 1024,
   video: 50 * 1024 * 1024
 };
 
@@ -114,6 +117,18 @@ const marca = (b, inicio, texto) =>
 const bytes = (b, inicio, ...esperados) =>
   b.length >= inicio + esperados.length
   && esperados.every((v, i) => b[inicio + i] === v);
+
+/* Procura um trecho ASCII SÓ nos primeiros `ate` bytes. Serve para descobrir
+   que o ZIP é DOCX (marca 'word/') ou ODT (marca 'opendocument.text') sem
+   descompactar nada — os nomes dos arquivos internos aparecem em texto plano
+   nos cabeçalhos locais do ZIP, logo depois do PK, e sempre bem no começo.
+
+   subarray corta a busca: sem isso, indexOf varreria um arquivo de 100 MB
+   inteiro procurando a palavra em toda parte, o que abriria uma via barata
+   para atrasar o servidor com um ZIP grande sem marcador. */
+function contem(b, texto, ate = 4096) {
+  return b.subarray(0, ate).indexOf(Buffer.from(texto, 'latin1')) >= 0;
+}
 
 const ASSINATURAS = [
   {
@@ -171,6 +186,39 @@ const ASSINATURAS = [
     tipo: 'application/pdf',
     classe: 'documento',
     casa: (b) => marca(b, 0, '%PDF-')
+  },
+  {
+    /* Word 2007+ (.docx). O arquivo é um ZIP, então começa com PK\x03\x04, e
+       o mesmo prefixo pertence a qualquer outro ZIP — .apk, .jar, .odt, ZIP
+       vazio genérico. O que distingue o DOCX é a pasta 'word/' logo depois,
+       nos primeiros cabeçalhos locais do arquivo compactado; o próprio
+       [Content_Types].xml também aparece em texto plano ali no começo, mas
+       basta 'word/' para separar de ODT e de ZIP arbitrário. */
+    ext: '.docx',
+    tipo: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    classe: 'documento',
+    casa: (b) => bytes(b, 0, 0x50, 0x4b, 0x03, 0x04) && contem(b, 'word/')
+  },
+  {
+    /* Word 97-2003 (.doc). É um OLE Compound File — a mesma assinatura de
+       .xls, .ppt e .msi antigos. Distinguir com precisão exigiria abrir o
+       diretório root do OLE e ler o CLSID; para o caso do dono (que sobe o
+       próprio arquivo) o risco é baixo. Fica a limitação registrada: um XLS
+       antigo enviado como .doc entra, e vale exatamente o mesmo tratamento
+       de download forçado que o PDF ganha. */
+    ext: '.doc',
+    tipo: 'application/msword',
+    classe: 'documento',
+    casa: (b) => bytes(b, 0, 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1)
+  },
+  {
+    /* OpenDocument Text (.odt). Mesmo prefixo do DOCX: ZIP com o marcador
+       'opendocument.text' dentro do arquivo interno 'mimetype', que fica bem
+       no começo do ZIP quando o gerador segue a especificação. */
+    ext: '.odt',
+    tipo: 'application/vnd.oasis.opendocument.text',
+    classe: 'documento',
+    casa: (b) => bytes(b, 0, 0x50, 0x4b, 0x03, 0x04) && contem(b, 'opendocument.text')
   }
 ];
 
@@ -179,8 +227,8 @@ function reconhecer(dados) {
   if (!achada) {
     throw erro400(
       'Formato não aceito. Envie imagem (PNG, JPEG, WEBP ou GIF), vídeo (MP4 ou WEBM) '
-      + 'ou documento em PDF. O conteúdo do arquivo é conferido byte a byte, então '
-      + 'renomear a extensão não resolve.'
+      + 'ou documento (PDF, Word .docx/.doc ou OpenDocument .odt). O conteúdo do '
+      + 'arquivo é conferido byte a byte, então renomear a extensão não resolve.'
     );
   }
   return achada;

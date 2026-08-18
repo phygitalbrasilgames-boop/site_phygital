@@ -602,10 +602,11 @@
 
     var v = sel.value;
     var destino, qtd;
+    var listaManual = null;
     if (v === 'lista') {
-      var lista = emailsDaLista();
-      if (!lista.length) { PB.toast('Lista vazia', 'Informe ao menos um e-mail válido.', 'alerta'); return; }
-      destino = 'Lista manual'; qtd = lista.length;
+      listaManual = emailsDaLista();
+      if (!listaManual.length) { PB.toast('Lista vazia', 'Informe ao menos um e-mail válido.', 'alerta'); return; }
+      destino = 'Lista manual'; qtd = listaManual.length;
     } else {
       var alvo = v === 'todos' ? todosCamp
                : v === 'abertos' ? abertos
@@ -623,7 +624,6 @@
        relido: sem a linha, nada foi entregue. */
     function saiu(id) {
       if (D.modo() !== 'api') return true;            /* demonstração: não há servidor a consultar */
-      if (destino === 'Lista manual') return false;   /* sem rota: o servidor só conhece responsáveis inscritos */
       return D.emailsEnviados().some(function (e) { return e.id === id; });
     }
 
@@ -636,6 +636,9 @@
               ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
         status: 'entregue', corpo: corpo, anexos: anexos
       };
+      /* Lista manual: os endereços viajam junto para o dispatcher da API. Ficam
+         no registro só na ida — dados.js apaga o campo depois da gravação. */
+      if (listaManual) registro.destinatarios = listaManual;
 
       D.gravar('emailsEnviados', registro);
 

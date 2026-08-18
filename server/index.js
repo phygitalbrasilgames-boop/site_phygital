@@ -55,6 +55,9 @@ const TIPOS = {
   '.webm': 'video/webm',
   '.woff2': 'font/woff2',
   '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.odt': 'application/vnd.oasis.opendocument.text',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   '.zip': 'application/zip'
 };
@@ -106,7 +109,7 @@ rotas.get('/api/_saude', async (ctx) => ctx.ok({
    -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
-   PDF ENVIADO POR USUÁRIO
+   DOCUMENTO ENVIADO POR USUÁRIO
 
    PDF é formato executável: o visualizador embutido do navegador roda o
    JavaScript que o arquivo carrega, e roda NA NOSSA ORIGEM — o que dá a ele o
@@ -114,15 +117,19 @@ rotas.get('/api/_saude', async (ctx) => ctx.ok({
    é liberado para qualquer conta autenticada (server/rotas/upload.js), o PDF
    que chega vem de fora e não pode abrir embutido.
 
-   Content-Disposition: attachment tira o arquivo desse contexto: o navegador
-   entrega o download e não abre visualizador nenhum. Vale só para
-   assets/enviados/ — PDF do próprio repositório é conteúdo nosso.
+   Vale a mesma cautela para Word (.doc/.docx) e ODT: um .docm ou macro em
+   Word entregue como .doc é vetor conhecido de execução, e o navegador que
+   integra com Office tenta abrir direto. Content-Disposition: attachment tira
+   qualquer um deles desse contexto — vai como download, e o operador decide
+   se abre. Vale só para assets/enviados/ — arquivo do próprio repositório é
+   conteúdo nosso.
 
    A comparação é feita no caminho JÁ RESOLVIDO, não no texto da URL: com o
    texto, '/assets/x/../enviados/isso.pdf' chegaria ao mesmo arquivo sem casar
    com o prefixo, e sairia embutido.
    -------------------------------------------------------------------------- */
 const PASTA_ENVIADOS = path.join(ESTATICOS, 'assets', 'enviados') + path.sep;
+const EXTENSOES_BAIXAR = new Set(['.pdf', '.doc', '.docx', '.odt']);
 
 function servirEstatico(req, res, caminhoUrl) {
   let relativo = decodeURIComponent(caminhoUrl);
@@ -143,7 +150,7 @@ function servirEstatico(req, res, caminhoUrl) {
       return;
     }
     const extensao = path.extname(alvo).toLowerCase();
-    const baixarSempre = extensao === '.pdf' && alvo.startsWith(PASTA_ENVIADOS);
+    const baixarSempre = EXTENSOES_BAIXAR.has(extensao) && alvo.startsWith(PASTA_ENVIADOS);
 
     res.writeHead(200, {
       'Content-Type': TIPOS[extensao] || 'application/octet-stream',

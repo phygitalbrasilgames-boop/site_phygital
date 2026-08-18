@@ -640,7 +640,11 @@
   /* Os mesmos tetos de server/rotas/upload.js. Conferir aqui não substitui a
      conferência do servidor: evita gastar a subida inteira de um arquivo que
      vai levar 413 no fim. Só vale quando a tela informa `classe`. */
-  var TETOS_ENVIO = { imagem: 5 * 1024 * 1024, video: 50 * 1024 * 1024 };
+  var TETOS_ENVIO = {
+    imagem: 5 * 1024 * 1024,
+    documento: 100 * 1024 * 1024,
+    video: 50 * 1024 * 1024
+  };
 
   /* Sem back-end o arquivo tem de caber no localStorage junto com o resto dos
      dados, e o teto do navegador é de poucos megabytes. */
@@ -725,8 +729,11 @@
 
     var teto = TETOS_ENVIO[op.classe];
     if (teto && arquivo.size > teto) {
+      var comeco = op.classe === 'video' ? 'O vídeo tem '
+        : op.classe === 'documento' ? 'O documento tem '
+        : 'A imagem tem ';
       return envioRecusado(pronto,
-        (op.classe === 'video' ? 'O vídeo tem ' : 'A imagem tem ') + tamanhoLegivel(arquivo.size) +
+        comeco + tamanhoLegivel(arquivo.size) +
         ' e o limite é ' + tamanhoLegivel(teto) + '.');
     }
 

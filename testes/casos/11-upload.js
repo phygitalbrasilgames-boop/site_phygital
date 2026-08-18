@@ -68,6 +68,43 @@ const pdf = (recheio = 512) => Buffer.concat([
   Buffer.from('\n%%EOF\n', 'latin1')
 ]);
 
+/** DOCX: ZIP com a marca 'word/' no começo. Um ZIP mínimo, sem descompactar
+    de verdade — o servidor só olha os bytes iniciais. */
+const docx = (recheio = 256) => Buffer.concat([
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]),         /* PK\x03\x04 */
+  Buffer.from([0x14, 0x00, 0x00, 0x00, 0x08, 0x00]),
+  Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+  Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+  Buffer.from([0x13, 0x00, 0x00, 0x00]),         /* nome com 19 bytes */
+  Buffer.from('word/document.xml', 'latin1'),
+  Buffer.alloc(recheio, 0x30)
+]);
+
+/** DOC: OLE Compound File — 8 bytes D0 CF 11 E0 A1 B1 1A E1. */
+const doc = (recheio = 512) => Buffer.concat([
+  Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+  Buffer.alloc(recheio, 0x00)
+]);
+
+/** ODT: ZIP com 'opendocument.text' no começo (dentro de 'mimetype'). */
+const odt = (recheio = 256) => Buffer.concat([
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+  Buffer.from([0x14, 0x00, 0x00, 0x00, 0x00, 0x00]),
+  Buffer.alloc(20, 0x00),
+  Buffer.from('mimetypeapplication/vnd.oasis.opendocument.text', 'latin1'),
+  Buffer.alloc(recheio, 0x30)
+]);
+
+/** ZIP genérico: PK\x03\x04 sem marcador de DOCX ou ODT. Serve para provar
+    que um .zip solto (renomeado ou não) não passa como Word. */
+const zipGenerico = (recheio = 256) => Buffer.concat([
+  Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+  Buffer.from([0x14, 0x00, 0x00, 0x00, 0x08, 0x00]),
+  Buffer.alloc(20, 0x00),
+  Buffer.from('README.txt', 'latin1'),
+  Buffer.alloc(recheio, 0x40)
+]);
+
 /* --------------------------------------------------------------------------
    MULTIPART
 
@@ -302,18 +339,99 @@ describe('envio de arquivo', () => {
     assert.ok(upload.TETOS.video > upload.TETOS.imagem);
   });
 
-  it('PDF acima de 10 MB é recusado', async () => {
-    assert.equal(upload.TETOS.documento, 10 * 1024 * 1024);
-
-    const gordo = Buffer.concat([pdf(), Buffer.alloc(upload.TETOS.documento, 0x20)]);
-
-    const r = await enviarFormulario(mestre, gordo, 'regulamento-enorme.pdf', 'application/pdf');
-    assert.equal(r.status, 413);
-
-    /* O teto do documento fica ENTRE imagem e vídeo: RG escaneado pelo celular
-       passa de 5 MB com facilidade, mas 50 MB de folga é depósito. */
+  it('documento acima de 100 MB é recusado; o de 100 MB no limite entra', async () => {
+    assert.equal(upload.TETOS.documento, 100 * 1024 * 1024);
+    /* O teto de documento agora é o maior: Word institucional com fotos
+       embutidas e regulamento com tabelas passam de 50 MB com facilidade. */
     assert.ok(upload.TETOS.documento > upload.TETOS.imagem);
-    assert.ok(upload.TETOS.documento < upload.TETOS.video);
+    assert.ok(upload.TETOS.documento > upload.TETOS.video);
+
+    /* 101 MB — um byte além do teto, recusado. Vale tanto no envelope
+       multipart quanto no corpo cru: quem estoura o teto sai em 413. */
+    const acima = Buffer.concat([pdf(), Buffer.alloc(upload.TETOS.documento + 1, 0x20)]);
+    const recusado = await enviarFormulario(mestre, acima, 'demais.pdf', 'application/pdf');
+    assert.equal(recusado.status, 413);
+
+    /* 100 MB cravado — cabe. A conferência é feita pelo corpo binário cru
+       porque o multipart adiciona algumas centenas de bytes de envelope, e
+       um arquivo exatamente no teto sairia como 413 pelo total do envelope
+       antes de o analisador ver o tamanho real do anexo. Corpo cru é o
+       formato que o fetch() do painel usa. */
+    const cheio = Buffer.concat([
+      pdf(),
+      Buffer.alloc(upload.TETOS.documento - pdf().length, 0x20)
+    ]);
+    assert.equal(cheio.length, upload.TETOS.documento);
+    const noLimite = await enviarCru(mestre, cheio, 'application/pdf', 'no-limite.pdf');
+    assert.equal(noLimite.status, 200, 'PDF cravado no teto ainda entra');
+    criados.push(noLimite.corpo.nome);
+    assert.equal(noLimite.corpo.tamanho, upload.TETOS.documento);
+  });
+
+  it('Word .docx entra como documento e sai obrigatoriamente como download', async () => {
+    const r = await enviarFormulario(
+      mestre, docx(), 'regulamento-2026.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    );
+
+    assert.equal(r.status, 200);
+    assert.equal(r.corpo.classe, 'documento');
+    assert.equal(r.corpo.tipo,
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    criados.push(r.corpo.nome);
+    assert.match(r.corpo.caminho, /^assets\/enviados\/[0-9a-f-]{36}\.docx$/);
+
+    /* Mesmo tratamento do PDF: um .docm entregue como .docx é vetor de
+       execução — Content-Disposition: attachment tira o arquivo do
+       navegador. */
+    const servido = await amb.anonimo().get(`/${r.corpo.caminho}`);
+    assert.equal(servido.status, 200);
+    assert.match(String(servido.cabecalhos.get('content-disposition')), /attachment/);
+  });
+
+  it('Word .doc (formato antigo) também entra como documento', async () => {
+    const r = await enviarFormulario(mestre, doc(), 'ficha-antiga.doc', 'application/msword');
+
+    assert.equal(r.status, 200);
+    assert.equal(r.corpo.classe, 'documento');
+    assert.equal(r.corpo.tipo, 'application/msword');
+    criados.push(r.corpo.nome);
+    assert.match(r.corpo.caminho, /^assets\/enviados\/[0-9a-f-]{36}\.doc$/);
+
+    const servido = await amb.anonimo().get(`/${r.corpo.caminho}`);
+    assert.match(String(servido.cabecalhos.get('content-disposition')), /attachment/);
+  });
+
+  it('ODT (OpenDocument Text) entra como documento', async () => {
+    const r = await enviarFormulario(
+      mestre, odt(), 'ata.odt', 'application/vnd.oasis.opendocument.text'
+    );
+
+    assert.equal(r.status, 200);
+    assert.equal(r.corpo.classe, 'documento');
+    criados.push(r.corpo.nome);
+    assert.match(r.corpo.caminho, /^assets\/enviados\/[0-9a-f-]{36}\.odt$/);
+
+    const servido = await amb.anonimo().get(`/${r.corpo.caminho}`);
+    assert.match(String(servido.cabecalhos.get('content-disposition')), /attachment/);
+  });
+
+  it('ZIP genérico (PK sem marcador OOXML/OpenDocument) é recusado', async () => {
+    /* O prefixo PK\x03\x04 pertence a QUALQUER ZIP: .apk, .jar, ZIP arbitrário.
+       Deixar entrar como docx transformaria a rota em depósito de ZIP genérico
+       — o marcador 'word/' é o que separa DOCX de qualquer outro ZIP. */
+    const r = await enviarFormulario(
+      mestre, zipGenerico(), 'material.zip', 'application/zip'
+    );
+    assert.equal(r.status, 400);
+
+    /* .docx com nome mentindo (extensão .docx no zip vazio) também não entra:
+       o nome de arquivo vem do cliente e não vale nada. */
+    const disfarcado = await enviarFormulario(
+      mestre, zipGenerico(), 'quase.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    );
+    assert.equal(disfarcado.status, 400);
   });
 
   /* ------------------------------------------------------------------------

@@ -20,11 +20,11 @@ const mensagens = require('./mensagens');
 const CORPO_MAX = 2 * 1024 * 1024;      /* 2 MB para JSON */
 const CORPO_MAX_UPLOAD = 8 * 1024 * 1024; /* 8 MB quando a rota aceita arquivo */
 
-/* Envelope de POST /api/upload, e SÓ dele: vídeo de banner passa longe dos
+/* Envelope de POST /api/upload, e SÓ dele: documento e vídeo passam longe dos
    8 MB acima. É constante separada de propósito — subir CORPO_MAX_UPLOAD
-   afrouxaria junto todas as rotas que embutem foto em JSON. A sobra de 2 MB
-   sobre o teto de vídeo cobre o invólucro do multipart. */
-const CORPO_MAX_ARQUIVO = 52 * 1024 * 1024;
+   afrouxaria junto todas as rotas que embutem foto em JSON. A sobra de 1 MB
+   sobre o maior teto (documento em 100 MB) cobre o invólucro do multipart. */
+const CORPO_MAX_ARQUIVO = 101 * 1024 * 1024;
 
 /* --------------------------------------------------------------------------
    ERRO DE APLICAÇÃO
