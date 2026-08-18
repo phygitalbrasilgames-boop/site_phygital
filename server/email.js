@@ -6,10 +6,11 @@
    status, protocolo de chamado, código de verificação, disparo em massa)
    passa por enviar() daqui. Nenhum outro módulo deve falar de e-mail.
 
-   Em desenvolvimento nada sai de verdade: o envio é gravado em
+   Sem senha de SMTP no ambiente nada sai de verdade: o envio é gravado em
    emails_enviados com status='simulado' para poder ser inspecionado nos
-   testes. O envio real só é cogitado quando o ambiente diz explicitamente que
-   é produção E existe senha de SMTP configurada.
+   testes. Havendo servidor de saída configurado E PHYGITAL_SMTP_SENHA, a linha
+   nasce com status='fila' e quem transmite é server/fila-email.js, fora das
+   transações de negócio.
 
    Decisões que valem explicar:
 
@@ -254,14 +255,21 @@ function montarHtml({ assunto = '', corpo = '', anexos = [], rodape = '' } = {})
    -------------------------------------------------------------------------- */
 
 /**
- * Só tenta SMTP de verdade quando o ambiente afirma produção E há senha.
- * Fora disso o envio é simulado — é o que permite rodar os testes sem mandar
- * e-mail para pessoas reais.
+ * Decide entre entrar na fila de envio real e apenas simular.
+ *
+ * O que decide é TER COMO ENVIAR: servidor de saída na tabela smtp e senha em
+ * PHYGITAL_SMTP_SENHA. PHYGITAL_MODO não entra na conta — um servidor de
+ * homologação com credencial válida precisa mandar e-mail de verdade, e a conta
+ * de produção sem a senha no ambiente não pode fingir que mandou.
+ *
+ * Sem senha continua 'simulado', e é isso que permite rodar a suíte de testes
+ * inteira sem mandar mensagem para pessoa nenhuma.
+ *
+ * O require é tardio de propósito: fila-email.js depende deste módulo, e
+ * exigi-lo aqui em cima fecharia um ciclo de carregamento.
  */
 function statusDeEnvio() {
-  const producao = process.env.PHYGITAL_MODO === 'producao';
-  const temSenha = Boolean(process.env.PHYGITAL_SMTP_SENHA);
-  return producao && temSenha ? 'fila' : 'simulado';
+  return require('./fila-email').configuracaoSmtp().ok ? 'fila' : 'simulado';
 }
 
 /** Normaliza destinatário: aceita string, lista, ou lista separada por vírgula. */
@@ -340,14 +348,12 @@ function enviar({
     status = 'falhou';
   }
 
-  if (status === 'fila') {
-    /* PONTO DE INTEGRAÇÃO SMTP REAL.
-       O projeto não pode ganhar dependência npm e o Node não traz cliente
-       SMTP, então aqui o e-mail fica gravado como 'fila': tudo pronto
-       (destinatários, assunto, HTML final) esperando o conector. Quando ele
-       existir, é ESTE bloco que dispara e atualiza a linha para 'entregue' ou
-       'falhou' — nenhum outro lugar do sistema envia e-mail. */
-  }
+  /* PONTO DE INTEGRAÇÃO SMTP REAL.
+     A linha é gravada como 'fila' e a transmissão fica com o despachante de
+     server/fila-email.js, agendado logo abaixo do INSERT. enviar() continua
+     SÍNCRONO e continua só gravando: é chamado de dentro de db.transacao() e
+     uma sessão de SMTP presa não pode segurar o COMMIT nem, ao falhar,
+     desfazer a inscrição de um time. Nenhum outro lugar do sistema envia. */
 
   const id = 'em-' + crypto.randomUUID();
 
@@ -372,6 +378,14 @@ function enviar({
     ...colunas.map((c) => linha[c])
   );
 
+  if (status === 'fila') {
+    /* Próximo tick: o despacho começa depois que a transação desta chamada já
+       fechou e a resposta HTTP já saiu. Se o despachante estiver indisponível
+       por algum motivo, a linha simplesmente espera a próxima rodada — ela já
+       está gravada, nada se perde. */
+    try { require('./fila-email').agendar(); } catch (_) { /* fica na fila */ }
+  }
+
   return {
     ok: status !== 'falhou',
     status,
@@ -392,7 +406,7 @@ function enviar({
    INSPEÇÃO (testes e painel)
    -------------------------------------------------------------------------- */
 
-/** O que está esperando o conector SMTP real. */
+/** O que está esperando o despachante (server/fila-email.js). */
 function fila() {
   return mapa.lista(
     db.todos("SELECT * FROM emails_enviados WHERE status = 'fila' ORDER BY data"),

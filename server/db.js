@@ -36,7 +36,58 @@ function abrir() {
      toda subida mantém um banco antigo em dia sem migração manual. */
   bd.exec(fs.readFileSync(path.join(__dirname, 'esquema.sql'), 'utf8'));
 
+  migrar(bd);
+
   return bd;
+}
+
+/* --------------------------------------------------------------------------
+   MIGRAÇÃO LEVE
+
+   Justamente por ser idempotente, o esquema NÃO altera tabela que já existe:
+   'CREATE TABLE IF NOT EXISTS' com uma coluna nova é ignorado inteiro num banco
+   antigo. Quem já tinha ./dados/phygital.db ficaria sem as colunas da fila de
+   e-mail, e o despachante quebraria no primeiro UPDATE.
+
+   ALTER TABLE ADD COLUMN resolve sem apagar dado e sem passo manual. A guarda é
+   o PRAGMA table_info: SQLite não tem 'ADD COLUMN IF NOT EXISTS', e repetir o
+   ALTER numa coluna existente é erro.
+   -------------------------------------------------------------------------- */
+
+const COLUNAS_ACRESCENTADAS = [
+  /* Estado do despachante de e-mail (server/fila-email.js). */
+  ['emails_enviados', 'tentativas', 'INTEGER NOT NULL DEFAULT 0'],
+  ['emails_enviados', 'proxima_tentativa', 'TEXT'],
+  ['emails_enviados', 'enviado_em', 'TEXT']
+];
+
+/* Índices que dependem das colunas acima. Ficam aqui, e não no esquema.sql,
+   porque lá rodariam ANTES do ALTER e derrubariam a subida do banco antigo. */
+const INDICES_APOS_MIGRACAO = [
+  `CREATE INDEX IF NOT EXISTS idx_emails_fila
+     ON emails_enviados (status, proxima_tentativa)`
+];
+
+function migrar(banco) {
+  const colunasDe = new Map();
+
+  for (const [tabela, coluna, definicao] of COLUNAS_ACRESCENTADAS) {
+    if (!colunasDe.has(tabela)) {
+      /* PRAGMA não aceita parâmetro; o nome da tabela é constante deste arquivo,
+         nunca entrada de usuário, então não há caminho de injeção. */
+      colunasDe.set(tabela, new Set(
+        banco.prepare(`PRAGMA table_info(${tabela})`).all().map((c) => c.name)
+      ));
+    }
+
+    const existentes = colunasDe.get(tabela);
+    if (existentes.has(coluna)) continue;
+
+    banco.exec(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${definicao}`);
+    existentes.add(coluna);
+  }
+
+  for (const sql of INDICES_APOS_MIGRACAO) banco.exec(sql);
 }
 
 function fechar() {

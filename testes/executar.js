@@ -44,6 +44,17 @@ process.env.PHYGITAL_MODO = 'dev';          /* devolve o código de verificaçã
 process.env.PHYGITAL_ADMIN_SENHA = 'Arena2026Nacional';
 process.env.PHYGITAL_COMPETIDOR_SENHA = 'Quadra2026Digital';
 
+/* NENHUM TESTE FALA COM O SERVIDOR DE E-MAIL DE VERDADE.
+
+   É PHYGITAL_SMTP_SENHA que liga o envio real: com ela no ambiente,
+   email.enviar() deixa de simular, grava a linha como 'fila' e agenda um
+   despacho para o servidor configurado na tabela smtp — que a semente preenche
+   com o provedor de produção. Herdar essa variável do terminal de quem rodou a
+   suíte faria os testes mandarem e-mail para gente de verdade, então ela sai
+   daqui. O caso 10 põe uma senha de mentira no lugar, e só depois de apontar a
+   configuração para 127.0.0.1. */
+delete process.env.PHYGITAL_SMTP_SENHA;
+
 const { run } = require('node:test');
 const ambiente = require('./apoio/ambiente');
 

@@ -416,23 +416,36 @@ CREATE TABLE IF NOT EXISTS modelos_email (
   atualizado_em TEXT
 );
 
--- Fila/histórico de envio. Em desenvolvimento nada sai de verdade: o envio é
--- registrado com status='simulado' para poder ser inspecionado nos testes.
+-- Fila/histórico de envio. Sem senha de SMTP no ambiente nada sai de verdade:
+-- o envio fica registrado com status='simulado' para poder ser inspecionado
+-- nos testes. Com senha, a linha nasce 'fila' e quem transmite é o despachante
+-- de server/fila-email.js, que roda fora das transações de negócio.
+--
+-- tentativas/proxima_tentativa/enviado_em são o estado do despachante: quantas
+-- vezes esta linha já foi ao servidor, quando pode voltar a ser tentada depois
+-- de uma falha temporária, e quando o servidor confirmou a entrega.
 CREATE TABLE IF NOT EXISTS emails_enviados (
-  id            TEXT PRIMARY KEY,
-  modelo_id     TEXT REFERENCES modelos_email (id) ON DELETE SET NULL,
-  assunto       TEXT NOT NULL,
-  destino       TEXT,
-  para          TEXT,
-  corpo         TEXT,
-  qtd           INTEGER NOT NULL DEFAULT 1,
-  status        TEXT NOT NULL DEFAULT 'simulado'
-                  CHECK (status IN ('simulado', 'entregue', 'falhou', 'fila')),
-  erro          TEXT,
-  data          TEXT NOT NULL
+  id                TEXT PRIMARY KEY,
+  modelo_id         TEXT REFERENCES modelos_email (id) ON DELETE SET NULL,
+  assunto           TEXT NOT NULL,
+  destino           TEXT,
+  para              TEXT,
+  corpo             TEXT,
+  qtd               INTEGER NOT NULL DEFAULT 1,
+  status            TEXT NOT NULL DEFAULT 'simulado'
+                      CHECK (status IN ('simulado', 'entregue', 'falhou', 'fila')),
+  erro              TEXT,
+  data              TEXT NOT NULL,
+  tentativas        INTEGER NOT NULL DEFAULT 0,
+  proxima_tentativa TEXT,
+  enviado_em        TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_emails_data ON emails_enviados (data DESC);
+
+-- O índice da fila (status, proxima_tentativa) é criado em server/db.js, na
+-- migração leve: num banco criado antes destas colunas, este arquivo roda ANTES
+-- do ALTER TABLE e um índice sobre coluna inexistente derrubaria a subida.
 
 -- ---------------------------------------------------------------------------
 -- AUDITORIA

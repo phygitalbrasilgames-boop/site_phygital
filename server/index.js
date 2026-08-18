@@ -17,7 +17,10 @@
      PHYGITAL_DADOS           pasta do banco (padrão ./dados)
      PHYGITAL_ADMIN_SENHA     senha da conta master na primeira semeadura
      PHYGITAL_COMPETIDOR_SENHA
-     PHYGITAL_SMTP_SENHA      só usada em modo producao
+     PHYGITAL_SMTP_SENHA      liga o envio real de e-mail; sem ela, simulado
+     PHYGITAL_SMTP_CERT_INVALIDO
+                              aceita certificado próprio no SMTP (só ambiente
+                              interno; em produção derruba a proteção do TLS)
    ========================================================================== */
 'use strict';
 
@@ -28,6 +31,7 @@ const path = require('node:path');
 const db = require('./db');
 const auth = require('./auth');
 const web = require('./http');
+const filaEmail = require('./fila-email');
 
 const RAIZ = path.join(__dirname, '..');
 const ESTATICOS = path.join(RAIZ, 'site');
@@ -209,6 +213,13 @@ function subir(porta, tentativas) {
   });
 
   servidor.listen(porta, () => {
+    /* O despachante da fila de e-mail só sobe com o servidor: ele fala com o
+       SMTP fora de qualquer transação e precisa da mesma vida útil do processo.
+       Sem configuração utilizável cada rodada não faz nada, então ligar sempre
+       é seguro — e cobre o caso de a configuração ser corrigida no painel. */
+    filaEmail.iniciarDespachante({ intervaloMs: 60000 });
+    const envio = filaEmail.resumoConfiguracao();
+
     const url = `http://localhost:${porta}`;
     const linha = '─'.repeat(52);
     console.log('');
@@ -222,6 +233,11 @@ function subir(porta, tentativas) {
     console.log(`  Modo:   ${MODO}`);
     console.log(`  Banco:  ${db.ARQUIVO}`);
     console.log(`  Rotas:  ${rotas.total} em ${carregados.length} módulo(s)`);
+    /* Nunca imprimimos a configuração inteira: ela carrega a senha. */
+    console.log(envio.ok
+      ? `  E-mail: ENVIO REAL por ${envio.host}:${envio.porta}`
+        + ` (${envio.seguro ? 'TLS implícito' : 'STARTTLS'}) como ${envio.remetente}`
+      : `  E-mail: SIMULADO — ${envio.motivo}`);
     if (falhados.length) {
       console.log(`  ATENÇÃO: ${falhados.length} módulo(s) com falha:`);
       falhados.forEach((f) => console.log(`     · ${f.modulo}: ${f.erro}`));
@@ -240,6 +256,9 @@ function subir(porta, tentativas) {
 
   const encerrar = () => {
     console.log('\nEncerrando…');
+    /* Antes de fechar o banco: uma rodada em curso escreveria numa conexão
+       morta e o que estiver na fila continua lá para a próxima subida. */
+    filaEmail.pararDespachante();
     servidor.close(() => { db.fechar(); process.exit(0); });
     /* Se alguma conexão não fechar, não ficamos presos para sempre. */
     setTimeout(() => process.exit(0), 3000).unref();

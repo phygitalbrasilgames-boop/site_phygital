@@ -764,7 +764,13 @@ function emailEnviado(l) {
     qtd: l.qtd,
     status: l.status,
     erro: l.erro,
-    data: horaLegivel(l.data)
+    data: horaLegivel(l.data),
+    /* Estado do despachante (server/fila-email.js). Numa linha recém-montada,
+       que ainda não passou pelo banco, estas colunas não existem — daí os
+       padrões em vez de undefined vazando para a resposta. */
+    tentativas: Number(l.tentativas) || 0,
+    proximaTentativa: l.proxima_tentativa || null,
+    enviadoEm: l.enviado_em || null
   };
 }
 
