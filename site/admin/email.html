@@ -699,34 +699,113 @@
     '</tr>';
   }).join('');
 
+  /* Envelope mínimo usado no modo demonstração (sem servidor) para embrulhar
+     o fragmento `e.corpo` guardado no cache do navegador. No modo API o HTML
+     vem pronto do servidor (mesmo envelope de server/email.js#montarHtml),
+     então esta função só entra em cena quando não há back-end pra remontar. */
+  function envelopeLocal(assunto, corpo) {
+    var t = esc(assunto || '');
+    var c = corpo && String(corpo).trim()
+      ? corpo
+      : '<p style="color:#6E7377;font-style:italic">'
+        + 'O corpo desta mensagem não foi gravado no histórico. '
+        + 'Só o assunto e o público continuam disponíveis.'
+        + '</p>';
+    return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+      + '<title>' + t + '</title></head>'
+      + '<body style="margin:0;padding:24px 12px;background:#F5F6F4;'
+      + 'font-family:Barlow,Arial,Helvetica,sans-serif;color:#0E1113;line-height:1.6">'
+      + '<div style="max-width:600px;margin:0 auto;background:#FFF;border-radius:14px;overflow:hidden">'
+      + '<div style="background:#0E1113;padding:26px 24px;text-align:center">'
+      +   '<img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil" '
+      +      'style="width:180px;max-width:70%">'
+      + '</div>'
+      + '<div style="height:5px;display:flex">'
+      +   '<div style="flex:1;background:#009B4A"></div>'
+      +   '<div style="flex:1;background:#FCE001"></div>'
+      +   '<div style="flex:1;background:#0A66B1"></div>'
+      + '</div>'
+      + '<div style="padding:32px">'
+      +   '<h1 style="margin:0 0 18px;font-family:Saira,Arial,Helvetica,sans-serif;'
+      +     'font-size:22px;line-height:1.25;letter-spacing:-0.02em">' + t + '</h1>'
+      +   '<div style="font-size:15px">' + c + '</div>'
+      + '</div>'
+      + '<div style="padding:20px 32px 28px;background:#F5F6F4;font-size:12px;color:#6E7377">'
+      +   '<strong style="color:#0E1113">Esportes Phygital Brasil</strong><br>'
+      +   'contato@phygitalgamesbr.com.br<br>'
+      +   'Você recebe este e-mail porque é responsável por um time inscrito.'
+      + '</div>'
+      + '</div></body></html>';
+  }
+
+  /* Injeta no modal: um cabeçalho com os metadados do disparo e o iframe com
+     o HTML final. O iframe isola o CSS do e-mail (que redefine body, tabelas,
+     fontes) do painel administrativo — sem isso o estilo do e-mail vazaria
+     para a tela. */
+  function mostrarPrevia(registro, html, avisoCorpo) {
+    var anexos = registro.anexos || [];
+    var para = registro.para || '';
+    var listaAnexos = anexos.map(function (a) {
+      var noServidor = /^assets\/enviados\/[A-Za-z0-9._-]+$/.test((a && a.caminho) || '');
+      var nome = esc(a && a.nome);
+      return '<li>' + (noServidor
+        ? '<a href="../' + a.caminho + '" target="_blank" rel="noopener" '
+          + 'style="color:var(--verde);font-weight:600">' + nome + '</a>'
+        : nome) + '</li>';
+    }).join('');
+
+    /* srcdoc mantém o HTML inteiro numa "página" separada e sandbox tira
+       scripts/formulários — o corpo do e-mail é conteúdo, não aplicação. */
+    var iframe = '<iframe title="Prévia do e-mail enviado" '
+      + 'style="width:100%;height:520px;border:1px solid var(--borda);'
+      + 'border-radius:10px;background:#FFF" sandbox="allow-same-origin" '
+      + 'srcdoc="' + esc(html) + '"></iframe>';
+
+    $('#enviado-conteudo').innerHTML =
+      '<div class="mt-3">'
+      +   '<p class="txt-peq"><strong>Assunto:</strong> ' + esc(registro.assunto || '(sem assunto)') + '</p>'
+      +   '<p class="txt-peq"><strong>Público:</strong> ' + esc(registro.destino || '—')
+      +     ' · <strong>Destinatários:</strong> ' + (registro.qtd || 0)
+      +     ' · <strong>Enviado em:</strong> ' + esc(registro.data || '—') + '</p>'
+      +   (para ? '<p class="txt-peq"><strong>Para:</strong> ' + esc(para) + '</p>' : '')
+      +   (listaAnexos ? '<p class="txt-peq"><strong>Anexos:</strong></p><ul class="txt-peq">' + listaAnexos + '</ul>' : '')
+      +   (avisoCorpo ? '<p class="txt-peq txt-suave"><em>' + esc(avisoCorpo) + '</em></p>' : '')
+      +   '<p class="txt-micro txt-suave mt-2">Prévia exatamente como o destinatário recebeu:</p>'
+      +   iframe
+      + '</div>';
+    PB.abrirModal('modal-enviado');
+  }
+
   $('#tabela-enviados').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-ver]');
     if (!b) return;
     var e = enviados[parseInt(b.getAttribute('data-ver'), 10)];
+    if (!e) return;
 
-    /* Vira link só quando o caminho é o que /api/upload devolve — a restrição de
-       caracteres impede que um registro adulterado vire outro endereço no href.
-       Sem back-end o caminho é uma data: URL, que o navegador não abre por link:
-       nesse caso fica o nome, sem link. */
-    var anexos = e.anexos || [];
+    /* Modo API: pede ao servidor o HTML final remontado por montarHtml —
+       o admin vê o mesmo envelope que saiu para o destinatário. */
+    if (D.modo() === 'api' && PB.api && PB.api.emailEnviado && e.id) {
+      $('#enviado-conteudo').innerHTML = '<p class="txt-peq txt-suave mt-3">Carregando prévia…</p>';
+      PB.abrirModal('modal-enviado');
+      PB.api.emailEnviado(e.id).then(function (r) {
+        if (!r.ok || !r.dados || !r.dados.html) {
+          var motivo = (r.dados && r.dados.erro) || r.erro || 'Não foi possível carregar a prévia deste envio.';
+          $('#enviado-conteudo').innerHTML =
+            '<p class="txt-peq mt-3" style="color:var(--erro,#c00)">' + esc(motivo) + '</p>';
+          return;
+        }
+        var avisoCorpo = r.dados.corpoGravado
+          ? ''
+          : 'O corpo desta mensagem não ficou gravado no histórico — o envelope é reconstruído para referência.';
+        mostrarPrevia(r.dados.registro || e, r.dados.html, avisoCorpo);
+      });
+      return;
+    }
 
-    $('#enviado-conteudo').innerHTML =
-      '<div class="email-preview mt-3"><div class="email-preview__corpo">' +
-        '<div class="email-preview__topo"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></div>' +
-        '<div class="email-preview__conteudo"><h2>' + esc(e.assunto) + '</h2>' +
-          '<p class="txt-peq">Enviado para ' + esc(e.destino) + ' · ' + e.qtd + ' destinatários · ' + esc(e.data) + '.</p>' +
-          anexos.map(function (a) {
-            var noServidor = /^assets\/enviados\/[A-Za-z0-9._-]+$/.test((a && a.caminho) || '');
-            var nome = esc(a && a.nome);
-            return '<p class="txt-micro txt-suave">Anexo guardado: ' + (noServidor
-              ? '<a href="../' + a.caminho + '" target="_blank" rel="noopener" ' +
-                'style="color:var(--verde);font-weight:600">' + nome + '</a>'
-              : nome) + '</p>';
-          }).join('') +
-        '</div>' +
-        '<div class="email-preview__rodape"><strong>Esportes Phygital Brasil</strong><br>contato@phygitalgamesbr.com.br</div>' +
-      '</div></div>';
-    PB.abrirModal('modal-enviado');
+    /* Modo demonstração: sem servidor, embrulhamos o fragmento que ficou no
+       cache local (o disparo desta sessão gravou `corpo`). Seed antigo sem
+       corpo cai no aviso interno do envelope. */
+    mostrarPrevia(e, envelopeLocal(e.assunto, e.corpo || ''), '');
   });
 
   /* ---- SMTP: carrega o que está gravado e grava ao salvar ---- */

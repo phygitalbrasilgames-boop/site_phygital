@@ -611,6 +611,53 @@ function registrar(rotas) {
     });
   });
 
+  /* ---- Prévia de UM envio já registrado -------------------------------- */
+
+  /**
+   * Devolve o HTML final do e-mail entregue, para o admin ver no histórico
+   * exatamente o que saiu. A coluna `corpo` guarda só o fragmento; o envelope
+   * (logo, fita tricolor, rodapé) é remontado por email.montarHtml — mesmo
+   * caminho usado no despacho, então o que a tela mostra é o que foi enviado.
+   *
+   * Registros semente (`corpo` NULL) caem num aviso dentro do envelope, para
+   * a tela não abrir um iframe em branco sem explicação. Nada de senha ou
+   * dado alheio: só o assunto, o corpo e a estrutura pública do e-mail.
+   */
+  rotas.get('/api/email/enviados/:id', async (ctx) => {
+    ctx.exigirAdmin();
+
+    const linha = db.um('SELECT * FROM emails_enviados WHERE id = ?', ctx.params.id);
+    if (!linha) throw erro404(`E-mail enviado não encontrado: ${ctx.params.id}.`);
+
+    const registro = mapa.emailEnviado(linha);
+    const temCorpo = registro.corpo && String(registro.corpo).trim().length > 0;
+
+    /* Sem corpo gravado o envelope monta uma nota discreta em vez de um miolo
+       vazio: o admin entende que a mensagem é antiga e não perdemos o layout. */
+    const corpoFinal = temCorpo
+      ? registro.corpo
+      : '<p style="color:#6E7377;font-style:italic">'
+        + 'O corpo desta mensagem não foi gravado no histórico. '
+        + 'Só o assunto e o público continuam disponíveis.'
+        + '</p>';
+
+    const html = email.montarHtml({
+      assunto: registro.assunto || '',
+      corpo: corpoFinal,
+      /* Anexos não são persistidos: gravar arquivo em base64 estouraria o
+         histórico (ver comentário em limparAnexos). O envelope reconstruído
+         mostra só o corpo — igual ao que o despachante entregou. */
+      anexos: []
+    });
+
+    ctx.ok({
+      ok: true,
+      registro,
+      html,
+      corpoGravado: Boolean(temCorpo)
+    });
+  });
+
   /* ---- Prévia ----------------------------------------------------------- */
 
   rotas.post('/api/email/previa', async (ctx) => {

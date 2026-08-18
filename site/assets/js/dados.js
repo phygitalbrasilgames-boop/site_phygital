@@ -2183,6 +2183,9 @@
     salvarSmtp: function (cfg) { return pedir('PUT', '/email/smtp', cfg); },
     testarSmtp: function (para) { return pedir('POST', '/email/testar', { para: para }); },
     emailsEnviados: function () { return pedir('GET', '/email/enviados'); },
+    /* Registro único do histórico: usado pela tela de disparo para mostrar
+       no modal o HTML remontado pelo servidor (com envelope da marca). */
+    emailEnviado: function (id) { return pedir('GET', '/email/enviados/' + encodeURIComponent(id)); },
     previaEmail: function (dados) { return pedir('POST', '/email/previa', dados); },
     dispararEmail: function (dados) { return pedir('POST', '/email/disparar', dados); }
   };
