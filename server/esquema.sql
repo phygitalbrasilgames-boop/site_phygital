@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS contas (
   papel             TEXT NOT NULL CHECK (papel IN ('competidor', 'admin')),
   -- só para papel='admin': master (tudo) | gestor (leitura + export + email) | operacao
   nivel             TEXT CHECK (nivel IN ('master', 'gestor', 'operacao')),
+  -- idioma preferido da conta: vale para o painel e para o e-mail que ela
+  -- recebe. Valores em server/traducoes.js (pt | en | es).
+  idioma            TEXT NOT NULL DEFAULT 'pt' CHECK (idioma IN ('pt', 'en', 'es')),
   email_verificado  INTEGER NOT NULL DEFAULT 0,
   -- admin criado pelo master recebe senha temporária e é obrigado a trocar
   senha_provisoria  INTEGER NOT NULL DEFAULT 0,
@@ -383,6 +386,35 @@ CREATE TABLE IF NOT EXISTS banners_site (
   ativo           INTEGER NOT NULL DEFAULT 1,
   arquivado_em    TEXT
 );
+
+-- ---------------------------------------------------------------------------
+-- TRADUÇÃO DO CONTEÚDO CADASTRADO
+-- ---------------------------------------------------------------------------
+
+-- O português é a língua de origem e continua na coluna normal de cada tabela.
+-- Inglês e espanhol vivem aqui, numa tabela genérica: uma coluna por idioma em
+-- cada tabela seriam dezenas de colunas e uma migração a cada idioma novo.
+--
+-- Sem chave estrangeira de propósito: `tabela` aponta para sete tabelas
+-- diferentes e o SQLite não tem referência polimórfica. Quem exclui um registro
+-- em definitivo chama traducoes.apagarRegistro().
+--
+-- A lista de campos traduzíveis por tabela NÃO está aqui: está em
+-- server/traducoes.js (CAMPOS_TRADUZIVEIS), a constante única que a API e a
+-- tela do administrador leem.
+CREATE TABLE IF NOT EXISTS traducoes (
+  tabela        TEXT NOT NULL,
+  registro_id   TEXT NOT NULL,
+  campo         TEXT NOT NULL,
+  idioma        TEXT NOT NULL CHECK (idioma IN ('pt', 'en', 'es')),
+  texto         TEXT,
+  atualizado_em TEXT NOT NULL,
+  PRIMARY KEY (tabela, registro_id, campo, idioma)
+);
+
+-- A leitura sempre pergunta por (tabela, idioma) e uma lista de registros.
+CREATE INDEX IF NOT EXISTS idx_traducoes_leitura
+  ON traducoes (tabela, idioma, registro_id);
 
 -- ---------------------------------------------------------------------------
 -- E-MAIL

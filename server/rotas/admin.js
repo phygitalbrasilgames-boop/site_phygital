@@ -32,6 +32,7 @@ const db = require('../db');
 const auth = require('../auth');
 const regras = require('../regras');
 const mapa = require('../mapa');
+const traducoes = require('../traducoes');
 const { erro400, erro403, erro404, erro409 } = require('../http');
 
 /* --------------------------------------------------------------------------
@@ -743,6 +744,10 @@ async function excluirHistorico(ctx) {
        jogadores, comissão, documentos e inscrições, pelas chaves estrangeiras
        do esquema). É a única operação do sistema que não tem volta. */
     db.executar(`DELETE FROM ${t.tabela} WHERE id = ?`, id);
+    /* A tabela `traducoes` é genérica e não tem chave estrangeira para lugar
+       nenhum, então o CASCADE não a alcança: sem esta linha, a tradução ficaria
+       órfã e voltaria a ser lida se um registro novo reusasse o mesmo id. */
+    traducoes.apagarRegistro(t.tabela, id);
     regras.registrar(ctx, t.area, linha.nome, 'excluiu em definitivo', `${t.rotulo} · ${id}`);
   });
 

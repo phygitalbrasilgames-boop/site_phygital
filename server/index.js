@@ -70,7 +70,7 @@ const TIPOS = {
 
 const MODULOS = [
   'bootstrap', 'auth', 'campeonatos', 'times',
-  'inscricoes', 'chamados', 'conteudo', 'admin', 'email', 'upload'
+  'inscricoes', 'chamados', 'conteudo', 'admin', 'email', 'upload', 'traducoes'
 ];
 
 const rotas = web.criarRoteador();
@@ -221,7 +221,9 @@ async function atender(req, res) {
       throw new web.ErroHttp(500, 'A rota não produziu resposta.');
     }
   } catch (e) {
-    if (!res.headersSent) web.falha(res, e);
+    /* ctx.falha traduz a mensagem para o idioma da requisição — a resposta de
+       erro é o texto que o front-end joga no toast. */
+    if (!res.headersSent) ctx.falha(e);
     else res.end();
   }
 }

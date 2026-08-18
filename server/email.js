@@ -32,6 +32,7 @@
 const crypto = require('node:crypto');
 const db = require('./db');
 const mapa = require('./mapa');
+const traducoes = require('./traducoes');
 const { erro404 } = require('./http');
 
 /* Base para montar a URL absoluta do logo: cliente de e-mail não resolve
@@ -142,13 +143,42 @@ function contextoCompleto(contexto = {}) {
   };
 }
 
+/* --------------------------------------------------------------------------
+   IDIOMA DO DESTINATÁRIO
+
+   O modelo tem UM id e UMA linha; assunto e corpo em inglês e espanhol ficam na
+   tabela `traducoes` (tabela='modelos_email'). Duplicar a linha por idioma
+   quebraria toda referência a modelo por id — inclusive a chave estrangeira de
+   emails_enviados.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Idioma da conta que vai receber. Endereço que não é de nenhuma conta (o
+ * disparo em massa aceita lista digitada) cai no português.
+ */
+function idiomaDoDestinatario(enderecos) {
+  for (const endereco of enderecos || []) {
+    const conta = db.um(
+      'SELECT idioma FROM contas WHERE lower(email) = ? AND arquivado_em IS NULL',
+      String(endereco).trim().toLowerCase()
+    );
+    if (conta) return traducoes.normalizarOuPadrao(conta.idioma);
+  }
+  return traducoes.IDIOMA_PADRAO;
+}
+
 /**
  * Aplica um modelo de e-mail ao contexto.
+ * @param idioma  idioma do destinatário; campo sem tradução volta em português
  * @returns {{ id, para, ativo, assunto, corpo }} — corpo já em HTML seguro.
  */
-function aplicarModelo(modeloId, contexto = {}) {
-  const modelo = db.um('SELECT * FROM modelos_email WHERE id = ?', modeloId);
-  if (!modelo) throw erro404(`Modelo de e-mail não encontrado: ${modeloId}.`);
+function aplicarModelo(modeloId, contexto = {}, idioma = traducoes.IDIOMA_PADRAO) {
+  const bruto = db.um('SELECT * FROM modelos_email WHERE id = ?', modeloId);
+  if (!bruto) throw erro404(`Modelo de e-mail não encontrado: ${modeloId}.`);
+
+  /* A troca acontece antes da substituição das variáveis: o {{...}} do texto
+     traduzido é resolvido igual ao do português. */
+  const modelo = traducoes.traduzir('modelos_email', bruto, idioma);
 
   const ctx = contextoCompleto(contexto);
 
@@ -298,15 +328,24 @@ function normalizarPara(para) {
  * @param destino   rótulo do público ('Todos os campeonatos') para o histórico
  * @param contexto  valores das variáveis {{...}}
  * @param qtd       quantos destinatários; padrão = tamanho de `para`
+ * @param idioma    força o idioma; sem ele, o da conta do primeiro destinatário
  * @returns registro gravado (nunca lança)
  */
 function enviar({
   modeloId = null, para = null, destino = null, contexto = {},
-  assunto = null, corpo = null, qtd = null, anexos = [], rodape = ''
+  assunto = null, corpo = null, qtd = null, anexos = [], rodape = '',
+  idioma = null
 } = {}) {
   let assuntoFinal = assunto;
   let corpoFinal = corpo;
   let erro = null;
+
+  /* Resolvido antes de aplicar o modelo: é ele que decide de qual idioma sai o
+     assunto e o corpo. Quem chama pode forçar (o disparo em massa do painel
+     manda no idioma escolhido pelo admin); sem isso, manda a preferência
+     gravada na conta de quem recebe. */
+  const enderecos = normalizarPara(para);
+  const idiomaFinal = traducoes.normalizar(idioma) || idiomaDoDestinatario(enderecos);
 
   /* modelo_id tem chave estrangeira para modelos_email: gravar um id que não
      existe derrubaria justamente o registro de falha que queremos guardar.
@@ -315,7 +354,7 @@ function enviar({
 
   try {
     if (modeloId) {
-      const aplicado = aplicarModelo(modeloId, contexto);
+      const aplicado = aplicarModelo(modeloId, contexto, idiomaFinal);
       modeloGravavel = aplicado.id;
 
       /* Modelo desativado pelo admin é decisão dele: não enviamos e não
@@ -337,7 +376,6 @@ function enviar({
     erro = e.message;
   }
 
-  const enderecos = normalizarPara(para);
   const html = montarHtml({ assunto: assuntoFinal || '', corpo: corpoFinal || '', anexos, rodape });
 
   let status = erro ? 'falhou' : statusDeEnvio();
@@ -392,6 +430,7 @@ function enviar({
     motivo: erro,
     id,
     modeloId,
+    idioma: idiomaFinal,
     assunto: assuntoFinal || '',
     corpo: corpoFinal || '',
     html,
@@ -427,5 +466,6 @@ module.exports = {
   aplicarModelo, enviar, fila, ultimos,
   montarHtml, substituir, escapar, limparAssunto,
   variaveisDe, normalizarPara, statusDeEnvio, contextoCompleto,
+  idiomaDoDestinatario,
   VARIAVEIS_OBRIGATORIAS, RESSALVA_INSCRICAO
 };

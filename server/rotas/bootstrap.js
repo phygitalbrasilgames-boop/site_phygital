@@ -20,6 +20,7 @@ const db = require('../db');
 const auth = require('../auth');
 const regras = require('../regras');
 const mapa = require('../mapa');
+const traducoes = require('../traducoes');
 
 const VERSAO = '2.0.0';
 
@@ -152,17 +153,23 @@ function vazio() {
   };
 }
 
-/** O que qualquer visitante vê — nada aqui depende de sessão. */
-function publico() {
+/**
+ * O que qualquer visitante vê — nada aqui depende de sessão.
+ *
+ * Recebe o contexto só para saber em que idioma devolver o conteúdo
+ * cadastrado; ctx.traduzir mantém o português no campo que ainda não foi
+ * traduzido, e devolve as linhas intactas quando o idioma é o português.
+ */
+function publico(ctx) {
   const contagens = contagensDeInscricao();
 
   /* Encerrados no fim da lista e, dentro de cada grupo, o evento mais próximo
      primeiro — é a ordem que a home e a página de inscrições esperam. */
-  const campeonatos = db.todos(
+  const campeonatos = ctx.traduzir('campeonatos', db.todos(
     `SELECT * FROM campeonatos
       WHERE arquivado_em IS NULL
       ORDER BY (status = 'encerrado'), data, id`
-  ).map((l) => mapa.campeonato(l, contagens[l.id]));
+  )).map((l) => mapa.campeonato(l, contagens[l.id]));
 
   const ranking = db.todos(
     `SELECT * FROM ranking
@@ -177,28 +184,32 @@ function publico() {
     ranking: mapa.rankingPorModalidade(ranking, MODALIDADES),
     /* Rascunho é do administrador: o site público só recebe o que foi publicado. */
     posts: mapa.lista(
-      db.todos(`SELECT * FROM posts
+      ctx.traduzir('posts', db.todos(`SELECT * FROM posts
                  WHERE arquivado_em IS NULL AND publicado = 1
-                 ORDER BY data DESC, id`), mapa.post
+                 ORDER BY data DESC, id`)), mapa.post
     ),
     eventos: mapa.lista(
-      db.todos('SELECT * FROM eventos WHERE arquivado_em IS NULL ORDER BY ano DESC, id'), mapa.evento
+      ctx.traduzir('eventos',
+        db.todos('SELECT * FROM eventos WHERE arquivado_em IS NULL ORDER BY ano DESC, id')), mapa.evento
     ),
     /* A ordem é o que amarra cada parceiro ao seu logo na home. */
     parceiros: mapa.lista(
-      db.todos('SELECT * FROM parceiros WHERE arquivado_em IS NULL ORDER BY ordem, id'), mapa.parceiro
+      ctx.traduzir('parceiros',
+        db.todos('SELECT * FROM parceiros WHERE arquivado_em IS NULL ORDER BY ordem, id')), mapa.parceiro
     ),
     bannersSite: mapa.lista(
-      db.todos('SELECT * FROM banners_site WHERE arquivado_em IS NULL ORDER BY ordem, id'), mapa.bannerSite
+      ctx.traduzir('banners_site',
+        db.todos('SELECT * FROM banners_site WHERE arquivado_em IS NULL ORDER BY ordem, id')), mapa.bannerSite
     ),
     categorias: mapa.lista(
-      db.todos('SELECT * FROM categorias WHERE arquivado_em IS NULL ORDER BY nome'), mapa.categoria
+      ctx.traduzir('categorias',
+        db.todos('SELECT * FROM categorias WHERE arquivado_em IS NULL ORDER BY nome')), mapa.categoria
     )
   };
 }
 
 /** Acréscimo da sessão de competidor: só o que pertence à própria conta. */
-function doCompetidor(conta) {
+function doCompetidor(conta, ctx) {
   const times = db.todos(
     'SELECT * FROM times WHERE conta_id = ? AND arquivado_em IS NULL ORDER BY criado_em, id',
     conta.id
@@ -225,7 +236,8 @@ function doCompetidor(conta) {
     minhasInscricoes: mapa.lista(inscricoes, mapa.inscricao),
     chamados: chamados.map((c) => mapa.chamado(c, mensagens[c.id])),
     banners: mapa.lista(
-      db.todos('SELECT * FROM banners WHERE arquivado_em IS NULL ORDER BY ordem, id'), mapa.banner
+      ctx.traduzir('banners',
+        db.todos('SELECT * FROM banners WHERE arquivado_em IS NULL ORDER BY ordem, id')), mapa.banner
     )
   };
 }
@@ -317,12 +329,12 @@ function doAdmin(conta) {
 
 function montar(ctx) {
   const conta = ctx.conta;
-  const dados = Object.assign(vazio(), publico());
+  const dados = Object.assign(vazio(), publico(ctx));
 
   /* A própria conta vale para os dois painéis: admin/campeonato-time.html
      também lê D.usuario() para identificar quem está operando. */
   if (conta) dados.usuario = mapa.usuario(conta);
-  if (conta && conta.papel === 'competidor') Object.assign(dados, doCompetidor(conta));
+  if (conta && conta.papel === 'competidor') Object.assign(dados, doCompetidor(conta, ctx));
   if (conta && conta.papel === 'admin') Object.assign(dados, doAdmin(conta));
 
   return {
@@ -331,6 +343,10 @@ function montar(ctx) {
     /* As regras de elenco vêm do servidor para o front-end não validar com uma
        cópia divergente da sua. */
     modalidades: regras.MODALIDADES,
+    /* Qual idioma o servidor resolveu para esta requisição e quais existem: o
+       seletor do front-end nasce marcando o certo sem ter que adivinhar. */
+    idioma: ctx.idioma,
+    idiomas: traducoes.IDIOMAS,
     conta: auth.contaPublica(conta),
     dados
   };

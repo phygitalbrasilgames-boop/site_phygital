@@ -58,7 +58,13 @@ const COLUNAS_ACRESCENTADAS = [
   /* Estado do despachante de e-mail (server/fila-email.js). */
   ['emails_enviados', 'tentativas', 'INTEGER NOT NULL DEFAULT 0'],
   ['emails_enviados', 'proxima_tentativa', 'TEXT'],
-  ['emails_enviados', 'enviado_em', 'TEXT']
+  ['emails_enviados', 'enviado_em', 'TEXT'],
+
+  /* Idioma preferido da conta (server/traducoes.js). NOT NULL exige DEFAULT no
+     ALTER TABLE — sem ele, as linhas que já existem não teriam valor. O CHECK
+     do esquema fica de fora aqui: o SQLite não aceita acrescentá-lo por ALTER,
+     e quem escreve na coluna já passa por traducoes.normalizar(). */
+  ['contas', 'idioma', "TEXT NOT NULL DEFAULT 'pt'"]
 ];
 
 /* Índices que dependem das colunas acima. Ficam aqui, e não no esquema.sql,

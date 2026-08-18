@@ -553,7 +553,10 @@ const ORDEM_LIMPEZA = [
   'times', 'campeonatos', 'contas',
   'ranking', 'ranking_config', 'resultados',
   'categorias', 'posts', 'eventos', 'parceiros',
-  'banners', 'banners_site', 'smtp'
+  'banners', 'banners_site', 'smtp',
+  /* Sem chave estrangeira (a coluna `tabela` aponta para sete tabelas), então
+     o CASCADE não alcança: a limpeza tem que citar a tradução explicitamente. */
+  'traducoes'
 ];
 
 const contagens = new Map();
@@ -1022,6 +1025,94 @@ function semearConteudo() {
   }
 }
 
+/* --------------------------------------------------------------------------
+   TRADUÇÃO DE EXEMPLO
+
+   O suficiente para conferir o caminho inteiro de ponta a ponta: um campeonato
+   e um post completos em inglês e espanhol, uma categoria, um banner do hero e
+   um modelo de e-mail.
+
+   As lacunas são de propósito. 'cbb-2026' tem só o nome em inglês e nada em
+   espanhol, e o post p1 não tem `corpo` traduzido: é assim que dá para ver na
+   tela que o campo sem tradução volta em português em vez de sair vazio.
+   -------------------------------------------------------------------------- */
+
+const TRADUCOES = [
+  {
+    tabela: 'campeonatos', registro: 'cbf-2026',
+    en: {
+      nome: 'Phygital Football Cup 2026 — National Stage',
+      descricao: 'The main stage of the national calendar. 24 teams compete for a direct spot in the Games of the Future qualifier.',
+      local: 'Phygital Arena — São Paulo, Brazil',
+      termos: 'By registering the team, the person in charge declares that every athlete has granted image rights and is physically fit to compete.'
+    },
+    es: {
+      nome: 'Copa Phygital de Fútbol 2026 — Etapa Nacional',
+      descricao: 'La principal etapa del calendario nacional. 24 equipos disputan una plaza directa en la clasificatoria de los Games of the Future.',
+      local: 'Arena Phygital — São Paulo, Brasil',
+      termos: 'Al inscribir al equipo, el responsable declara que todos los atletas cuentan con autorización de imagen y están aptos físicamente para competir.'
+    }
+  },
+  {
+    /* Tradução incompleta de propósito: prova o fallback campo a campo. */
+    tabela: 'campeonatos', registro: 'cbb-2026',
+    en: { nome: 'Phygital 3x3 Basketball Circuit — 2nd Edition' }
+  },
+  {
+    tabela: 'posts', registro: 'p1',
+    en: {
+      titulo: 'Phygital Football Cup 2026 opens registration for 24 teams',
+      resumo: 'The national stage takes place in September, in São Paulo, with a direct spot in the Games of the Future qualifier for the champion.'
+    },
+    es: {
+      titulo: 'La Copa Phygital de Fútbol 2026 abre inscripciones para 24 equipos',
+      resumo: 'La etapa nacional se celebra en septiembre, en São Paulo, con plaza directa en la clasificatoria de los Games of the Future para el campeón.'
+    }
+  },
+  {
+    tabela: 'categorias', registro: 'campeonatos',
+    en: { nome: 'Championships' },
+    es: { nome: 'Campeonatos' }
+  },
+  {
+    tabela: 'modelos_email', registro: 'codigo-verificacao',
+    en: {
+      assunto: 'Your verification code is {{codigo}}',
+      corpo: '<p>Hello, {{usuario.nome}}.</p><p>Your verification code is <b>{{codigo}}</b>. It is valid for 15 minutes.</p><p>If you did not request it, ignore this e-mail.</p>'
+    },
+    es: {
+      assunto: 'Tu código de verificación es {{codigo}}',
+      corpo: '<p>Hola, {{usuario.nome}}.</p><p>Tu código de verificación es <b>{{codigo}}</b>. Es válido por 15 minutos.</p><p>Si no lo has solicitado, ignora este correo.</p>'
+    }
+  }
+];
+
+function semearTraducoes() {
+  const agora = db.agora();
+
+  for (const item of TRADUCOES) {
+    /* O registro pode não existir num banco parcialmente semeado; sem esta
+       guarda, a tradução ficaria órfã e nunca seria lida por ninguém. */
+    if (!db.um(`SELECT id FROM ${item.tabela} WHERE id = ?`, item.registro)) continue;
+
+    for (const idioma of ['en', 'es']) {
+      const campos = item[idioma];
+      if (!campos) continue;
+
+      for (const [campo, texto] of Object.entries(campos)) {
+        inserir('traducoes', {
+          tabela: item.tabela,
+          registro_id: item.registro,
+          campo,
+          idioma,
+          texto,
+          atualizado_em: agora
+        }, ['tabela', 'registro_id', 'campo', 'idioma']);
+      }
+    }
+  }
+}
+
 function semearEmail() {
   inserir('smtp', {
     id: 1,
@@ -1093,6 +1184,9 @@ function semear({ recriar = false } = {}) {
     semearResultados();
     semearConteudo();
     semearEmail();
+    /* Depois de conteúdo e e-mail: a tradução aponta para registros que os dois
+       acabaram de criar e é ignorada quando o registro não existe. */
+    semearTraducoes();
 
     conferirElencos();
 

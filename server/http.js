@@ -8,6 +8,8 @@
 'use strict';
 
 const auth = require('./auth');
+const traducoes = require('./traducoes');
+const mensagens = require('./mensagens');
 
 /* --------------------------------------------------------------------------
    LIMITES
@@ -63,11 +65,19 @@ function json(res, status, corpo, cabecalhos = {}) {
 
 const ok = (res, corpo, cabecalhos) => json(res, 200, corpo, cabecalhos);
 
-function falha(res, e) {
+/**
+ * Resposta de erro. `idioma` traduz a mensagem por server/mensagens.js — ela
+ * vai direto para um toast na tela, então é texto para humano, não código.
+ *
+ * A mensagem de 500 é fixa de propósito: o texto de uma exceção interna pode
+ * carregar caminho de arquivo, SQL ou dado de outra conta.
+ */
+function falha(res, e, idioma = traducoes.IDIOMA_PADRAO) {
   const status = e instanceof ErroHttp ? e.status : 500;
+  const original = status === 500 ? 'Erro interno no servidor.' : e.message;
   const corpo = {
     ok: false,
-    erro: status === 500 ? 'Erro interno no servidor.' : e.message,
+    erro: mensagens.traduzir(original, idioma),
     ...(e instanceof ErroHttp ? e.extra : {})
   };
   if (status === 500) console.error('[erro 500]', e);
@@ -124,9 +134,75 @@ function lerCookies(req) {
   for (const parte of cru.split(';')) {
     const i = parte.indexOf('=');
     if (i < 0) continue;
-    saida[parte.slice(0, i).trim()] = decodeURIComponent(parte.slice(i + 1).trim());
+    const bruto = parte.slice(i + 1).trim();
+    /* decodeURIComponent lança URIError em escape truncado ('%', '%C3'), e o
+       cookie vem do cliente. Sem esta guarda, um cookie malformado derrubava
+       toda requisição de API com 500 — e ficava assim até alguém apagar o
+       cookie na mão, porque o navegador reenviava o mesmo valor. */
+    try {
+      saida[parte.slice(0, i).trim()] = decodeURIComponent(bruto);
+    } catch (_) {
+      saida[parte.slice(0, i).trim()] = bruto;
+    }
   }
   return saida;
+}
+
+/* --------------------------------------------------------------------------
+   COOKIE DE IDIOMA
+
+   Sem HttpOnly de propósito, ao contrário do cookie de sessão: o seletor de
+   idioma do front-end (ES5) lê e escreve este mesmo cookie, e ele não guarda
+   nada que sirva para assumir a conta de alguém.
+   -------------------------------------------------------------------------- */
+
+const IDIOMA_COOKIE_DIAS = 365;
+
+function cookieIdioma(idioma, { seguro = false } = {}) {
+  const partes = [
+    `${traducoes.NOME_COOKIE}=${traducoes.normalizarOuPadrao(idioma)}`,
+    'Path=/',
+    'SameSite=Lax',
+    `Max-Age=${IDIOMA_COOKIE_DIAS * 86400}`
+  ];
+  if (seguro) partes.push('Secure');
+  return partes.join('; ');
+}
+
+/* --------------------------------------------------------------------------
+   IDIOMA DA REQUISIÇÃO
+
+   Ordem: ?lang= → cookie → coluna idioma da conta → Accept-Language → 'pt'.
+
+   Da mais explícita para a mais implícita: o parâmetro é uma escolha feita
+   agora (e é o que faz um link compartilhado abrir no idioma certo), o cookie é
+   a escolha anterior neste navegador, a coluna é a preferência que o usuário
+   salvou na conta, e o cabeçalho é só o palpite do navegador.
+
+   Valor desconhecido NÃO é erro: é tratado como "não informado" e a resolução
+   segue para a próxima fonte, terminando em 'pt'. Tudo isso vem de fora e não
+   merece confiança — quem valida é traducoes.normalizar.
+   -------------------------------------------------------------------------- */
+
+function resolverIdioma(ctx) {
+  const daUrl = traducoes.normalizar(ctx.query.get('lang'));
+  if (daUrl) return daUrl;
+
+  const doCookie = traducoes.normalizar(ctx.cookies[traducoes.NOME_COOKIE]);
+  if (doCookie) return doCookie;
+
+  /* ctx.conta já vem memorizada; não custa consulta extra na maioria das rotas. */
+  const conta = ctx.conta;
+  const daConta = conta && traducoes.normalizar(conta.idioma);
+  if (daConta) return daConta;
+
+  return traducoes.deAccept(ctx.req.headers['accept-language'])
+    || traducoes.IDIOMA_PADRAO;
+}
+
+/** Idioma para a resposta de erro, sem deixar uma falha na resolução escapar. */
+function idiomaSeguro(ctx) {
+  try { return ctx.idioma; } catch (_) { return traducoes.IDIOMA_PADRAO; }
 }
 
 /* --------------------------------------------------------------------------
@@ -167,6 +243,37 @@ function criarContexto(req, res, url) {
       return this._conta;
     },
 
+    /* Idioma da resposta, resolvido sob demanda pelo mesmo motivo da conta. */
+    _idioma: undefined,
+    get idioma() {
+      if (this._idioma === undefined) this._idioma = resolverIdioma(this);
+      return this._idioma;
+    },
+
+    /**
+     * Idioma do CONTEÚDO CADASTRADO, que não é sempre o da interface.
+     *
+     * Sessão de administrador lê sempre o português, porque o painel do admin é
+     * a superfície de EDIÇÃO: os formulários nascem preenchidos com o que a API
+     * devolve, e devolver ali o texto traduzido faria o próximo "salvar" gravar
+     * a tradução por cima do original — perdendo a língua de origem, que é a
+     * única de onde as outras derivam. O admin traduz pela tela dedicada, que
+     * fala com /api/traducoes.
+     *
+     * Interface, mensagens de erro e e-mail continuam no idioma escolhido; só o
+     * texto editável do cadastro é que volta em português.
+     */
+    get idiomaConteudo() {
+      const conta = this.conta;
+      if (conta && conta.papel === 'admin') return traducoes.IDIOMA_PADRAO;
+      return this.idioma;
+    },
+
+    /** Aplica a tradução do conteúdo numa linha ou numa lista de linhas. */
+    traduzir(tabela, linhas) {
+      return traducoes.traduzir(tabela, linhas, this.idiomaConteudo);
+    },
+
     /** Exige sessão. */
     exigirLogin() {
       const c = this.conta;
@@ -193,7 +300,8 @@ function criarContexto(req, res, url) {
 
     corpo(limite) { return corpoJson(this.req, limite); },
     ok(corpo, cab) { return ok(this.res, corpo, cab); },
-    json(status, corpo, cab) { return json(this.res, status, corpo, cab); }
+    json(status, corpo, cab) { return json(this.res, status, corpo, cab); },
+    falha(e) { return falha(this.res, e, idiomaSeguro(this)); }
   };
 }
 
@@ -273,5 +381,6 @@ module.exports = {
   ErroHttp, erro400, erro401, erro403, erro404, erro409, erro429,
   json, ok, falha,
   corpoBruto, corpoJson, CORPO_MAX, CORPO_MAX_UPLOAD, CORPO_MAX_ARQUIVO,
-  lerCookies, ipDe, ehSeguro, criarContexto, criarRoteador, conferirOrigem
+  lerCookies, ipDe, ehSeguro, criarContexto, criarRoteador, conferirOrigem,
+  cookieIdioma, resolverIdioma, idiomaSeguro
 };
