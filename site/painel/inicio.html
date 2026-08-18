@@ -39,14 +39,41 @@
     opacity: 1; visibility: visible;
     transition: opacity 320ms var(--curva) 240ms, visibility 0s linear 240ms;
   }
-  .banner-painel .hero__slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .banner-painel .hero__slide > img,
+  .banner-painel .hero__slide > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Vídeo do YouTube como fundo — mesmas regras de site.css, repetidas aqui
+     porque as páginas do painel não carregam aquele arquivo. O embed é 16:9 e
+     o banner não é: as unidades de contêiner (cqh/cqw) medem o próprio banner
+     para cobrir a área sem tarja preta; vh/vw ficam de reserva. O gradiente de
+     ::after já cobre o iframe e intercepta o clique. */
+  .banner-painel .banner-yt {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    container-type: size;
+  }
+  .banner-painel .banner-yt__quadro {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border: 0;
+    pointer-events: none;
+    width: 177.78vh; min-width: 100%;
+    height: 56.25vw; min-height: 100%;
+    width: 177.78cqh;
+    height: 56.25cqw;
+  }
   .banner-painel .hero__slide::after {
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(90deg, rgba(14,17,19,.94) 0%, rgba(14,17,19,.82) 46%, rgba(14,17,19,.34) 100%);
   }
   .banner-painel__conteudo { position: relative; z-index: 2; padding: var(--e-5) var(--e-5) var(--e-6); max-width: 62ch; min-width: 0; }
   .banner-painel .eyebrow { color: var(--amarelo); margin-bottom: var(--e-2); }
-  .banner-painel__titulo { font-size: clamp(1.375rem, 2.6vw, 2rem); text-transform: uppercase; margin-bottom: var(--e-2); color: #fff; }
+  /* Mesma fonte do banner da home: declarada, não herdada, porque nem todo
+     título do banner é um elemento de cabeçalho. */
+  .banner-painel__titulo {
+    font-family: var(--fonte-display); font-weight: 700; letter-spacing: -.02em;
+    font-size: clamp(1.375rem, 2.6vw, 2rem); text-transform: uppercase;
+    margin-bottom: var(--e-2); color: #fff;
+  }
   .banner-painel__meta { font-size: var(--t-peq); color: rgba(255,255,255,.78); margin-bottom: var(--e-3); }
   .banner-painel__acoes { display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap; }
   /* Sobre o fundo escuro do banner as etiquetas viram versão sólida (contraste).
@@ -374,7 +401,9 @@
 
       return '' +
       '<div class="hero__slide' + (i === 0 ? ' ativo' : '') + '">' +
-        '<img src="' + esc(img(b.img)) + '" alt="">' +
+        /* Mesmo fundo da home: YouTube, arquivo de vídeo ou imagem. O '../'
+           é o caminho daqui até a raiz do site, onde ficam os assets. */
+        PB.midiaBanner(b, '../', '') +
         '<div class="banner-painel__conteudo">' +
           '<p class="eyebrow">' + esc(m ? m.nome : 'Phygital Brasil') + (c ? ' · Inscrições abertas' : '') + '</p>' +
           '<h3 class="banner-painel__titulo">' + esc(c ? c.nome : b.titulo) + '</h3>' +

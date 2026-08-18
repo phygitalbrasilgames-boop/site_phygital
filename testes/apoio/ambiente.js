@@ -179,9 +179,14 @@ function cliente({ ip, cookie } = {}) {
     set cookie(valor) { estado.cookie = valor; },
 
     async pedir(metodo, caminho, corpo, extra = {}) {
+      /* Buffer vai como está: os testes de upload mandam bytes de PNG e de MP4,
+         e passar por String() trocaria todo byte fora do UTF-8 válido por
+         U+FFFD — o arquivo chegaria corrompido ao servidor. */
       const carga = corpo === undefined
         ? null
-        : Buffer.from(extra.cru ? String(corpo) : JSON.stringify(corpo), 'utf8');
+        : Buffer.isBuffer(corpo)
+          ? corpo
+          : Buffer.from(extra.cru ? String(corpo) : JSON.stringify(corpo), 'utf8');
 
       const bruta = await requisitar({
         metodo,

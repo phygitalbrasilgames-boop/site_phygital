@@ -47,7 +47,12 @@ const TIPOS = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.gif': 'image/gif',
   '.ico': 'image/x-icon',
+  /* Vídeo de banner enviado por POST /api/upload. Sem o tipo certo aqui o
+     arquivo sai como application/octet-stream e o <video> não toca. */
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.woff2': 'font/woff2',
   '.pdf': 'application/pdf',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -65,7 +70,7 @@ const TIPOS = {
 
 const MODULOS = [
   'bootstrap', 'auth', 'campeonatos', 'times',
-  'inscricoes', 'chamados', 'conteudo', 'admin', 'email'
+  'inscricoes', 'chamados', 'conteudo', 'admin', 'email', 'upload'
 ];
 
 const rotas = web.criarRoteador();
@@ -139,14 +144,21 @@ function cabecalhosSeguranca(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
   /* O CSS carrega as fontes do Google Fonts por @import, então fonts.googleapis
-     e fonts.gstatic precisam estar liberados em style-src e font-src. */
+     e fonts.gstatic precisam estar liberados em style-src e font-src.
+
+     O YouTube entra por dois pontos, e só por eles: img.youtube.com/i.ytimg.com
+     servem a miniatura que o editor de banner mostra ao colar o link, e
+     youtube-nocookie.com é o player embutido do banner de vídeo. Nenhum dos
+     dois pode rodar script na página — frame-src libera o <iframe>, não o
+     documento que está dentro dele. */
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com",
     "connect-src 'self'",
+    "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'"

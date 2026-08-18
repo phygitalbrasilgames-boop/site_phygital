@@ -415,11 +415,10 @@
     });
 
     slides.innerHTML = banners.map(function (b, i) {
-      /* Fundo: vídeo em laço e silenciado, ou imagem */
-      var fundo = (b.midia === 'video' && b.video)
-        ? '<video src="' + esc(b.video) + '" autoplay muted loop playsinline aria-hidden="true"></video>'
-        : '<img src="' + esc(b.img) + '" alt="' + esc(b.semTexto ? (b.titulo || 'Banner Phygital Brasil') : '') + '"' +
-          (b.semTexto ? '' : ' aria-hidden="true"') + '>';
+      /* Fundo: YouTube, arquivo de vídeo em laço e silenciado, ou imagem.
+         Só a imagem recebe texto alternativo, e apenas no slide sem texto —
+         nos outros o próprio título do slide já está no HTML. */
+      var fundo = PB.midiaBanner(b, '', b.semTexto ? (b.titulo || 'Banner Phygital Brasil') : '');
 
       var conteudo = '';
       if (!b.semTexto) {

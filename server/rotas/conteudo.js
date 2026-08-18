@@ -117,6 +117,28 @@ function endereco(valor, rotulo, esquemas, { max = 500, obrigatorio = false } = 
   return s;
 }
 
+/* O vídeo do banner tem uma forma a mais que as outras mídias: 'youtube:<id>'.
+   É como o admin guarda um vídeo hospedado no YouTube sem coluna nova no banco
+   — o renderizador vê o prefixo e monta o <iframe> em vez do <video>.
+
+   A conferência do id é estrita (11 caracteres do alfabeto do YouTube) porque
+   esse valor termina dentro de um src na home: qualquer folga aqui é injeção
+   de endereço na página pública. */
+const YOUTUBE = /^youtube:[A-Za-z0-9_-]{11}$/;
+
+function enderecoDeVideo(valor, rotulo, opcoes) {
+  const s = valor === null || valor === undefined ? '' : String(valor).trim();
+
+  if (s.slice(0, 8).toLowerCase() === 'youtube:') {
+    if (!YOUTUBE.test(s)) {
+      throw erro400(`O campo "${rotulo}" com vídeo do YouTube precisa ser "youtube:" seguido do identificador de 11 caracteres.`);
+    }
+    return s;
+  }
+
+  return endereco(valor, rotulo, ESQUEMAS_MIDIA, opcoes);
+}
+
 /* --------------------------------------------------------------------------
    IDENTIFICADORES
 
@@ -338,7 +360,7 @@ function validarBannerSite(corpo, { novo, atual }) {
     d.midia = m || 'imagem';
   }
   if (informado(corpo, 'img')) d.img = endereco(corpo.img, 'Imagem', ESQUEMAS_MIDIA, { max: 1500000 });
-  if (informado(corpo, 'video')) d.video = endereco(corpo.video, 'Vídeo', ESQUEMAS_MIDIA, { max: 1500000 });
+  if (informado(corpo, 'video')) d.video = enderecoDeVideo(corpo.video, 'Vídeo', { max: 1500000 });
   if (informado(corpo, 'texto')) d.texto = texto(corpo.texto, 'Texto', { max: 1200 });
   if (informado(corpo, 'eyebrow')) d.eyebrow = texto(corpo.eyebrow, 'Etiqueta', { max: 80 });
   if (informado(corpo, 'botao')) d.botao = texto(corpo.botao, 'Botão', { max: 60 });

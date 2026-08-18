@@ -20,6 +20,11 @@ login.txt
 senhas*.txt
 credenciais*.txt
 
+# Arquivos que o administrador envia pelo painel (imagem e vídeo de banner).
+# É conteúdo do cliente, não código: a pasta existe no clone, o conteúdo não.
+/site/assets/enviados/*
+!/site/assets/enviados/.gitkeep
+
 # Saída da exportação de campeonato, gerada pelo navegador.
 /Copa Phygital*/
 /Copa Phygital*.zip

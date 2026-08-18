@@ -18,6 +18,12 @@ const auth = require('./auth');
 const CORPO_MAX = 2 * 1024 * 1024;      /* 2 MB para JSON */
 const CORPO_MAX_UPLOAD = 8 * 1024 * 1024; /* 8 MB quando a rota aceita arquivo */
 
+/* Envelope de POST /api/upload, e SÓ dele: vídeo de banner passa longe dos
+   8 MB acima. É constante separada de propósito — subir CORPO_MAX_UPLOAD
+   afrouxaria junto todas as rotas que embutem foto em JSON. A sobra de 2 MB
+   sobre o teto de vídeo cobre o invólucro do multipart. */
+const CORPO_MAX_ARQUIVO = 52 * 1024 * 1024;
+
 /* --------------------------------------------------------------------------
    ERRO DE APLICAÇÃO
 
@@ -266,6 +272,6 @@ function conferirOrigem(req) {
 module.exports = {
   ErroHttp, erro400, erro401, erro403, erro404, erro409, erro429,
   json, ok, falha,
-  corpoBruto, corpoJson, CORPO_MAX, CORPO_MAX_UPLOAD,
+  corpoBruto, corpoJson, CORPO_MAX, CORPO_MAX_UPLOAD, CORPO_MAX_ARQUIVO,
   lerCookies, ipDe, ehSeguro, criarContexto, criarRoteador, conferirOrigem
 };

@@ -108,6 +108,111 @@
   PB.fmt = fmt;
 
   /* ---------------------------------------------------------------------
+     MÍDIA DE FUNDO DO BANNER
+
+     O campo `video` do banner tem três formas:
+
+       ''                        banner de imagem, o fundo sai de `img`
+       'assets/enviados/x.mp4'   arquivo enviado pelo administrador
+       'youtube:<ID>'            vídeo hospedado no YouTube
+
+     A montagem mora aqui porque a home e o painel do competidor precisam do
+     mesmo resultado e são páginas independentes — duplicar o markup faria as
+     duas divergirem no primeiro ajuste.
+     --------------------------------------------------------------------- */
+
+  function escAtr(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* Aceita a forma gravada ('youtube:<ID>') e também um endereço colado
+     inteiro: o campo passa pela validação de endereço do servidor, que deixa
+     um https://youtu.be/... passar igual. Devolve '' quando não é YouTube.
+
+     O identificador é devolvido só se for [A-Za-z0-9_-] — ele entra no src do
+     iframe, e restringir o alfabeto aqui é o que impede um valor gravado no
+     banco de virar outro endereço. */
+  function idYoutube(valor) {
+    var s = String(valor || '').trim();
+    if (!s) return '';
+
+    var bruto = '';
+    var marcado = /^youtube:(.+)$/i.exec(s);
+    if (marcado) {
+      bruto = marcado[1];
+    /* O domínio precisa terminar em youtu.be / youtube.com — o grupo de
+       subdomínio só casa terminando em ponto, então um 'evil-youtube.com'
+       não passa por aqui. */
+    } else if (/^https?:\/\/([a-z0-9-]+\.)*youtu\.be\//i.test(s)) {
+      bruto = s.split(/[?#]/)[0].split('/').pop();
+    } else if (/^https?:\/\/([a-z0-9-]+\.)*youtube(-nocookie)?\.com\//i.test(s)) {
+      /* /watch?v=ID, /embed/ID, /shorts/ID e /live/ID */
+      var v = /[?&]v=([^&#]+)/.exec(s);
+      bruto = v ? v[1] : (/\/(?:embed|shorts|live)\/([^/?#]+)/.exec(s) || [])[1] || '';
+    } else {
+      return '';
+    }
+
+    bruto = String(bruto || '').trim();
+    return /^[A-Za-z0-9_-]{6,24}$/.test(bruto) ? bruto : '';
+  }
+
+  /* Parâmetros do player, na ordem em que importam:
+     mute=1      nenhum navegador dá autoplay com som;
+     loop=1      só repete acompanhado de playlist com o mesmo ID;
+     controls=0, modestbranding=1, rel=0, iv_load_policy=3, showinfo=0, fs=0,
+     disablekb=1 tiram botões, marca, anotações e sugestões — o pedido é um
+                 fundo limpo, não um player;
+     nocookie    a home não planta cookie de rastreio em quem só a abriu. */
+  function embedYoutube(id) {
+    return 'https://www.youtube-nocookie.com/embed/' + id + '?' + [
+      'autoplay=1', 'mute=1', 'loop=1', 'playlist=' + id, 'controls=0',
+      'modestbranding=1', 'rel=0', 'iv_load_policy=3', 'disablekb=1',
+      'playsinline=1', 'fs=0', 'showinfo=0'
+    ].join('&');
+  }
+
+  /* HTML do fundo de um slide.
+       banner  registro de bannersSite (home) ou de banners (painel)
+       base    caminho até a raiz do site: '' nas páginas públicas, '../'
+               dentro de painel/ e admin/
+       alt     texto alternativo da imagem; vazio marca a mídia como
+               decorativa. Vídeo é sempre decorativo. */
+  function midiaBanner(banner, base, alt) {
+    var b = banner || {};
+    var raiz = base || '';
+    var caminho = function (p) {
+      return /^assets\//.test(String(p)) ? raiz + p : String(p || '');
+    };
+
+    /* `midia` existe no banner do site; o do painel não tem o campo, então ter
+       `video` preenchido já basta. Um banner que voltou para imagem guarda o
+       vídeo antigo no registro — por isso 'imagem' vence. */
+    if (b.video && b.midia !== 'imagem') {
+      var id = idYoutube(b.video);
+      if (id) {
+        /* O iframe fica embrulhado porque é ele que vira o contêiner de
+           dimensionamento do CSS (o vídeo é 16:9 e o banner não é). */
+        return '<div class="banner-yt" aria-hidden="true">' +
+          '<iframe class="banner-yt__quadro" src="' + escAtr(embedYoutube(id)) + '" ' +
+          'title="Vídeo de fundo do banner" allow="autoplay; encrypted-media" ' +
+          'frameborder="0" tabindex="-1" aria-hidden="true"></iframe></div>';
+      }
+      return '<video src="' + escAtr(caminho(b.video)) + '" ' +
+        'autoplay muted loop playsinline aria-hidden="true"></video>';
+    }
+
+    return '<img src="' + escAtr(caminho(b.img)) + '" alt="' + escAtr(alt || '') + '"' +
+      (alt ? '' : ' aria-hidden="true"') + '>';
+  }
+
+  PB.idYoutube = idYoutube;
+  PB.embedYoutube = embedYoutube;
+  PB.midiaBanner = midiaBanner;
+
+  /* ---------------------------------------------------------------------
      CABEÇALHO — sombra ao rolar + menu mobile
      --------------------------------------------------------------------- */
   function iniciarCabecalho() {

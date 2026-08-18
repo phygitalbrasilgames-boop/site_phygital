@@ -21,6 +21,10 @@
   .bs-item__thumb img, .bs-item__thumb video { width: 100%; height: 100%; object-fit: cover; }
   .bs-item__thumb .marca-midia { position: absolute; top: 6px; left: 6px; background: rgba(14,17,19,.85); color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; padding: 3px 8px; border-radius: var(--r-pill); }
   .escolha-midia { display: flex; gap: var(--e-4); flex-wrap: wrap; }
+  /* Prévia da mídia escolhida — imagem, vídeo ou capa do YouTube */
+  .bs-previa { display: block; width: 100%; max-height: 160px; object-fit: cover; border-radius: var(--r-2); margin-top: var(--e-2); background: var(--grafite-80); }
+  /* Barra de envio: a .vagas__barra do painel, aqui em linha própria */
+  .bs-envio .vagas__barra { display: block; width: 100%; margin-top: 6px; }
   .linha-tamanho { display: flex; align-items: center; gap: var(--e-3); }
   .linha-tamanho input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--verde); }
   @media (max-width: 800px) { .bs-item { grid-template-columns: 1fr; } }
@@ -164,8 +168,9 @@
         <div>
           <strong>Especificações.</strong>
           Imagem: <strong>PNG ou JPG</strong>, 1920 × 900 px, até 2 MB.
-          Vídeo: <strong>MP4 ou WebM</strong>, 1920 × 900, até 10 MB, sem áudio —
-          ele roda em laço e silenciado, como fundo.
+          Vídeo: um arquivo <strong>MP4 ou WebM</strong> (1920 × 900, até 50 MB, sem áudio)
+          ou o <strong>link de um vídeo do YouTube</strong> — nos dois casos ele roda em laço
+          e silenciado, como fundo.
           Em telas menores a mídia é cortada pelo centro: mantenha o assunto no meio.
         </div>
       </div>
@@ -193,20 +198,41 @@
                   <span class="upload__titulo">Arraste a arte ou clique para escolher</span>
                   <span class="upload__specs">PNG ou JPG · 1920 × 900 px · até 2 MB</span>
                   <span class="upload__specs" data-upload-nome></span>
-                  <img id="b-previa" data-upload-preview alt="Pré-visualização" hidden style="max-height:140px;border-radius:var(--r-2);margin-top:8px">
+                  <img id="b-previa" class="bs-previa" data-upload-preview alt="Pré-visualização" hidden>
                   <input type="file" id="b-arquivo" accept="image/png,image/jpeg" class="sr-only">
                 </div>
               </div>
 
               <div class="campo" id="bloco-video" hidden>
-                <label for="b-video">Vídeo</label>
-                <div class="upload" data-upload>
-                  <span class="upload__titulo">Arraste o vídeo ou clique para escolher</span>
-                  <span class="upload__specs">MP4 ou WebM · 1920 × 900 · até 10 MB · sem áudio</span>
-                  <span class="upload__specs" data-upload-nome></span>
-                  <input type="file" id="b-video" accept="video/mp4,video/webm" class="sr-only">
+                <span class="rotulo">Vídeo de fundo</span>
+                <div class="escolha-midia">
+                  <label class="check"><input type="radio" name="origem-video" value="arquivo" checked> Enviar arquivo</label>
+                  <label class="check"><input type="radio" name="origem-video" value="youtube"> Link do YouTube</label>
                 </div>
-                <p class="campo__ajuda">O vídeo roda em laço, silenciado e sem controles. Em conexões lentas o navegador mostra o primeiro quadro.</p>
+
+                <div id="video-arquivo">
+                  <label for="b-video" class="sr-only">Arquivo de vídeo</label>
+                  <div class="upload" data-upload>
+                    <span class="upload__titulo">Arraste o vídeo ou clique para escolher</span>
+                    <span class="upload__specs">MP4 ou WebM · 1920 × 900 · até 50 MB · sem áudio</span>
+                    <span class="upload__specs" data-upload-nome></span>
+                    <input type="file" id="b-video" accept="video/mp4,video/webm" class="sr-only">
+                  </div>
+                  <video id="b-video-previa" class="bs-previa" muted playsinline loop hidden></video>
+                  <p class="campo__ajuda">O vídeo roda em laço, silenciado e sem controles. Em conexões lentas o navegador mostra o primeiro quadro.</p>
+                </div>
+
+                <div class="campo" id="video-youtube" hidden>
+                  <label for="b-youtube">Endereço do vídeo no YouTube</label>
+                  <input type="url" id="b-youtube" placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX">
+                  <p class="campo__erro" id="b-youtube-erro" hidden>Não reconheci este endereço — confira se é mesmo o link de um vídeo do YouTube.</p>
+                  <img id="b-yt-previa" class="bs-previa" alt="Capa do vídeo do YouTube" hidden>
+                  <p class="campo__ajuda">
+                    Vale <strong>youtube.com/watch?v=…</strong>, <strong>youtu.be/…</strong>,
+                    <strong>/embed/…</strong> e <strong>/shorts/…</strong>.
+                    O vídeo entra em laço, silenciado, sem controles e sem a marca do YouTube.
+                  </p>
+                </div>
               </div>
 
               <div class="campo">
@@ -274,9 +300,14 @@
                 </fieldset>
               </div>
 
+              <div class="campo bs-envio" id="b-envio" role="status" aria-live="polite" hidden>
+                <span class="txt-peq txt-suave" id="b-envio-texto">Enviando o arquivo…</span>
+                <span class="vagas__barra"><i id="b-envio-barra" style="width:0%"></i></span>
+              </div>
+
               <div class="modal__acoes">
                 <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
-                <button type="submit" class="btn btn--primario">Salvar banner</button>
+                <button type="submit" class="btn btn--primario" id="b-salvar">Salvar banner</button>
               </div>
             </form>
           </div>
@@ -303,11 +334,72 @@
   var ativos = function () { return todos().filter(function (b) { return !b.arquivado; }); };
   var arquivados = function () { return todos().filter(function (b) { return b.arquivado; }); };
 
+  /* ---- Endereços de mídia -------------------------------------------------
+
+     O que fica gravado no banner é o que o servidor de upload devolveu:
+     'assets/enviados/<arquivo>', relativo à RAIZ do site — porque é a home
+     quem exibe o banner. Esta tela mora em /admin/, então precisa do '../'.
+     Endereço com esquema (data:, http:, https:) vai inteiro.
+     ---------------------------------------------------------------------- */
+  function enderecoMidia(valor) {
+    var v = String(valor == null ? '' : valor);
+    if (!v) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(v) ? v : '../' + v;
+  }
+
+  var YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+
+  /* Um vídeo do YouTube é gravado como 'youtube:<id>' — texto, como qualquer
+     outro endereço, sem coluna nova no banco.
+
+     Quem sabe garimpar o identificador de um endereço é PB.idYoutube, em
+     assets/js/phygital.js: é a MESMA função que a home usa para montar o
+     player. Duas regras para o mesmo link divergiriam no primeiro ajuste, e o
+     sintoma seria um banner que salva aqui e não aparece lá.
+
+     Este lado acrescenta só o que é próprio da ESCRITA:
+
+     · o que o admin costuma colar — o endereço sem "https://" à frente, ou o
+       identificador sozinho;
+     · o tamanho exato. Um identificador do YouTube tem 11 caracteres; aceitar
+       10 ou 12 é aceitar um link truncado e descobrir o erro com o banner no
+       ar. O servidor recusa qualquer outro tamanho. */
+  function idDoYoutube(valor) {
+    var s = String(valor == null ? '' : valor).trim();
+    if (!s) return '';
+
+    if (YOUTUBE_ID.test(s)) return s;
+
+    /* PB.idYoutube só reconhece endereço com esquema. O grupo de subdomínio
+       exige o ponto, então 'meu-youtube.com/' não vira youtube.com. */
+    if (/^([a-z0-9-]+\.)*(youtube\.com|youtu\.be|youtube-nocookie\.com)\//i.test(s)) {
+      s = 'https://' + s;
+    }
+
+    var id = PB.idYoutube(s);
+    return YOUTUBE_ID.test(id) ? id : '';
+  }
+
+  function capaDoYoutube(id) {
+    return 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg';
+  }
+
+  /* De volta ao endereço completo, para o campo mostrar algo que o admin
+     reconhece (e possa abrir) em vez do 'youtube:<id>' que está no banco. */
+  function linkDoYoutube(id) {
+    return 'https://www.youtube.com/watch?v=' + id;
+  }
+
   function miniatura(b) {
     if (b.midia === 'video' && b.video) {
-      return '<video src="' + esc(b.video) + '" muted playsinline></video><span class="marca-midia">Vídeo</span>';
+      var yt = idDoYoutube(b.video);
+      if (yt) {
+        return '<img src="' + esc(capaDoYoutube(yt)) + '" alt=""><span class="marca-midia">YouTube</span>';
+      }
+      return '<video src="' + esc(enderecoMidia(b.video)) + '" muted playsinline></video>' +
+             '<span class="marca-midia">Vídeo</span>';
     }
-    return '<img src="../' + esc(b.img) + '" alt=""><span class="marca-midia">Imagem</span>';
+    return '<img src="' + esc(enderecoMidia(b.img)) + '" alt=""><span class="marca-midia">Imagem</span>';
   }
 
   function descricao(b) {
@@ -364,17 +456,199 @@
       '<div class="vazio"><h3>Histórico vazio</h3><p>Banners removidos da rotação aparecem aqui e podem ser restaurados.</p></div>';
   }
 
+  /* ---- Envio do arquivo ---------------------------------------------------
+
+     O arquivo escolhido sobe para POST /api/upload e o que volta é o caminho
+     público, que é o que fica gravado no banner. Antes desta tela nada subia:
+     a imagem escolhida era descartada e o vídeo virava URL.createObjectURL —
+     um blob que só existe naquela aba e morre no recarregamento.
+     ---------------------------------------------------------------------- */
+
+  var enviando = false;
+  var envioAtual = null;
+
+  /* Sem back-end o arquivo tem de caber no localStorage junto com o resto dos
+     dados, e o teto do navegador é de poucos megabytes. */
+  var TETO_SEM_SERVIDOR = 1.5 * 1024 * 1024;
+
+  function tamanhoLegivel(bytes) {
+    return bytes >= 1024 * 1024
+      ? (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB'
+      : Math.round(bytes / 1024) + ' KB';
+  }
+
+  function mostrarEnvio(texto, pct) {
+    $('#b-envio').hidden = false;
+    $('#b-envio-texto').textContent = texto;
+    $('#b-envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#b-envio').hidden = true;
+    $('#b-envio-barra').style.width = '0%';
+  }
+
+  /* Trava o salvar enquanto o arquivo sobe. Sem isto o admin, sem retorno na
+     tela, clica de novo e sobe o mesmo vídeo duas vezes. */
+  function travarSalvar(travado) {
+    enviando = travado;
+    var botao = $('#b-salvar');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Salvar banner';
+  }
+
+  /* XMLHttpRequest e não fetch: só o XHR informa quanto do arquivo já subiu, e
+     um vídeo de 30 MB sobe por um bom tempo. `aoTerminar` recebe sempre
+     { ok: true, caminho } ou { ok: false, erro } — nunca lança. */
+  function enviarArquivo(arquivo, aoTerminar) {
+    if (D.modo() !== 'api') { guardarSemServidor(arquivo, aoTerminar); return; }
+
+    var req = new XMLHttpRequest();
+    var pacote = new FormData();
+    pacote.append('arquivo', arquivo, arquivo.name);
+
+    req.open('POST', '/api/upload', true);
+    req.setRequestHeader('Accept', 'application/json');
+
+    req.upload.addEventListener('progress', function (e) {
+      if (!e.lengthComputable) return;
+      var pct = Math.round((e.loaded / e.total) * 100);
+      mostrarEnvio('Enviando ' + arquivo.name + ' — ' + pct + '%', pct);
+    });
+
+    req.addEventListener('load', function () {
+      var resposta = null;
+      try { resposta = JSON.parse(req.responseText); } catch (err) { resposta = null; }
+
+      if (req.status >= 200 && req.status < 300 && resposta && resposta.caminho) {
+        aoTerminar({ ok: true, caminho: resposta.caminho });
+        return;
+      }
+      aoTerminar({
+        ok: false,
+        erro: (resposta && resposta.erro) ||
+              'O servidor recusou o arquivo (HTTP ' + req.status + ').'
+      });
+    });
+
+    req.addEventListener('error', function () {
+      envioAtual = null;
+      aoTerminar({ ok: false, erro: 'A conexão caiu durante o envio. Tente de novo.' });
+    });
+    /* Cancelamento é decisão do admin, não falha: quem chama já limpou a tela e
+       não tem nada a avisar. */
+    req.addEventListener('abort', function () { aoTerminar({ cancelado: true }); });
+    req.addEventListener('loadend', function () { envioAtual = null; });
+
+    envioAtual = req;
+    mostrarEnvio('Preparando o envio de ' + arquivo.name + '…', 0);
+    req.send(pacote);
+  }
+
+  /* Fechar a janela no meio do envio (botão Cancelar, clique fora ou Esc) corta
+     o envio. Sem isto o arquivo continuaria subindo e o banner seria gravado
+     depois de o admin ter desistido. */
+  function cancelarEnvio() {
+    if (!envioAtual) return;
+    envioAtual.abort();
+    envioAtual = null;
+    travarSalvar(false);
+    esconderEnvio();
+  }
+
+  document.addEventListener('click', function (e) {
+    var fechou = (e.target.closest && e.target.closest('[data-fechar-modal]')) ||
+                 (e.target.classList && e.target.classList.contains('modal'));
+    if (fechou) cancelarEnvio();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') cancelarEnvio();
+  });
+
+  /* Demonstração estática (GitHub Pages, file://): não há para onde subir, então
+     o arquivo vira data: URL. Não é bonito, mas sobrevive ao recarregamento —
+     que é justamente o que o blob: de antes não fazia. */
+  function guardarSemServidor(arquivo, aoTerminar) {
+    if (arquivo.size > TETO_SEM_SERVIDOR) {
+      aoTerminar({
+        ok: false,
+        erro: 'Sem servidor esta tela só guarda arquivos de até 1,5 MB (este tem ' +
+              tamanhoLegivel(arquivo.size) + '). Use o link do YouTube ou publique com o back-end ligado.'
+      });
+      return;
+    }
+
+    var leitor = new FileReader();
+    mostrarEnvio('Lendo ' + arquivo.name + '…', 40);
+    leitor.onload = function () { aoTerminar({ ok: true, caminho: String(leitor.result) }); };
+    leitor.onerror = function () { aoTerminar({ ok: false, erro: 'Não foi possível ler o arquivo escolhido.' }); };
+    leitor.readAsDataURL(arquivo);
+  }
+
   /* ---- Formulário ---- */
   function midiaSelecionada() {
     return document.querySelector('input[name="midia"]:checked').value;
   }
+  function origemDoVideo() {
+    return document.querySelector('input[name="origem-video"]:checked').value;
+  }
   function aplicarMidia() {
     var v = midiaSelecionada();
+    var origem = origemDoVideo();
     $('#bloco-imagem').hidden = v !== 'imagem';
     $('#bloco-video').hidden = v !== 'video';
+    $('#video-arquivo').hidden = origem !== 'arquivo';
+    $('#video-youtube').hidden = origem !== 'youtube';
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="midia"]'), function (r) {
-    r.addEventListener('change', aplicarMidia);
+  Array.prototype.forEach.call(
+    document.querySelectorAll('input[name="midia"], input[name="origem-video"]'),
+    function (r) { r.addEventListener('change', aplicarMidia); }
+  );
+
+  /* ---- Prévias ------------------------------------------------------------
+
+     A prévia do vídeo escolhido é blob: DE PROPÓSITO — ela só precisa durar
+     enquanto a janela está aberta. O que vai para o banco é o caminho que o
+     servidor devolve no envio.
+     ---------------------------------------------------------------------- */
+
+  var blobDaPrevia = '';
+
+  function mostrarPreviaVideo(endereco) {
+    var el = $('#b-video-previa');
+    if (blobDaPrevia && blobDaPrevia !== endereco) URL.revokeObjectURL(blobDaPrevia);
+    blobDaPrevia = endereco && endereco.indexOf('blob:') === 0 ? endereco : '';
+
+    if (!endereco) { el.removeAttribute('src'); el.hidden = true; return; }
+    el.src = endereco;
+    el.hidden = false;
+  }
+
+  function mostrarPreviaYoutube(id) {
+    var el = $('#b-yt-previa');
+    if (!id) { el.removeAttribute('src'); el.hidden = true; return; }
+    el.src = capaDoYoutube(id);
+    el.hidden = false;
+  }
+
+  /* Confere o link colado na hora e devolve o identificador (ou ''). */
+  function conferirYoutube() {
+    var bruto = $('#b-youtube').value.trim();
+    var id = idDoYoutube(bruto);
+    var campo = $('#b-youtube').closest('.campo');
+    var naoReconhecido = !!bruto && !id;
+
+    campo.classList.toggle('campo--erro', naoReconhecido);
+    $('#b-youtube-erro').hidden = !naoReconhecido;
+    mostrarPreviaYoutube(id);
+    return id;
+  }
+
+  $('#b-youtube').addEventListener('input', conferirYoutube);
+
+  $('#b-video').addEventListener('change', function () {
+    var arq = this.files && this.files[0];
+    mostrarPreviaVideo(arq ? URL.createObjectURL(arq) : '');
   });
 
   $('#b-sem-texto').addEventListener('change', function () {
@@ -403,11 +677,32 @@
 
     var tipo = b && b.midia === 'video' ? 'video' : 'imagem';
     document.querySelector('input[name="midia"][value="' + tipo + '"]').checked = true;
+
+    /* Os <input type="file"> guardam a escolha entre uma abertura e outra: sem
+       limpar, editar um banner e depois outro reenviaria a arte do primeiro. */
+    $('#b-arquivo').value = '';
+    $('#b-video').value = '';
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#form-banner [data-upload-nome]'),
+      function (el) { el.textContent = ''; }
+    );
+
+    var yt = b && tipo === 'video' ? idDoYoutube(b.video) : '';
+    $('#b-youtube').value = yt ? linkDoYoutube(yt) : '';
+    document.querySelector('input[name="origem-video"][value="' + (yt ? 'youtube' : 'arquivo') + '"]').checked = true;
+    $('#b-youtube').closest('.campo').classList.remove('campo--erro');
+    $('#b-youtube-erro').hidden = true;
+
     aplicarMidia();
+    travarSalvar(false);
+    esconderEnvio();
 
     var prev = $('#b-previa');
-    if (b && b.img && tipo === 'imagem') { prev.src = '../' + b.img; prev.hidden = false; }
-    else prev.hidden = true;
+    if (b && b.img && tipo === 'imagem') { prev.src = enderecoMidia(b.img); prev.hidden = false; }
+    else { prev.removeAttribute('src'); prev.hidden = true; }
+
+    mostrarPreviaVideo(b && tipo === 'video' && !yt ? enderecoMidia(b.video) : '');
+    mostrarPreviaYoutube(yt);
 
     PB.abrirModal('modal-banner');
   }
@@ -472,46 +767,96 @@
 
   $('#form-banner').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviando) return;                 /* já há um arquivo subindo */
+
     var id = $('#b-id').value;
     var existente = id ? todos().filter(function (x) { return x.id === id; })[0] : null;
     var semTexto = $('#b-sem-texto').checked;
     var tipo = midiaSelecionada();
+    var origem = origemDoVideo();
 
-    var arqImg = $('#b-arquivo').files[0];
-    var arqVid = $('#b-video').files[0];
+    /* Só o arquivo do lado escolhido conta: um vídeo que ficou selecionado e o
+       admin depois trocou para "Imagem fixa" não pode ir junto. */
+    var arqImg = tipo === 'imagem' ? $('#b-arquivo').files[0] : null;
+    var arqVid = tipo === 'video' && origem === 'arquivo' ? $('#b-video').files[0] : null;
 
-    if (!existente && tipo === 'imagem' && !arqImg) {
+    /* Mídia que o banner já tem, aproveitada SÓ quando nada novo foi escolhido.
+       O defeito antigo estava exatamente aqui: a tela reaproveitava sempre, e
+       por isso a imagem escolhida nunca chegava ao banner. */
+    var imgAtual = existente ? (existente.img || '') : '';
+    var videoAtual = existente ? (existente.video || '') : '';
+    var videoAtualEhYoutube = !!idDoYoutube(videoAtual);
+    var yt = '';
+
+    if (tipo === 'imagem' && !arqImg && !imgAtual) {
       PB.toast('Falta a imagem', 'Escolha a arte do banner antes de salvar.', 'alerta');
       return;
     }
-    if (!existente && tipo === 'video' && !arqVid) {
+
+    if (tipo === 'video' && origem === 'youtube') {
+      yt = conferirYoutube();
+      if (!yt) {
+        PB.toast('Link do YouTube não reconhecido',
+          'Cole o endereço do vídeo: youtube.com/watch?v=…, youtu.be/…, /embed/… ou /shorts/….', 'alerta');
+        $('#b-youtube').focus();
+        return;
+      }
+    }
+
+    /* Trocar de "link do YouTube" para "enviar arquivo" exige arquivo novo: o
+       que está gravado é do outro tipo e reaproveitá-lo contradiria a escolha. */
+    if (tipo === 'video' && origem === 'arquivo' && !arqVid && (!videoAtual || videoAtualEhYoutube)) {
       PB.toast('Falta o vídeo', 'Escolha o arquivo de vídeo antes de salvar.', 'alerta');
       return;
     }
 
-    var item = {
-      id: id || ('s' + Date.now()),
-      midia: tipo,
-      img: existente ? existente.img : 'assets/img/mock/hero-1.svg',
-      video: arqVid ? URL.createObjectURL(arqVid) : (existente ? existente.video : ''),
-      semTexto: semTexto,
-      eyebrow: semTexto ? '' : $('#b-eyebrow').value.trim(),
-      titulo: semTexto ? '' : $('#b-titulo').value.trim(),
-      tituloTamanho: semTexto ? 0 : (parseInt($('#b-tamanho').value, 10) || 0),
-      texto: semTexto ? '' : $('#b-texto').value.trim(),
-      botao: semTexto ? '' : $('#b-botao').value.trim(),
-      link: semTexto ? '' : $('#b-link').value.trim(),
-      botao2: semTexto ? '' : $('#b-botao2').value.trim(),
-      link2: semTexto ? '' : $('#b-link2').value.trim(),
-      ordem: existente ? existente.ordem : ativos().length + 1,
-      ativo: true,
-      arquivado: existente ? !!existente.arquivado : false
-    };
+    /* Grava o banner. `caminho` só vem preenchido quando um arquivo subiu. */
+    function concluir(caminho) {
+      var item = {
+        id: id || ('s' + Date.now()),
+        midia: tipo,
+        img: tipo === 'imagem' && caminho ? caminho : imgAtual,
+        video: tipo !== 'video' ? videoAtual
+             : yt ? 'youtube:' + yt
+             : (caminho || videoAtual),
+        semTexto: semTexto,
+        eyebrow: semTexto ? '' : $('#b-eyebrow').value.trim(),
+        titulo: semTexto ? '' : $('#b-titulo').value.trim(),
+        tituloTamanho: semTexto ? 0 : (parseInt($('#b-tamanho').value, 10) || 0),
+        texto: semTexto ? '' : $('#b-texto').value.trim(),
+        botao: semTexto ? '' : $('#b-botao').value.trim(),
+        link: semTexto ? '' : $('#b-link').value.trim(),
+        botao2: semTexto ? '' : $('#b-botao2').value.trim(),
+        link2: semTexto ? '' : $('#b-link2').value.trim(),
+        ordem: existente ? existente.ordem : ativos().length + 1,
+        ativo: true,
+        arquivado: existente ? !!existente.arquivado : false
+      };
 
-    D.gravar('bannersSite', item);
-    PB.fecharModal('modal-banner');
-    PB.toast('Banner salvo', 'A home do site já reflete a alteração.', 'info');
-    PB.recarregar();
+      D.gravar('bannersSite', item);
+      PB.fecharModal('modal-banner');
+      PB.toast('Banner salvo', 'A home do site já reflete a alteração.', 'info');
+      PB.recarregar();
+    }
+
+    var arquivo = arqImg || arqVid;
+    if (!arquivo) { concluir(''); return; }
+
+    travarSalvar(true);
+    enviarArquivo(arquivo, function (r) {
+      if (r.cancelado) return;          /* cancelarEnvio() já destravou a tela */
+
+      travarSalvar(false);
+      esconderEnvio();
+
+      if (!r.ok) {
+        /* Nada é gravado: o banner ficaria apontando para um arquivo que não
+           existe, e a home abriria com o fundo quebrado. */
+        PB.toast('O arquivo não subiu', r.erro, 'erro');
+        return;
+      }
+      concluir(r.caminho);
+    });
   });
 
   render();
