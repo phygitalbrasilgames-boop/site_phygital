@@ -139,20 +139,6 @@
 
     <main class="painel__corpo" id="conteudo">
 
-      <!-- Aviso de modo demonstração: sem back-end o SMTP não existe, e a tela
-           precisa deixar isso claro ANTES do admin gastar tempo compondo. O
-           script inline no fim da página exibe quando D.modo() !== 'api'. -->
-      <div class="aviso aviso--alerta" id="aviso-sem-backend" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
-        <div>
-          <strong>Modo demonstração — o e-mail não sai daqui.</strong>
-          Este site está sem back-end (o GitHub Pages só serve arquivos estáticos).
-          Você pode compor e ver a prévia, mas o SMTP só funciona rodando o
-          servidor local: <code>node --env-file=.env server/index.js</code> e depois
-          <code>http://localhost:3000</code>.
-        </div>
-      </div>
-
       <div class="bloco">
         <div data-abas>
           <div class="abas" role="tablist" aria-label="Disparo de e-mail">
@@ -414,14 +400,6 @@
 (function () {
   var D = PB.dados, F = PB.fmt;
   var $ = function (s) { return document.querySelector(s); };
-
-  /* Aviso de modo demonstração: sem back-end o SMTP não existe, ponto. Sem
-     este alerta o admin compõe um e-mail inteiro, clica "Enviar" e recebe um
-     "entregue" que é ficção — foi o motivo do e-mail do print não chegar. */
-  if (D.modo && D.modo() !== 'api') {
-    var aviso = document.getElementById('aviso-sem-backend');
-    if (aviso) aviso.hidden = false;
-  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {

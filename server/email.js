@@ -37,7 +37,17 @@ const { erro404 } = require('./http');
 
 /* Base para montar a URL absoluta do logo: cliente de e-mail não resolve
    caminho relativo. */
-const URL_BASE = process.env.PHYGITAL_URL || 'http://localhost:3000';
+/* Endereço público onde as imagens do e-mail carregam. Um localhost dentro do
+   HTML enviado quebra o logo para quem recebe.
+
+   - PHYGITAL_URL vence tudo, para produção em domínio próprio;
+   - Codespaces injeta CODESPACE_NAME em todo shell — traduzido para a URL
+     encaminhada, faz o e-mail funcionar sem configuração extra;
+   - o padrão local vale para desenvolvimento na máquina do autor. */
+const URL_BASE = process.env.PHYGITAL_URL
+  || (process.env.CODESPACE_NAME
+      && `https://${process.env.CODESPACE_NAME}-${process.env.PHYGITAL_PORTA || 3000}.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || 'app.github.dev'}`)
+  || 'http://localhost:3000';
 
 /* Assunto longo é cortado pelo cliente de e-mail de qualquer jeito. */
 const ASSUNTO_MAX = 200;
