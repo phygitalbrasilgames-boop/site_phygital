@@ -46,18 +46,34 @@ function variaveisConhecidas() {
 }
 
 /**
- * Anexo entra como METADADO, nunca como conteúdo: o corpo da requisição tem
- * teto de 2 MB e guardar arquivo em base64 no banco estouraria o histórico.
- * Consequência: a prévia lista o anexo, mas o despachante entrega só o corpo —
- * anexar de verdade exige guardar o arquivo em disco e apontar a linha para ele.
+ * Anexo entra como METADADO. O binário fica em site/assets/enviados/ (gravado
+ * antes por POST /api/upload, que valida assinatura e limita tamanho por classe)
+ * e o dispatcher lê os bytes do disco na hora de montar o multipart do SMTP.
+ * Guardar o conteúdo em base64 aqui estouraria o histórico e o teto de corpo
+ * de requisição — o caminho é a ponte.
+ *
+ * O campo `caminho`, quando vem, precisa casar EXATO com o formato que
+ * server/rotas/upload.js grava: `assets/enviados/<uuid v4>.<ext curta>`. Sem
+ * essa amarra o cliente escolheria qualquer caminho e teríamos travessia de
+ * diretório — o dispatcher lê arquivo. Fora do padrão, o campo é DESCARTADO
+ * (não bloqueia o disparo): o anexo continua na prévia como metadado, mas o
+ * dispatcher entrega só o corpo, como faz há muito tempo.
  */
+const CAMINHO_ENVIADO = /^assets\/enviados\/[0-9a-f-]{36}\.[a-z0-9]{2,5}$/;
+const MAX_ANEXOS_POR_DISPARO = 10;
+
 function limparAnexos(bruto) {
   if (!Array.isArray(bruto)) return [];
-  return bruto.slice(0, 10).map((a) => ({
-    nome: String((a && a.nome) || 'arquivo').slice(0, 160),
-    tipo: String((a && a.tipo) || '').slice(0, 80),
-    tamanho: Number(a && a.tamanho) || 0
-  }));
+  return bruto.slice(0, MAX_ANEXOS_POR_DISPARO).map((a) => {
+    const caminho = String((a && a.caminho) || '');
+    const item = {
+      nome: String((a && a.nome) || 'arquivo').slice(0, 160),
+      tipo: String((a && a.tipo) || '').slice(0, 80),
+      tamanho: Number(a && a.tamanho) || 0
+    };
+    if (caminho && CAMINHO_ENVIADO.test(caminho)) item.caminho = caminho;
+    return item;
+  });
 }
 
 const texto = (v) => String(v === undefined || v === null ? '' : v).trim();
@@ -644,10 +660,10 @@ function registrar(rotas) {
     const html = email.montarHtml({
       assunto: registro.assunto || '',
       corpo: corpoFinal,
-      /* Anexos não são persistidos: gravar arquivo em base64 estouraria o
-         histórico (ver comentário em limparAnexos). O envelope reconstruído
-         mostra só o corpo — igual ao que o despachante entregou. */
-      anexos: []
+      /* Anexos vêm do metadado gravado no banco: o binário mora em
+         site/assets/enviados/. O envelope só lista nome e tamanho — igual à
+         prévia que o dispatcher entrega para o destinatário. */
+      anexos: registro.anexos || []
     });
 
     ctx.ok({
@@ -740,6 +756,10 @@ function registrar(rotas) {
        o público for a lista de responsáveis por time, personalizar exige
        enfileirar uma linha por destinatário — mudança no modelo da tabela, não
        no despachante. */
+    /* Anexos vão inteiros (com `caminho`): quem grava a linha é email.enviar,
+       e é ele que persiste o metadado na coluna `anexos` para o dispatcher
+       encontrar o arquivo no disco depois. Antes esta rota mandava um array
+       vazio; o resultado é que o SMTP nunca via o anexo. */
     const resultado = email.enviar({
       para: alvo.destinatarios.map((d) => d.email),
       destino: alvo.rotulo,

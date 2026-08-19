@@ -60,6 +60,13 @@ const COLUNAS_ACRESCENTADAS = [
   ['emails_enviados', 'proxima_tentativa', 'TEXT'],
   ['emails_enviados', 'enviado_em', 'TEXT'],
 
+  /* Metadados dos anexos do disparo, em JSON: [{nome, caminho, tipo, tamanho}].
+     O conteúdo binário não fica aqui — o arquivo continua em
+     site/assets/enviados/ e o dispatcher lê os bytes do disco na hora de
+     entregar. Sem esta coluna o anexo não sobreviveria ao INSERT: o payload
+     traz só metadado e o retorno para o SMTP precisa saber qual arquivo abrir. */
+  ['emails_enviados', 'anexos', 'TEXT'],
+
   /* Idioma preferido da conta (server/traducoes.js). NOT NULL exige DEFAULT no
      ALTER TABLE — sem ele, as linhas que já existem não teriam valor. O CHECK
      do esquema fica de fora aqui: o SQLite não aceita acrescentá-lo por ALTER,

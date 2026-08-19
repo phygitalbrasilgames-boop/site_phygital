@@ -470,7 +470,11 @@ CREATE TABLE IF NOT EXISTS emails_enviados (
   data              TEXT NOT NULL,
   tentativas        INTEGER NOT NULL DEFAULT 0,
   proxima_tentativa TEXT,
-  enviado_em        TEXT
+  enviado_em        TEXT,
+  -- Metadados dos anexos do disparo, em JSON: [{nome, caminho, tipo, tamanho}].
+  -- O binário fica em site/assets/enviados/; o dispatcher (server/fila-email.js)
+  -- carrega o arquivo do disco na hora de montar o multipart do SMTP.
+  anexos            TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_emails_data ON emails_enviados (data DESC);

@@ -30,6 +30,8 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const db = require('./db');
 const mapa = require('./mapa');
 const traducoes = require('./traducoes');
@@ -291,6 +293,81 @@ function montarHtml({ assunto = '', corpo = '', anexos = [], rodape = '' } = {})
 }
 
 /* --------------------------------------------------------------------------
+   ANEXOS
+
+   O binário fica em site/assets/enviados/ (a rota /api/upload já grava com
+   assinatura conferida e nome no formato UUID.<ext>); a linha em
+   emails_enviados guarda só o metadado, com o `caminho` como ponte. No momento
+   de entregar, o dispatcher (server/fila-email.js) chama carregarAnexo() para
+   abrir o arquivo do disco e entregar Buffer ao smtp.js — que já sabe montar
+   multipart/mixed a partir de {nome, tipo, conteudo}.
+
+   Duas travas:
+
+   1. RESOLUÇÃO CONTIDA. path.resolve casa com a pasta PASTA_ENVIADOS e o
+      resultado precisa começar por ela — caso o `caminho` que chegou não seja
+      exatamente 'assets/enviados/<uuid>.<ext>', a rota já o descartou; aqui
+      cinto e suspensório, para o dispatcher nunca abrir arquivo fora dali.
+   2. NÃO LANÇA. Se o arquivo sumiu do disco (limpeza de órfãos, movido à mão),
+      carregarAnexo devolve um erro em texto — quem chama transforma isso na
+      coluna `erro` da linha e marca a mensagem como falha, em vez de derrubar
+      a rodada do despachante.
+   -------------------------------------------------------------------------- */
+
+const PASTA_ENVIADOS = path.resolve(__dirname, '..', 'site', 'assets', 'enviados');
+const CAMINHO_ENVIADO = /^assets\/enviados\/[0-9a-f-]{36}\.[a-z0-9]{2,5}$/;
+
+/**
+ * Lê o arquivo do anexo e devolve o que server/smtp.js pede.
+ *
+ * @param {{nome, tipo, caminho, tamanho}} a  metadado gravado no disparo
+ * @returns {{ok:true, anexo}|{ok:false, motivo}}
+ */
+function carregarAnexo(a) {
+  const nome = String((a && a.nome) || 'arquivo');
+  const tipo = String((a && a.tipo) || 'application/octet-stream');
+  const caminho = String((a && a.caminho) || '');
+
+  if (!caminho) {
+    /* Metadado sem caminho é anexo "só na prévia" — a rota nova exige o campo,
+       mas o histórico velho pode ter linhas sem ele. Sinalizamos para o
+       dispatcher entregar assim mesmo, sem esse anexo. */
+    return { ok: false, motivo: `Anexo ${nome}: caminho não gravado.` };
+  }
+
+  /* Fora do padrão de /api/upload — o próprio /disparar descarta caminhos
+     assim, mas repetimos a checagem no ponto que abre o arquivo. */
+  if (!CAMINHO_ENVIADO.test(caminho)) {
+    return { ok: false, motivo: `Anexo ${nome}: caminho fora do formato aceito.` };
+  }
+
+  const nomeArquivo = caminho.split('/').pop();
+  const alvo = path.resolve(PASTA_ENVIADOS, nomeArquivo);
+
+  /* Amarra final: o path resolvido tem que continuar DENTRO de site/assets/
+     enviados. Sem o separador no fim, '/enviados-outro/x' bateria como prefixo. */
+  if (alvo !== path.join(PASTA_ENVIADOS, nomeArquivo)
+      || !alvo.startsWith(PASTA_ENVIADOS + path.sep)) {
+    return { ok: false, motivo: `Anexo ${nome}: caminho fora da pasta de envios.` };
+  }
+
+  let conteudo;
+  try {
+    conteudo = fs.readFileSync(alvo);
+  } catch (e) {
+    if (e && e.code === 'ENOENT') {
+      return { ok: false, motivo: `Anexo ${nome}: arquivo sumiu de ${caminho}.` };
+    }
+    return { ok: false, motivo: `Anexo ${nome}: ${(e && e.message) || 'falha ao ler o arquivo.'}` };
+  }
+
+  return {
+    ok: true,
+    anexo: { nome, tipo, conteudo, codificacao: 'binary' }
+  };
+}
+
+/* --------------------------------------------------------------------------
    ENVIO
    -------------------------------------------------------------------------- */
 
@@ -405,6 +482,20 @@ function enviar({
 
   const id = 'em-' + crypto.randomUUID();
 
+  /* Só metadado: o binário fica em site/assets/enviados/ e o dispatcher lê o
+     arquivo do disco na hora. Guardar o conteúdo em base64 aqui estouraria o
+     histórico (100 MB por arquivo, e o painel imprime esta coluna). */
+  const anexosGravaveis = Array.isArray(anexos)
+    ? anexos.map((a) => ({
+        nome: String((a && a.nome) || 'arquivo'),
+        tipo: String((a && a.tipo) || 'application/octet-stream'),
+        tamanho: Number(a && a.tamanho) || 0,
+        /* Só grava o caminho quando ele existe: sem caminho, o dispatcher sabe
+           que é anexo "só na prévia" e entrega a mensagem sem esse arquivo. */
+        ...(a && a.caminho ? { caminho: String(a.caminho) } : {})
+      }))
+    : [];
+
   const linha = mapa.paraLinhaEmailEnviado({
     modeloId: modeloGravavel,
     assunto: assuntoFinal || '(sem assunto)',
@@ -416,7 +507,8 @@ function enviar({
     corpo: corpoFinal || '',
     qtd: qtd === null ? (enderecos.length || 1) : Number(qtd) || 0,
     status,
-    erro
+    erro,
+    anexos: anexosGravaveis
   }, { id });
 
   const colunas = Object.keys(linha);
@@ -476,6 +568,7 @@ module.exports = {
   aplicarModelo, enviar, fila, ultimos,
   montarHtml, substituir, escapar, limparAssunto,
   variaveisDe, normalizarPara, statusDeEnvio, contextoCompleto,
-  idiomaDoDestinatario,
-  VARIAVEIS_OBRIGATORIAS, RESSALVA_INSCRICAO
+  idiomaDoDestinatario, carregarAnexo,
+  VARIAVEIS_OBRIGATORIAS, RESSALVA_INSCRICAO,
+  PASTA_ENVIADOS
 };
