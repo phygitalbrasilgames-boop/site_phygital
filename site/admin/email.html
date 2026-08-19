@@ -183,12 +183,21 @@
                 <div class="campo">
                   <label for="anexo">Anexar arquivo</label>
                   <input type="file" id="anexo" name="anexo"
-                         accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.doc,.docx">
+                         accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,image/gif">
                   <p class="campo__ajuda">
-                    Imagem (PNG, JPG, WEBP ou GIF até 5 MB) ou documento
-                    (PDF, Word .doc/.docx até 100 MB). O arquivo é guardado no
-                    servidor e vai junto com o e-mail para cada destinatário.
+                    PDF, Word, PNG, JPG, WEBP ou GIF até 100 MB. O arquivo vai
+                    anexado ao e-mail.
                   </p>
+                  <div id="anexo-card" class="mt-2" hidden
+                       style="gap:var(--e-2);align-items:center;padding:var(--e-2) var(--e-3);
+                              background:var(--claro);border:1px solid var(--cinza-20);border-radius:var(--r-2);
+                              font-size:var(--t-peq)">
+                    <span id="anexo-card-info" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                    <button type="button" id="anexo-card-remover"
+                            aria-label="Remover anexo"
+                            style="border:0;background:transparent;cursor:pointer;font-size:1.25rem;line-height:1;
+                                   width:28px;height:28px;border-radius:var(--r-1);color:var(--grafite)">×</button>
+                  </div>
                 </div>
 
                 <div class="campo" id="envio" role="status" aria-live="polite" hidden>
@@ -534,40 +543,47 @@
     if (cmd) { e.preventDefault(); comandar(cmd); }
   });
 
-  /* ---- Prévia ao vivo ---- */
-  function atualizarPrevia() {
-    $('#prev-assunto').textContent = $('#assunto').value || 'Assunto do e-mail';
-    var html = editor.innerHTML.trim();
-    $('#prev-mensagem').innerHTML = html && html !== '<br>'
-      ? html
-      : '<p>O texto que você escrever aparece aqui.</p>';
-    var arq = $('#anexo').files[0];
-    $('#prev-anexo').hidden = !arq;
-    if (arq) $('#prev-anexo').textContent = 'Anexo: ' + arq.name;
-  }
-  $('#assunto').addEventListener('input', atualizarPrevia);
-  $('#anexo').addEventListener('change', atualizarPrevia);
-  atualizarPrevia();
-
   /* ---- Anexo do disparo ----
-     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o caminho
-     devolvido entra no registro do disparo. O metadado (nome, caminho, tipo,
-     tamanho) viaja no POST /api/email/disparar, é gravado na coluna `anexos`
-     do banco e, na hora de entregar, o dispatcher lê os bytes do disco em
-     site/assets/enviados/ e passa como Buffer para o SMTP — que já sabe montar
-     multipart/mixed. Encanamento completo. */
-  var enviando = false;
+     O arquivo sobe assim que o admin escolhe: POST /api/upload devolve o caminho
+     em assets/enviados/ e o metadado (nome, caminho, tipo, tamanho) fica em
+     memória (anexoPronto). Na hora do submit ele viaja no POST /api/email/disparar,
+     é gravado na coluna `anexos` do banco e, na entrega, o dispatcher lê o Buffer
+     do disco e passa para o SMTP — que já sabe montar multipart/mixed.
+     Encanamento completo. */
+  var anexoPronto = null;   /* { nome, caminho, tipo, tamanho } — só depois do upload OK */
+  var enviando = false;     /* trava o botão enquanto o arquivo sobe */
+  var envioCancel = null;   /* função para abortar o XHR do upload em curso */
+
+  function tamanhoLegivel(bytes) {
+    return bytes >= 1024 * 1024
+      ? (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB'
+      : Math.round(bytes / 1024) + ' KB';
+  }
 
   function mostrarEnvio(texto, pct) {
     $('#envio').hidden = false;
     $('#envio-texto').textContent = texto;
     $('#envio-barra').style.width = pct + '%';
+    $('#envio-remover').hidden = true;
   }
 
   function esconderEnvio() {
     $('#envio').hidden = true;
     $('#envio-barra').style.width = '0%';
     $('#envio-remover').hidden = true;
+  }
+
+  /* Sem back-end não dá para chamar DELETE — o "caminho" é uma data: URL que só
+     existe no navegador. A faxina do servidor pega arquivos órfãos em 2 h, então
+     mesmo em modo API isto é best-effort: falha aqui não é fatal. */
+  function apagarNoServidor(caminho) {
+    if (!caminho || !PB.dados || PB.dados.modo() !== 'api') return;
+    var m = /^assets\/enviados\/([0-9a-f-]{36}\.[a-z0-9]{2,5})$/i.exec(caminho);
+    if (!m || !PB.api || !PB.api.remover) return;
+    try {
+      PB.api.remover('/upload/' + encodeURIComponent(m[1]))
+        .then(function () {}, function () {});   /* silêncio: é limpeza */
+    } catch (_) { /* ignora */ }
   }
 
   /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o admin clica de
@@ -579,19 +595,129 @@
     botao.textContent = travado ? 'Enviando…' : 'Enviar e-mail';
   }
 
-  /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto o
-     disparo não acontece e não há como desescolher o arquivo. */
+  function mostrarCard(nome, tamanho) {
+    var el = $('#anexo-card');
+    el.hidden = false;
+    /* display inline vence [hidden]; setar aqui para o card aparecer como flex */
+    el.style.display = 'flex';
+    $('#anexo-card-info').textContent = nome + ' — ' + tamanhoLegivel(tamanho);
+  }
+
+  function esconderCard() {
+    var el = $('#anexo-card');
+    el.hidden = true;
+    el.style.display = 'none';   /* zera o display inline para o hidden pegar */
+  }
+
+  /* Zera tudo: input do arquivo, memória do anexo, card, barra de progresso.
+     Chamado quando o admin desanexa, quando o upload falha ou é cancelado. */
+  function limparAnexo(motivoToast) {
+    if (anexoPronto && anexoPronto.caminho) apagarNoServidor(anexoPronto.caminho);
+    anexoPronto = null;
+    $('#anexo').value = '';
+    esconderCard();
+    esconderEnvio();
+    atualizarPrevia();
+    if (motivoToast) PB.toast('Anexo removido', motivoToast, 'info');
+  }
+
+  /* ---- Prévia ao vivo ---- */
+  function atualizarPrevia() {
+    $('#prev-assunto').textContent = $('#assunto').value || 'Assunto do e-mail';
+    var html = editor.innerHTML.trim();
+    $('#prev-mensagem').innerHTML = html && html !== '<br>'
+      ? html
+      : '<p>O texto que você escrever aparece aqui.</p>';
+    $('#prev-anexo').hidden = !anexoPronto;
+    if (anexoPronto) $('#prev-anexo').textContent = 'Anexo: ' + anexoPronto.nome;
+  }
+  $('#assunto').addEventListener('input', atualizarPrevia);
+  atualizarPrevia();
+
+  /* Upload dispara ao escolher o arquivo — não ao enviar. O admin vê o progresso
+     na hora e sabe que o anexo já está no servidor antes de clicar em Enviar. */
+  $('#anexo').addEventListener('change', function () {
+    var arquivo = this.files[0];
+
+    /* Trocou de arquivo (ou limpou o input): o anterior perde a razão de existir. */
+    if (envioCancel) { try { envioCancel(); } catch (_) {} envioCancel = null; }
+    if (anexoPronto && anexoPronto.caminho) apagarNoServidor(anexoPronto.caminho);
+    anexoPronto = null;
+    esconderCard();
+    esconderEnvio();
+    atualizarPrevia();
+
+    if (!arquivo) { travarEnvio(false); return; }
+
+    /* Classe é dica de pré-conferência (o teto muda com ela): imagem só até
+       5 MB, documento até 100 MB. O servidor decide pelo conteúdo do arquivo. */
+    var tipoArq = String(arquivo.type || '').toLowerCase();
+    var nomeArq = String(arquivo.name || '').toLowerCase();
+    var classeArq = 'documento';
+    if (tipoArq.indexOf('image/') === 0) classeArq = 'imagem';
+    else if (/\.(png|jpe?g|webp|gif)$/i.test(nomeArq)) classeArq = 'imagem';
+
+    travarEnvio(true);
+    mostrarEnvio('Preparando o envio de ' + arquivo.name + '…', 0);
+
+    var envio = PB.enviarArquivo(arquivo, {
+      classe: classeArq,
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      envioCancel = null;
+      travarEnvio(false);
+
+      if (r.cancelado) { $('#anexo').value = ''; esconderEnvio(); return; }
+
+      if (!r.ok) {
+        /* Falhou: apaga a escolha, mostra o erro em toast + no bloco de envio.
+           Sem anexo em memória, o submit segue normalmente sem arquivo. */
+        $('#anexo').value = '';
+        mostrarEnvio(r.erro, 0);
+        $('#envio-remover').hidden = false;
+        PB.toast('O anexo não subiu', r.erro, 'erro');
+        return;
+      }
+
+      anexoPronto = {
+        nome: arquivo.name,
+        caminho: r.caminho,
+        tipo: r.tipo || tipoArq,
+        tamanho: r.tamanho || arquivo.size
+      };
+      esconderEnvio();
+      mostrarCard(anexoPronto.nome, anexoPronto.tamanho);
+      atualizarPrevia();
+    });
+
+    envioCancel = envio && envio.cancelar ? envio.cancelar : null;
+  });
+
+  /* Botão "×" do card: desanexa e apaga do servidor (best-effort). */
+  $('#anexo-card-remover').addEventListener('click', function () {
+    limparAnexo('Dispare quando quiser — agora sem anexo.');
+  });
+
+  /* Saída para quem escolheu um arquivo que o servidor recusou: o card não chega
+     a aparecer, mas o bloco de erro precisa de um "sair". */
   $('#envio-remover').addEventListener('click', function () {
     $('#anexo').value = '';
     esconderEnvio();
     atualizarPrevia();
-    PB.toast('Anexo removido', 'Dispare de novo — agora só com o texto.', 'info');
   });
 
   /* ---- Envio ---- */
   $('#form-email').addEventListener('submit', function (e) {
     e.preventDefault();
-    if (enviando) return;
+    if (enviando) {
+      /* Botão desabilitado já cobre — este return é defesa contra Enter no form. */
+      PB.toast('Aguarde o anexo subir', 'O arquivo ainda está sendo enviado ao servidor.', 'alerta');
+      return;
+    }
 
     var assunto = $('#assunto').value.trim();
     var corpo = editor.innerHTML.trim();
@@ -672,44 +798,11 @@
       PB.recarregar();
     }
 
-    var arquivo = $('#anexo').files[0];
-    if (!arquivo) { disparar([]); return; }
-
-    /* Classe é dica de pré-conferência (o teto muda com ela): imagem só até
-       5 MB, documento até 100 MB. O servidor decide pelo conteúdo do arquivo. */
-    var tipoArq = String(arquivo.type || '').toLowerCase();
-    var nomeArq = String(arquivo.name || '').toLowerCase();
-    var classeArq = 'documento';
-    if (tipoArq.indexOf('image/') === 0) classeArq = 'imagem';
-    else if (/\.(png|jpe?g|webp|gif)$/i.test(nomeArq)) classeArq = 'imagem';
-
-    travarEnvio(true);
-    PB.enviarArquivo(arquivo, {
-      classe: classeArq,
-      /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
-         que a tela não travou. */
-      aoProgresso: function (pct) {
-        mostrarEnvio(pct > 0
-          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
-          : 'Preparando o envio de ' + arquivo.name + '…', pct);
-      }
-    }, function (r) {
-      travarEnvio(false);
-
-      if (r.cancelado) { esconderEnvio(); return; }
-
-      if (!r.ok) {
-        /* Nada é disparado: o histórico registraria um anexo que não existe e o
-           comunicado sairia sem o arquivo prometido no texto. */
-        mostrarEnvio(r.erro, 0);
-        $('#envio-remover').hidden = false;
-        PB.toast('O anexo não subiu', r.erro, 'erro');
-        return;
-      }
-
-      esconderEnvio();
-      disparar([{ nome: arquivo.name, caminho: r.caminho, tipo: r.tipo, tamanho: r.tamanho }]);
-    });
+    /* O anexo já subiu no change do input — aqui só entregamos o metadado. */
+    disparar(anexoPronto
+      ? [{ nome: anexoPronto.nome, caminho: anexoPronto.caminho,
+           tipo: anexoPronto.tipo, tamanho: anexoPronto.tamanho }]
+      : []);
   });
 
   /* ---- Histórico ---- */
