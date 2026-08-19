@@ -1989,6 +1989,22 @@
        servidor responde 400, e o disparo é retirado do histórico. */
     if (alvo === 'manual') carga.destinatarios = item.destinatarios || [];
 
+    /* Anexos: só os metadados (nome, caminho, tipo, tamanho). O arquivo já subiu
+       antes por POST /api/upload; o `caminho` devolvido é o que aponta para o
+       binário em site/assets/enviados/, e o dispatcher no servidor lê os bytes
+       do disco na hora de entregar. Sem esse repasse o anexo nunca chegaria ao
+       SMTP — era exatamente o gargalo antigo. */
+    if (Array.isArray(item.anexos) && item.anexos.length) {
+      carga.anexos = item.anexos.map(function (a) {
+        return {
+          nome: (a && a.nome) || 'arquivo',
+          caminho: (a && a.caminho) || '',
+          tipo: (a && a.tipo) || '',
+          tamanho: Number(a && a.tamanho) || 0
+        };
+      });
+    }
+
     var r = pedirSync('POST', '/email/disparar', carga);
 
     if (!r.ok) {

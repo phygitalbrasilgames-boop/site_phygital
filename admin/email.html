@@ -182,10 +182,12 @@
 
                 <div class="campo">
                   <label for="anexo">Anexar arquivo</label>
-                  <input type="file" id="anexo" name="anexo" accept="image/png,image/jpeg,image/webp,image/gif">
+                  <input type="file" id="anexo" name="anexo"
+                         accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.doc,.docx">
                   <p class="campo__ajuda">
-                    PNG, JPG, WEBP ou GIF até 5 MB. O arquivo é guardado no servidor;
-                    a mensagem que sai leva o texto, ainda não o anexo.
+                    Imagem (PNG, JPG, WEBP ou GIF até 5 MB) ou documento
+                    (PDF, Word .doc/.docx até 100 MB). O arquivo é guardado no
+                    servidor e vai junto com o e-mail para cada destinatário.
                   </p>
                 </div>
 
@@ -549,15 +551,11 @@
 
   /* ---- Anexo do disparo ----
      O arquivo sobe para POST /api/upload por PB.enviarArquivo e o caminho
-     devolvido entra no registro do disparo. Antes o arquivo era descartado: a
-     prévia mostrava o nome e nada era guardado em lugar nenhum.
-
-     Duas paradas conhecidas, as duas fora desta tela:
-     · PB.dados.gravar('emailsEnviados', …) manda ao servidor só assunto, corpo
-       e alvo — `anexos` fica no cache e some quando o histórico é relido. Com
-       back-end ligado o caminho não sobrevive ao recarregamento.
-     · server/fila-email.js não repassa anexo ao SMTP, então o arquivo não é
-       entregue nem quando o metadado chega ao servidor. */
+     devolvido entra no registro do disparo. O metadado (nome, caminho, tipo,
+     tamanho) viaja no POST /api/email/disparar, é gravado na coluna `anexos`
+     do banco e, na hora de entregar, o dispatcher lê os bytes do disco em
+     site/assets/enviados/ e passa como Buffer para o SMTP — que já sabe montar
+     multipart/mixed. Encanamento completo. */
   var enviando = false;
 
   function mostrarEnvio(texto, pct) {
@@ -677,9 +675,17 @@
     var arquivo = $('#anexo').files[0];
     if (!arquivo) { disparar([]); return; }
 
+    /* Classe é dica de pré-conferência (o teto muda com ela): imagem só até
+       5 MB, documento até 100 MB. O servidor decide pelo conteúdo do arquivo. */
+    var tipoArq = String(arquivo.type || '').toLowerCase();
+    var nomeArq = String(arquivo.name || '').toLowerCase();
+    var classeArq = 'documento';
+    if (tipoArq.indexOf('image/') === 0) classeArq = 'imagem';
+    else if (/\.(png|jpe?g|webp|gif)$/i.test(nomeArq)) classeArq = 'imagem';
+
     travarEnvio(true);
     PB.enviarArquivo(arquivo, {
-      classe: 'imagem',
+      classe: classeArq,
       /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
          que a tela não travou. */
       aoProgresso: function (pct) {
