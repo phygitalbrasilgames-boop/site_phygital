@@ -68,7 +68,8 @@ db.fechar();
 
 console.log('\n[setup-codespaces] pronto.');
 console.log('   Contas de teste : as duas com senha Phygital@2026');
-console.log('   Banco vazio     : sem times, campeonatos ou chamados — cadastre pelo painel.');
+console.log('   Sem times, campeonatos ou chamados — cadastre pelo painel.');
+console.log('   Banners e posts do blog vem semeados; edite/exclua pelo painel.');
 
 if (!process.env.PHYGITAL_SMTP_SENHA) {
   console.log('\n   ATENÇÃO: PHYGITAL_SMTP_SENHA não está definida.');

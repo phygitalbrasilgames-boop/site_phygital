@@ -6,11 +6,13 @@
 
      · MODO MÍNIMO (padrão) — o banco nasce com o essencial para o dono já
        conseguir usar a plataforma: exatamente duas contas (u1 master e comp1
-       competidor), o SMTP configurado, todos os modelos de e-mail e a
-       configuração base de ranking. Sem times, campeonatos, chamados, posts,
-       eventos, parceiros, banners nem histórico de e-mails: essas entidades
-       são cadastradas pelo painel durante o uso real. Ideal para o Codespaces
-       recém-criado.
+       competidor), o SMTP configurado, todos os modelos de e-mail, a
+       configuração base de ranking, mais o conteúdo editorial que o dono
+       pediu preservar: categorias, posts do blog e banners (site + painel
+       do competidor). Sem times, campeonatos, chamados, inscrições, entradas
+       de ranking, resultados, eventos, parceiros nem histórico de e-mails:
+       esse inventário operacional é cadastrado pelo painel durante o uso
+       real. Ideal para o Codespaces recém-criado.
 
      · MODO DEMONSTRAÇÃO (--demo) — o banco nasce com o mesmo conjunto de
        dados que o protótipo mantinha em localStorage
@@ -989,7 +991,12 @@ function semearResultados() {
   }
 }
 
-function semearConteudo() {
+/* Conteúdo que entra nos DOIS modos: categorias, posts do blog e banners.
+   O dono do site pediu manter blog e banners no mínimo — as categorias vão
+   junto porque a coluna `cat` dos posts guarda o NOME da categoria e a tela
+   do blog lê essas categorias para o filtro; sem elas, os posts existentes
+   ficariam órfãos de agrupamento. */
+function semearConteudoBase() {
   for (const c of CATEGORIAS) {
     inserir('categorias', { id: c.id, nome: c.nome, descricao: c.descricao, cor: c.cor, arquivado_em: null });
   }
@@ -1011,22 +1018,6 @@ function semearConteudo() {
       arquivado_em: null
     });
   }
-
-  for (const e of EVENTOS) {
-    inserir('eventos', { id: e.id, titulo: e.titulo, mod: e.mod, ano: e.ano, local: e.local, fotos: e.fotos, arquivado_em: null });
-  }
-
-  PARCEIROS.forEach((p, i) => {
-    inserir('parceiros', {
-      id: `pa${i + 1}`,
-      nome: p.nome,
-      tipo: p.tipo,
-      /* O front-end monta o logo a partir da ordem; nada a guardar aqui. */
-      logo: null,
-      ordem: i + 1,
-      arquivado_em: null
-    });
-  });
 
   for (const b of BANNERS) {
     inserir('banners', {
@@ -1053,6 +1044,27 @@ function semearConteudo() {
       arquivado_em: null
     });
   }
+}
+
+/* Conteúdo só do modo demo: galeria de eventos passados e vitrine de
+   parceiros. Não são pedidos pelo dono no modo mínimo e ficam vazios para o
+   admin cadastrar a partir do painel. */
+function semearConteudoDemo() {
+  for (const e of EVENTOS) {
+    inserir('eventos', { id: e.id, titulo: e.titulo, mod: e.mod, ano: e.ano, local: e.local, fotos: e.fotos, arquivado_em: null });
+  }
+
+  PARCEIROS.forEach((p, i) => {
+    inserir('parceiros', {
+      id: `pa${i + 1}`,
+      nome: p.nome,
+      tipo: p.tipo,
+      /* O front-end monta o logo a partir da ordem; nada a guardar aqui. */
+      logo: null,
+      ordem: i + 1,
+      arquivado_em: null
+    });
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -1226,6 +1238,10 @@ function semear({ recriar = false, demo = false } = {}) {
     semearEmail();
     /* Config do ranking também — sem ela o painel do ranking abre em branco. */
     semearRankingConfig();
+    /* Blog (categorias + posts) e banners: o dono pediu esses no mínimo.
+       Modelos, config de ranking e blog são o "sistema montado"; o resto é
+       inventário operacional (times, campeonatos, chamados). */
+    semearConteudoBase();
 
     if (demo) {
       semearCampeonatos();
@@ -1234,14 +1250,17 @@ function semear({ recriar = false, demo = false } = {}) {
       semearChamados(conta.id);
       semearRanking();
       semearResultados();
-      semearConteudo();
+      semearConteudoDemo();
       semearEmailsEnviados();
-      /* Depois de conteúdo e e-mail: a tradução aponta para registros que os
-         dois acabaram de criar e é ignorada quando o registro não existe. */
-      semearTraducoes();
 
       conferirElencos();
     }
+
+    /* Traduções entram nos dois modos, mas cada linha só cola se o registro
+       traduzido existir (semearTraducoes já filtra) — no mínimo isso cobre
+       posts e o modelo de código de verificação; no demo cobre também os
+       campeonatos e a categoria de exemplo. */
+    semearTraducoes();
 
     const inseridas = total();
     /* Só registra auditoria quando algo foi realmente escrito — auditar uma
