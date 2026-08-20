@@ -15,10 +15,6 @@
   /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
   .campo__erro[hidden] { display: none; }
 
-  /* ---- Grade de dois blocos (chamados + atividade) ---- */
-  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
-  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
-
   /* ---- Linha de campeonato aberto ---- */
   .camp-adm { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: var(--e-4); padding: var(--e-4); border-bottom: 1px solid var(--linha-clara); }
   .camp-adm:last-child { border-bottom: 0; }
@@ -45,20 +41,6 @@
   .acoes-linha { display: flex; flex-wrap: wrap; gap: var(--e-2); }
 
   @media (max-width: 720px) { .camp-adm { grid-template-columns: 1fr; padding: var(--e-3); } }
-
-  /* ---- Linha do tempo da atividade ---- */
-  .linha-tempo { list-style: none; margin: 0; padding: 0; }
-  .linha-tempo li { position: relative; padding: 0 0 var(--e-4) var(--e-5); }
-  .linha-tempo li::before { content: ""; position: absolute; left: 7px; top: 22px; bottom: 0; width: 2px; background: var(--linha-clara); }
-  .linha-tempo li:last-child { padding-bottom: 0; }
-  .linha-tempo li:last-child::before { display: none; }
-  .linha-tempo__ponto { position: absolute; left: 0; top: 5px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--verde); background: var(--branco); }
-  .linha-tempo__ponto--amarelo { border-color: var(--ambar); }
-  .linha-tempo__ponto--azul { border-color: var(--azul); }
-  .linha-tempo__ponto--cinza { border-color: var(--cinza-40); }
-  .linha-tempo__titulo { font-family: var(--fonte-display); font-weight: 700; font-size: .9375rem; line-height: 1.3; }
-  .linha-tempo__texto { font-size: var(--t-peq); color: var(--texto); line-height: 1.5; }
-  .linha-tempo__meta { font-size: var(--t-micro); color: var(--texto-suave); margin-top: 2px; }
 
   /* Chamados: quebra o assunto em vez de vazar */
   .lista-linhas .chamado-item { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
@@ -107,11 +89,8 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub" hidden>
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
@@ -201,69 +180,14 @@
         <div class="bloco__corpo bloco__corpo--flat" id="lista-abertos"></div>
       </section>
 
-      <!-- ---------- CHAMADOS + ATIVIDADE ---------- -->
-      <div class="painel-grade">
-
-        <section class="bloco lista-linhas" aria-labelledby="titulo-chamados">
-          <div class="bloco__topo">
-            <h2 id="titulo-chamados">Chamados recentes</h2>
-            <a class="link-seta" href="chamados.html">Ver todos</a>
-          </div>
-          <div class="bloco__corpo bloco__corpo--flat" id="lista-chamados"></div>
-        </section>
-
-        <section class="bloco" aria-labelledby="titulo-atividade">
-          <div class="bloco__topo">
-            <h2 id="titulo-atividade">Atividade recente</h2>
-            <span class="txt-micro txt-suave">Últimos 5 dias</span>
-          </div>
-          <div class="bloco__corpo">
-            <ol class="linha-tempo">
-              <li>
-                <span class="linha-tempo__ponto" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">Nova inscrição recebida</p>
-                <p class="linha-tempo__texto">Alpha Squad BR enviou o elenco para o Phygital Shooter Open — protocolo <span class="mono-num">2026-000512</span>. A inscrição entrou na <strong>lista de inscritos (triagem)</strong> e aguarda decisão da organização.</p>
-                <p class="linha-tempo__meta">Hoje, 09:14 · e-mail de confirmação com protocolo disparado ao responsável</p>
-              </li>
-              <li>
-                <span class="linha-tempo__ponto linha-tempo__ponto--amarelo" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">Chamado aberto</p>
-                <p class="linha-tempo__texto">Protocolo <span class="mono-num">2026-000121</span> · “Solicitação de cancelamento de inscrição”, aberto por Litoral Gaming no Shooter Open 2026.</p>
-                <p class="linha-tempo__meta">Hoje, 08:05 · aguardando primeira resposta da operação</p>
-              </li>
-              <li>
-                <span class="linha-tempo__ponto" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">Time movido para a lista oficial</p>
-                <p class="linha-tempo__texto">Cangaço 3x3 saiu da triagem e ocupou vaga no Circuito Phygital Basquete 3x3. O e-mail automático de mudança de status foi enviado ao responsável do time.</p>
-                <p class="linha-tempo__meta">Ontem, 16:40 · Carlos Eduardo Pinto (Operação)</p>
-              </li>
-              <li>
-                <span class="linha-tempo__ponto linha-tempo__ponto--azul" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">E-mail disparado</p>
-                <p class="linha-tempo__texto">“Atualização do regulamento — Shooter Open” enviado para 14 destinatários pelo SMTP único (<span class="mono-num">smtp.phygitalgamesbr.com.br</span>). Nenhuma falha de entrega registrada.</p>
-                <p class="linha-tempo__meta">12/08/2026, 11:02 · Ana Beatriz Lopes (Gestor de Campeonato)</p>
-              </li>
-              <li>
-                <span class="linha-tempo__ponto linha-tempo__ponto--amarelo" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">Time movido para a lista de espera</p>
-                <p class="linha-tempo__texto">Guarani Byte passou para a lista de espera da Copa Phygital Futebol 2026. Entra automaticamente na fila caso um time da lista oficial desista.</p>
-                <p class="linha-tempo__meta">11/08/2026, 10:22 · Carlos Eduardo Pinto (Operação)</p>
-              </li>
-              <li>
-                <span class="linha-tempo__ponto linha-tempo__ponto--cinza" aria-hidden="true"></span>
-                <p class="linha-tempo__titulo">Banner publicado</p>
-                <p class="linha-tempo__texto">“Shooter Open — Temporada 2026” entrou na 3ª posição do carrossel — o mesmo banner aparece na tela inicial do site e no Painel do Competidor.</p>
-                <p class="linha-tempo__meta">10/08/2026, 15:48 · Inscrições Phygital (Master)</p>
-              </li>
-            </ol>
-            <p class="txt-micro txt-suave mt-4" style="margin-bottom:0">
-              Cada mudança de lista dispara um e-mail automático pelo SMTP configurado em
-              <a href="email.html" style="color:var(--verde);font-weight:600">Disparo de E-mail → Configurações</a>.
-            </p>
-          </div>
-        </section>
-
-      </div>
+      <!-- ---------- CHAMADOS ---------- -->
+      <section class="bloco lista-linhas" aria-labelledby="titulo-chamados">
+        <div class="bloco__topo">
+          <h2 id="titulo-chamados">Chamados recentes</h2>
+          <a class="link-seta" href="chamados.html">Ver todos</a>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat" id="lista-chamados"></div>
+      </section>
 
     </main>
   </div>
