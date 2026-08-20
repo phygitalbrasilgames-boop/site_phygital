@@ -1,15 +1,34 @@
 /* ==========================================================================
-   PHYGITAL BRASIL — SEMENTE DE DEMONSTRAÇÃO
+   PHYGITAL BRASIL — SEMENTE
 
-   Popula o banco com os mesmos dados que o protótipo mantinha em
-   localStorage (Backup_html/assets/js/dados.js), agora normalizados no
-   esquema relacional.
+   Popula o banco em dois modos, escolhidos pela chave `demo` (ou por --demo na
+   linha de comando):
+
+     · MODO MÍNIMO (padrão) — o banco nasce com o essencial para o dono já
+       conseguir usar a plataforma: exatamente duas contas (u1 master e comp1
+       competidor), o SMTP configurado, todos os modelos de e-mail e a
+       configuração base de ranking. Sem times, campeonatos, chamados, posts,
+       eventos, parceiros, banners nem histórico de e-mails: essas entidades
+       são cadastradas pelo painel durante o uso real. Ideal para o Codespaces
+       recém-criado.
+
+     · MODO DEMONSTRAÇÃO (--demo) — o banco nasce com o mesmo conjunto de
+       dados que o protótipo mantinha em localStorage
+       (Backup_html/assets/js/dados.js): três admins, um competidor, cinco
+       campeonatos, dois times completos, chamados, ranking povoado, posts,
+       eventos, parceiros, banners, traduções e histórico de e-mails. É o que
+       a suíte de testes usa e o que serve para uma apresentação ao vivo.
 
    Uso:
-     node server/semente.js              semeia o que estiver faltando
-     node server/semente.js --recriar    apaga o conteúdo de todas as tabelas
-                                         antes de popular (o arquivo do banco
-                                         é preservado)
+     node server/semente.js                     semeia o que faltar (mínimo)
+     node server/semente.js --recriar           apaga tudo e semeia MÍNIMO
+     node server/semente.js --demo              semeia o que faltar (demo)
+     node server/semente.js --recriar --demo    apaga tudo e semeia DEMO
+                                                (comportamento anterior de
+                                                --recriar sozinho)
+
+   Em qualquer forma o arquivo do banco é preservado — só o conteúdo das
+   tabelas é apagado quando `--recriar` é passado.
 
    Decisões que valem explicar:
 
@@ -62,6 +81,10 @@ const ADMINISTRADORES = [
     telefone: '(11) 3000-0003', nivel: 'operacao', criadoEm: '2026-05-08',
     variavelSenha: null, emailVerificado: false }
 ];
+
+/* Só a conta master no modo mínimo — os gestores u2/u3 são detalhe de
+   demonstração e não têm razão para existir no Codespaces recém-criado. */
+const MINIMO_ADMINISTRADORES = [ADMINISTRADORES[0]];
 
 /* Dados que o protótipo guardava no objeto `usuario`. Nome e e-mail cedem lugar
    à conta de acesso pedida para o competidor; telefone e data de criação são
@@ -699,7 +722,7 @@ function esvaziar() {
   return removidas;
 }
 
-function semearContas() {
+function semearContas(admins = ADMINISTRADORES) {
   criarConta({
     id: COMPETIDOR.id, nome: COMPETIDOR.nome, email: COMPETIDOR.email,
     telefone: COMPETIDOR.telefone, papel: 'competidor', nivel: null,
@@ -707,7 +730,7 @@ function semearContas() {
     emailVerificado: true
   });
 
-  for (const a of ADMINISTRADORES) {
+  for (const a of admins) {
     criarConta({
       id: a.id, nome: a.nome, email: a.email, telefone: a.telefone,
       papel: 'admin', nivel: a.nivel, criadoEm: a.criadoEm,
@@ -905,6 +928,8 @@ function semearChamados(contaId) {
   }
 }
 
+/* Só as entradas do ranking (RANKING). A config por modalidade fica em
+   semearRankingConfig() e vale para os dois modos. */
 function semearRanking() {
   for (const [modalidade, lista] of Object.entries(RANKING)) {
     lista.forEach((r, i) => {
@@ -922,7 +947,12 @@ function semearRanking() {
       }, ['modalidade', 'nome']);
     });
   }
+}
 
+/* A configuração do ranking (pontos por vitória, bônus de título, etc.) vale
+   tanto no modo mínimo quanto no modo demonstração: sem ela, o painel do
+   admin abre as telas de ranking sem nenhum valor default. */
+function semearRankingConfig() {
   for (const [modalidade, c] of Object.entries(RANKING_CONFIG)) {
     inserir('ranking_config', {
       modalidade,
@@ -1113,6 +1143,9 @@ function semearTraducoes() {
   }
 }
 
+/* SMTP + modelos de e-mail — os dois valem para os dois modos. Sem o SMTP a
+   tela "Disparo de E-mail → Configurações" abre em branco; sem os modelos
+   nenhum alerta automático tem template para preencher. */
 function semearEmail() {
   inserir('smtp', {
     id: 1,
@@ -1135,7 +1168,11 @@ function semearEmail() {
       ativo: 1, atualizado_em: null
     });
   }
+}
 
+/* Histórico de disparos: só o modo demo — no Codespaces recém-criado o
+   histórico começa vazio, como acontece em qualquer instalação nova. */
+function semearEmailsEnviados() {
   for (const e of EMAILS_ENVIADOS) {
     inserir('emails_enviados', {
       id: e.id,
@@ -1152,11 +1189,19 @@ function semearEmail() {
 }
 
 /**
- * Popula o banco. Com `recriar`, apaga o conteúdo de todas as tabelas antes —
- * o arquivo do banco continua o mesmo.
+ * Popula o banco.
+ *
+ * · `recriar` (padrão false) — apaga o conteúdo de todas as tabelas antes; o
+ *   arquivo do banco continua o mesmo.
+ * · `demo`    (padrão false) — quando true, semeia o pacote completo de
+ *   demonstração (três admins, competidor, campeonatos, times, chamados,
+ *   ranking, resultados, conteúdo público, histórico de e-mails e
+ *   traduções). Quando false, semeia SÓ o mínimo funcional: duas contas
+ *   (u1 + comp1), SMTP, modelos de e-mail e a configuração de ranking.
+ *
  * Tudo em uma transação: se qualquer passo falhar, nada é gravado.
  */
-function semear({ recriar = false } = {}) {
+function semear({ recriar = false, demo = false } = {}) {
   contagens.clear();
   senhasGeradas.length = 0;
   avisos.length = 0;
@@ -1169,44 +1214,54 @@ function semear({ recriar = false } = {}) {
   const removidas = db.transacao(() => {
     const apagadas = recriar ? esvaziar() : 0;
 
-    semearContas();
+    semearContas(demo ? ADMINISTRADORES : MINIMO_ADMINISTRADORES);
 
     /* A conta pode já existir de uma execução anterior: os times se ligam à
        que está no banco, não à que acabamos de tentar criar. */
     const conta = db.um('SELECT id FROM contas WHERE lower(email) = ?', EMAIL_COMPETIDOR.toLowerCase());
     if (!conta) throw new Error('Conta do competidor não encontrada depois da criação.');
 
-    semearCampeonatos();
-    semearTimes(conta.id);
-    semearInscricoes();
-    semearChamados(conta.id);
-    semearRanking();
-    semearResultados();
-    semearConteudo();
+    /* SMTP e modelos entram nos dois modos: são o que o painel de e-mail
+       precisa para abrir configurado. */
     semearEmail();
-    /* Depois de conteúdo e e-mail: a tradução aponta para registros que os dois
-       acabaram de criar e é ignorada quando o registro não existe. */
-    semearTraducoes();
+    /* Config do ranking também — sem ela o painel do ranking abre em branco. */
+    semearRankingConfig();
 
-    conferirElencos();
+    if (demo) {
+      semearCampeonatos();
+      semearTimes(conta.id);
+      semearInscricoes();
+      semearChamados(conta.id);
+      semearRanking();
+      semearResultados();
+      semearConteudo();
+      semearEmailsEnviados();
+      /* Depois de conteúdo e e-mail: a tradução aponta para registros que os
+         dois acabaram de criar e é ignorada quando o registro não existe. */
+      semearTraducoes();
+
+      conferirElencos();
+    }
 
     const inseridas = total();
     /* Só registra auditoria quando algo foi realmente escrito — auditar uma
        execução que não mudou nada encheria a trilha e quebraria a
        idempotência. */
     if (inseridas > 0 || apagadas > 0) {
+      const rotuloModo = demo ? ' (demo)' : ' (mínimo)';
       regras.registrar(null, 'sistema', 'semente',
-        recriar ? 'recriou o banco' : 'semeou o banco',
+        recriar ? `recriou o banco${rotuloModo}` : `semeou o banco${rotuloModo}`,
         `${inseridas} linha(s) inserida(s)` + (apagadas ? ` · ${apagadas} removida(s)` : ''));
     }
 
     return apagadas;
   });
 
-  imprimirResumo({ recriar, removidas });
+  imprimirResumo({ recriar, demo, removidas });
 
   return {
     recriado: recriar,
+    demo,
     removidas,
     inseridas: total(),
     contagens: Object.fromEntries(contagens),
@@ -1227,11 +1282,12 @@ function total() {
 
 const LINHA = '='.repeat(72);
 
-function imprimirResumo({ recriar, removidas }) {
+function imprimirResumo({ recriar, demo, removidas }) {
   console.log('');
   console.log(LINHA);
   console.log('SEMENTE PHYGITAL BRASIL');
   console.log(`Banco: ${db.ARQUIVO}`);
+  console.log(`Modo:  ${demo ? 'demonstração (--demo)' : 'mínimo (padrão)'}`);
   if (recriar) console.log(`Modo --recriar: ${removidas} linha(s) apagada(s) antes de popular.`);
   console.log(LINHA);
 
@@ -1299,17 +1355,21 @@ function imprimirSenhas() {
 
 if (require.main === module) {
   const argumentos = process.argv.slice(2);
-  const desconhecidos = argumentos.filter((a) => a !== '--recriar');
+  const RECONHECIDOS = new Set(['--recriar', '--demo']);
+  const desconhecidos = argumentos.filter((a) => !RECONHECIDOS.has(a));
 
   if (desconhecidos.length) {
     console.error(`Argumento não reconhecido: ${desconhecidos.join(', ')}`);
-    console.error('Uso: node server/semente.js [--recriar]');
+    console.error('Uso: node server/semente.js [--recriar] [--demo]');
     process.exit(1);
   }
 
   let codigo = 0;
   try {
-    semear({ recriar: argumentos.includes('--recriar') });
+    semear({
+      recriar: argumentos.includes('--recriar'),
+      demo: argumentos.includes('--demo')
+    });
   } catch (erro) {
     console.error('');
     console.error('A semeadura falhou e nada foi gravado:');

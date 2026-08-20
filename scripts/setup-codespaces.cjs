@@ -24,6 +24,12 @@ const path = require('node:path');
 const RAIZ = path.join(__dirname, '..');
 
 console.log('\n[setup-codespaces] 1/2  semeando o banco…\n');
+/* `--recriar` sem `--demo`: o banco nasce com o MÍNIMO — apenas as duas
+   contas de acesso (u1 + comp1), o SMTP, os modelos de e-mail e a config
+   de ranking. Times, campeonatos, chamados, posts, banners e histórico de
+   e-mails são cadastrados pelo próprio dono no painel, como aconteceria em
+   qualquer instalação nova. Para reencher a demonstração inteira: acrescente
+   `--demo` (ver docs de server/semente.js). */
 execFileSync('node', ['server/semente.js', '--recriar'], {
   cwd: RAIZ, stdio: 'inherit',
   env: {
@@ -62,6 +68,7 @@ db.fechar();
 
 console.log('\n[setup-codespaces] pronto.');
 console.log('   Contas de teste : as duas com senha Phygital@2026');
+console.log('   Banco vazio     : sem times, campeonatos ou chamados — cadastre pelo painel.');
 
 if (!process.env.PHYGITAL_SMTP_SENHA) {
   console.log('\n   ATENÇÃO: PHYGITAL_SMTP_SENHA não está definida.');

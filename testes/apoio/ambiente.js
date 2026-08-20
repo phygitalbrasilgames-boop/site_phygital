@@ -100,7 +100,11 @@ function silenciar(fn) {
 
 async function subir() {
   db.abrir();
-  silenciar(() => semente.semear({ recriar: true }));
+  /* A suíte assume o banco completo (times, campeonatos, chamados, etc.):
+     `demo: true` é o antigo comportamento de --recriar sozinho — sem ele o
+     banco nasceria com o mínimo funcional (sem `t1`, `cbf-2026`, …) e
+     dezenas de casos que apontam para SEMEADOS quebrariam. */
+  silenciar(() => semente.semear({ recriar: true, demo: true }));
 
   if (api.falhados.length) {
     throw new Error(

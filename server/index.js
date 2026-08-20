@@ -337,11 +337,13 @@ if (require.main === module) {
 
   db.abrir();
 
-  /* Banco vazio na primeira subida: semeia sozinho para o site não abrir em
-     branco e o desenvolvedor não precisar de um passo extra. */
+  /* Banco vazio na primeira subida: semeia o MÍNIMO (duas contas, SMTP,
+     modelos de e-mail, config de ranking) para o login abrir e o dono não
+     precisar de um passo extra. Para semear o pacote completo de
+     demonstração: `node server/semente.js --recriar --demo`. */
   const contas = db.valor('SELECT COUNT(*) FROM contas');
   if (!contas) {
-    console.log('Banco vazio — semeando dados de demonstração…');
+    console.log('Banco vazio — semeando dados mínimos…');
     try {
       require('./semente').semear({});
     } catch (e) {
