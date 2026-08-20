@@ -960,7 +960,10 @@
   /* ---------------------------------------------------------------------
      CONTADORES DO MENU
      O badge de chamados era um número fixo no HTML e continuava mostrando 3
-     mesmo com tudo encerrado. Agora é calculado a partir dos dados.
+     mesmo com tudo encerrado. Agora é calculado a partir dos dados — dos
+     dois lados: o painel local (arrays sínc.) e o Codespaces/API (Promise).
+     O badge nasce `hidden` no HTML; se o backend responder com abertos, cai
+     o hidden e o número aparece; se falhar ou vier zero, continua invisível.
      --------------------------------------------------------------------- */
   function iniciarContadoresMenu() {
     if (!global.PB || !PB.dados) return;
@@ -968,21 +971,52 @@
     var badges = $$('[data-conta-chamados]');
     if (!badges.length) return;
 
-    var ehAdmin = /\/admin\//.test(global.location.pathname);
-    var abertos = ehAdmin
-      ? (PB.dados.adminChamados('abertos') || []).length
-      : (PB.dados.chamados() || []).filter(function (c) { return c.status !== 'encerrado'; }).length;
+    function pintar(n) {
+      var abertos = Number(n) || 0;
+      badges.forEach(function (b) {
+        if (abertos > 0) {
+          b.textContent = String(abertos);
+          b.hidden = false;
+          b.setAttribute('aria-label', abertos + ' chamado(s) em aberto');
+        } else {
+          /* zero chamados abertos: o badge some em vez de mostrar "0" */
+          b.hidden = true;
+        }
+      });
+    }
 
-    badges.forEach(function (b) {
-      if (abertos > 0) {
-        b.textContent = abertos;
-        b.hidden = false;
-        b.setAttribute('aria-label', abertos + ' chamado(s) em aberto');
+    var ehAdmin = /\/admin\//.test(global.location.pathname);
+
+    /* Cada modo expõe uma função diferente:
+         · modo local admin      → PB.dados.adminChamados('abertos') = array
+         · modo local competidor → PB.dados.chamados()              = array
+         · modo API   admin      → PB.dados.metricas()              = Promise<{chamadosAbertos}>
+         · modo API   competidor → PB.dados.chamados()              = Promise<array>
+       Promise.resolve() aceita array E Promise, então trata os dois iguais. */
+    var fonte;
+    try {
+      if (ehAdmin && typeof PB.dados.adminChamados === 'function') {
+        fonte = PB.dados.adminChamados('abertos');
+      } else if (ehAdmin && typeof PB.dados.metricas === 'function') {
+        fonte = PB.dados.metricas();
+      } else if (typeof PB.dados.chamados === 'function') {
+        fonte = PB.dados.chamados();
       } else {
-        /* zero chamados abertos: o badge some em vez de mostrar "0" */
-        b.hidden = true;
+        return;
       }
-    });
+    } catch (_) { return; }
+
+    Promise.resolve(fonte).then(function (r) {
+      if (Array.isArray(r)) {
+        /* adminChamados('abertos') já veio filtrada; chamados() traz tudo. */
+        var abertos = ehAdmin
+          ? r.length
+          : r.filter(function (c) { return c && c.status !== 'encerrado'; }).length;
+        pintar(abertos);
+      } else if (r && typeof r === 'object') {
+        pintar(r.chamadosAbertos);
+      }
+    }).catch(function () { /* sem backend: o badge continua com hidden do HTML */ });
   }
 
   /* ---------------------------------------------------------------------
