@@ -1059,6 +1059,74 @@
   }
 
   /* ---------------------------------------------------------------------
+     SUBMENU DINÂMICO — CAMPEONATOS
+     O submenu "Campeonatos" do painel admin costumava listar três nomes
+     fixos no HTML — os campeonatos-semente do modo local. Publicar um
+     campeonato novo não aparecia ali; encerrar um seguia mostrando.
+     Agora o HTML entrega só o item "+ Criar Novo Campeonato" (marcado
+     com data-submenu-fim) e esta função insere ANTES dele os campeonatos
+     realmente abertos — status 'inscricoes' ou 'em-andamento', ignorando
+     arquivados. Sem backend ou sem admin, a função não faz nada e o item
+     estático "+ Criar Novo" continua servindo de fallback.
+     --------------------------------------------------------------------- */
+  function iniciarSubmenuCampeonatos() {
+    var ancoras = $$('[data-submenu-campeonatos]');
+    if (!ancoras.length) return;
+    if (!global.PB || !PB.dados || typeof PB.dados.campeonatos !== 'function') return;
+
+    /* Nome curto para caber no menu lateral sem quebrar em duas linhas.
+       Corta na primeira ocorrência de " —" (travessão do subtítulo) ou,
+       na ausência dele, nos primeiros 30 caracteres. */
+    function encurtar(nome) {
+      var s = String(nome == null ? '' : nome).trim();
+      if (!s) return '';
+      var corte = s.indexOf(' —');
+      if (corte > 0) return s.slice(0, corte);
+      if (s.length > 30) {
+        var cru = s.slice(0, 30).replace(/\s+\S*$/, '');
+        return (cru || s.slice(0, 30)) + '…';
+      }
+      return s;
+    }
+
+    function aberto(c) {
+      if (!c) return false;
+      if (c.arquivado || c.arquivado_em || c.arquivadoEm) return false;
+      return c.status === 'inscricoes' || c.status === 'em-andamento';
+    }
+
+    var fonte;
+    try { fonte = PB.dados.campeonatos(); } catch (_) { return; }
+
+    Promise.resolve(fonte).then(function (r) {
+      var lista;
+      if (Array.isArray(r)) lista = r;
+      else if (r && Array.isArray(r.campeonatos)) lista = r.campeonatos;
+      else return;
+
+      var abertos = lista.filter(aberto);
+      if (!abertos.length) return;
+
+      ancoras.forEach(function (ul) {
+        var fim = $('[data-submenu-fim]', ul);
+        abertos.forEach(function (c) {
+          if (!c || !c.id) return;
+          var li = doc.createElement('li');
+          var a = doc.createElement('a');
+          a.setAttribute('href', 'campeonato-gerenciar.html?id=' + encodeURIComponent(c.id));
+          a.textContent = encurtar(c.nome);
+          li.appendChild(a);
+          if (fim) ul.insertBefore(li, fim); else ul.appendChild(li);
+        });
+      });
+
+      /* Os itens acabaram de nascer: repassar o marcador de "ativo" para
+         que o item da URL corrente ganhe .ativo e aria-current. */
+      iniciarSubmenuAtivo();
+    }).catch(function () { /* sem backend: fica só o "+ Criar Novo" estático */ });
+  }
+
+  /* ---------------------------------------------------------------------
      SAIR DA CONTA
      --------------------------------------------------------------------- */
   function iniciarSair() {
@@ -1343,6 +1411,7 @@
     iniciarModalidadeExtra();
     iniciarContadoresMenu();
     iniciarSubmenuAtivo();
+    iniciarSubmenuCampeonatos();
     iniciarSair();
     iniciarAno();
     if (typeof PB.aoIniciar === 'function') PB.aoIniciar();
