@@ -34,7 +34,7 @@ describe('permissões', () => {
     const leituras = [
       '/api/times', '/api/times/t1', '/api/inscricoes', '/api/chamados',
       '/api/conta/sessoes', '/api/admin/metricas', '/api/admin/usuarios',
-      '/api/auditoria', '/api/historico', '/api/email/modelos', '/api/email/smtp',
+      '/api/historico', '/api/email/modelos', '/api/email/smtp',
       '/api/ranking-config/futebol', '/api/posts?arquivados=1',
       `/api/campeonatos/${CAMP}/inscritos`, `/api/campeonatos/${CAMP}/exportar`
     ];
@@ -69,7 +69,6 @@ describe('permissões', () => {
     const proibidas = [
       ['GET', '/api/admin/metricas'],
       ['GET', '/api/admin/usuarios'],
-      ['GET', '/api/auditoria'],
       ['GET', '/api/historico'],
       ['GET', '/api/email/modelos'],
       ['GET', `/api/campeonatos/${CAMP}/inscritos`],
@@ -107,7 +106,7 @@ describe('permissões', () => {
      GESTOR: LÊ, MAS NÃO ESCREVE
      ------------------------------------------------------------------------ */
 
-  it('o gestor lê campeonatos, inscritos, times, exportação e auditoria', async () => {
+  it('o gestor lê campeonatos, inscritos, times e exportação', async () => {
     const cli = amb.comoGestor();
 
     const leituras = [
@@ -115,7 +114,6 @@ describe('permissões', () => {
       '/api/times',
       '/api/inscricoes',
       '/api/chamados',
-      '/api/auditoria',
       '/api/historico',
       '/api/email/modelos',
       '/api/email/enviados',
@@ -206,7 +204,7 @@ describe('permissões', () => {
 
     const respostas = [];
     for (const caminho of [
-      '/api/bootstrap', '/api/admin/usuarios', '/api/admin/metricas', '/api/auditoria',
+      '/api/bootstrap', '/api/admin/usuarios', '/api/admin/metricas',
       '/api/historico', '/api/email/smtp', '/api/email/modelos', '/api/email/enviados',
       '/api/times', '/api/inscricoes', '/api/chamados', '/api/conta/sessoes',
       `/api/campeonatos/${CAMP}/inscritos`, `/api/campeonatos/${CAMP}/exportar?lista=todas`

@@ -595,64 +595,6 @@ async function salvarRankingConfig(ctx) {
 }
 
 /* ==========================================================================
-   AUDITORIA
-   ========================================================================== */
-
-/**
- * Quem fez o quê e quando, do mais recente para o mais antigo.
- *
- * Filtros: ?area= &de= &ate= &limite= &pagina=
- * As datas são AAAA-MM-DD e cobrem o dia inteiro.
- */
-async function listarAuditoria(ctx) {
-  ctx.exigirAdmin('auditoria:ler');
-
-  const area = (ctx.query.get('area') || '').trim();
-  const de = dataFiltro(ctx.query.get('de'), 'de');
-  const ate = dataFiltro(ctx.query.get('ate'), 'ate');
-  const limite = inteiro(ctx.query.get('limite'), AUDITORIA_LIMITE, 1, AUDITORIA_LIMITE_MAX);
-  const pagina = inteiro(ctx.query.get('pagina'), 1, 1);
-
-  /* Só nomes de coluna deste arquivo entram no texto do SQL; tudo que veio do
-     pedido viaja como parâmetro. */
-  const onde = [];
-  const valores = [];
-
-  if (area) { onde.push('a.area = ?'); valores.push(area); }
-  if (de) { onde.push('a.em >= ?'); valores.push(de); }
-  if (ate) {
-    /* `em` é ISO 8601, que ordena como texto: comparar com o fim do dia pega
-       qualquer horário da data informada. */
-    onde.push('a.em <= ?');
-    valores.push(`${ate}T23:59:59.999Z`);
-  }
-
-  const filtro = onde.length ? `WHERE ${onde.join(' AND ')}` : '';
-  const total = db.valor(`SELECT COUNT(*) FROM auditoria a ${filtro}`, ...valores) || 0;
-
-  /* papel não é coluna de auditoria: vem da conta que assinou o registro. */
-  const linhas = db.todos(
-    `SELECT a.*, c.papel AS papel
-       FROM auditoria a
-       LEFT JOIN contas c ON c.id = a.conta_id
-       ${filtro}
-      ORDER BY a.em DESC, a.id DESC
-      LIMIT ? OFFSET ?`,
-    ...valores, limite, (pagina - 1) * limite
-  );
-
-  ctx.ok({
-    ok: true,
-    total,
-    pagina,
-    limite,
-    paginas: Math.max(1, Math.ceil(total / limite)),
-    filtros: { area: area || null, de, ate },
-    itens: mapa.lista(linhas, mapa.auditoria)
-  });
-}
-
-/* ==========================================================================
    HISTÓRICO
 
    Exclusão em duas etapas, como no protótipo: arquivar tira de circulação,
@@ -770,8 +712,6 @@ function registrar(rotas) {
   rotas.put('/api/ranking/:modalidade', salvarRanking);
   rotas.get('/api/ranking-config/:modalidade', lerRankingConfig);
   rotas.put('/api/ranking-config/:modalidade', salvarRankingConfig);
-
-  rotas.get('/api/auditoria', listarAuditoria);
 
   rotas.get('/api/historico', listarHistorico);
   rotas.post('/api/historico/restaurar', restaurarHistorico);

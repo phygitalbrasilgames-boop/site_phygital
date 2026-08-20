@@ -332,33 +332,6 @@ describe('conteúdo e administração', () => {
   });
 
   /* ------------------------------------------------------------------------
-     AUDITORIA
-     ------------------------------------------------------------------------ */
-
-  it('a auditoria vem paginada, do mais recente para o mais antigo', async () => {
-    const primeira = await mestre.get('/api/auditoria?limite=5');
-
-    assert.equal(primeira.status, 200);
-    assert.equal(primeira.corpo.limite, 5);
-    assert.ok(primeira.corpo.itens.length <= 5);
-    assert.ok(primeira.corpo.total > 5);
-    assert.ok(primeira.corpo.itens.every((l, i, a) => i === 0 || a[i - 1].quando >= l.quando));
-
-    const segunda = await mestre.get('/api/auditoria?limite=5&pagina=2');
-    assert.notDeepEqual(segunda.corpo.itens, primeira.corpo.itens);
-
-    const porArea = await mestre.get('/api/auditoria?area=usuario');
-    assert.ok(porArea.corpo.total > 0);
-    assert.ok(porArea.corpo.itens.every((l) => l.area === 'usuario'));
-
-    const hoje = amb.hoje();
-    const porData = await mestre.get(`/api/auditoria?de=${hoje}&ate=${hoje}`);
-    assert.ok(porData.corpo.total > 0, 'o filtro precisa pegar o dia inteiro, não só a meia-noite');
-
-    assert.equal((await mestre.get('/api/auditoria?de=ontem')).status, 400);
-  });
-
-  /* ------------------------------------------------------------------------
      HISTÓRICO (LIXEIRA)
      ------------------------------------------------------------------------ */
 
