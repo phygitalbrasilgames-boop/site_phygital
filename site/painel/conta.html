@@ -34,7 +34,6 @@
     color: var(--erro); text-decoration: underline; cursor: pointer;
   }
   .link-risco:hover { color: #8f2416; }
-  .sessao-atual { white-space: nowrap; }
 
   /* Em telas estreitas o selo do topo desce para a segunda linha */
   @media (max-width: 640px) {
@@ -207,66 +206,6 @@
             </div>
           </form>
 
-          <hr>
-
-          <h3 class="sub-titulo">Sessões ativas</h3>
-          <p class="txt-peq txt-suave mb-4">
-            Estes são os dispositivos com a sua conta conectada. Não reconhece algum? Encerre a sessão e
-            troque a senha em seguida.
-          </p>
-
-          <div class="tabela-wrap">
-            <table>
-              <caption class="sr-only">Dispositivos com sessão ativa na sua conta</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Dispositivo</th>
-                  <th scope="col">Local aproximado</th>
-                  <th scope="col">Último acesso</th>
-                  <th scope="col"><span class="sr-only">Ação</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Chrome 126 · macOS</strong><br><span class="txt-micro txt-suave sessao-atual">Sessão atual</span></td>
-                  <td>São Paulo, SP</td>
-                  <td>Hoje, 08:42</td>
-                  <td><span class="tag tag--verde">Este dispositivo</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Safari · iPhone</strong><br><span class="txt-micro txt-suave">Aplicativo móvel</span></td>
-                  <td>São Paulo, SP</td>
-                  <td>Ontem, 21:07</td>
-                  <td>
-                    <button class="btn btn--fantasma btn--pequeno" type="button"
-                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
-                            data-confirmar-titulo="Encerrar a sessão do iPhone?"
-                            data-confirmar-ok="Sessão do iPhone encerrada.">Encerrar</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Chrome · Windows 11</strong><br><span class="txt-micro txt-suave">Computador do clube</span></td>
-                  <td>Campinas, SP</td>
-                  <td>28/07/2026, 14:12</td>
-                  <td>
-                    <button class="btn btn--fantasma btn--pequeno" type="button"
-                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
-                            data-confirmar-titulo="Encerrar a sessão do Windows?"
-                            data-confirmar-ok="Sessão do computador de Campinas encerrada.">Encerrar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="flex-fim mt-3">
-            <button class="btn btn--perigo btn--pequeno" type="button"
-                    data-confirmar="Todos os outros dispositivos serão desconectados agora. Esta sessão continua aberta."
-                    data-confirmar-titulo="Encerrar todas as outras sessões?"
-                    data-confirmar-ok="Todas as outras sessões foram encerradas.">
-              Encerrar todas as outras sessões
-            </button>
-          </div>
         </div>
       </div>
 
