@@ -530,7 +530,21 @@
     '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' + esc(F.dataExtenso(post.data)) + '</span>' +
     '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' + minutos + ' min de leitura</span>';
 
-  document.getElementById('post-corpo').innerHTML = CORPOS[post.id] || corpoPadrao(post);
+  /* Ordem de fonte do corpo:
+     1) post.corpo — o HTML que o admin escreveu no editor rico (blog-post.html).
+        É o que precisa aparecer para toda publicação criada pelo CMS; entra como
+        innerHTML porque já vem com <p>, <ul>, <b>, <h2> etc. do editor.
+     2) CORPOS[post.id] — texto próprio das publicações-semente p1..p6, cujo
+        `corpo` na base é null (server/semente.js grava null e o texto vive só
+        neste arquivo, como referência de layout).
+     3) corpoPadrao — fallback genérico quando não há corpo em nenhum lugar.
+     O corpo NÃO é escapado: quem escreve é o admin autenticado (permissão
+     blog:escrever), e todas as chamadas de corpo em post.html seguem esse
+     contrato há tempos (galerias, listas, blockquotes). */
+  var corpoHTML = (post.corpo && String(post.corpo).trim())
+    || CORPOS[post.id]
+    || corpoPadrao(post);
+  document.getElementById('post-corpo').innerHTML = corpoHTML;
   secaoArtigo.hidden = false;
 
   /* ---- Bloco do autor ---- */
