@@ -10,12 +10,6 @@
 <link rel="stylesheet" href="../assets/css/phygital.css">
 <link rel="stylesheet" href="../assets/css/painel.css">
 <style>
-  .doc-adm { border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); overflow: hidden; }
-  .doc-adm__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); padding: 10px var(--e-3); background: var(--claro); flex-wrap: wrap; }
-  .doc-adm__nome { font-family: var(--fonte-display); font-weight: 700; font-size: var(--t-peq); }
-  .doc-adm__linha { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--e-3); align-items: center; padding: 10px var(--e-3); border-top: 1px solid var(--linha-clara); }
-  .doc-adm__meta { font-size: var(--t-micro); color: var(--texto-suave); }
-  @media (max-width: 760px) { .doc-adm__linha { grid-template-columns: minmax(0,1fr); } }
   /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
   .campo__erro[hidden] { display: none; }
   .painel__topo { flex-wrap: wrap; }
@@ -72,6 +66,20 @@
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
       <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
@@ -180,14 +188,6 @@
                 </table>
               </div>
             </div>
-          </div>
-
-          <div class="bloco">
-            <div class="bloco__topo">
-              <h2>Documentação do elenco</h2>
-              <span class="txt-peq txt-suave" id="resumo-docs">—</span>
-            </div>
-            <div class="bloco__corpo" id="lista-docs"></div>
           </div>
 
           <div class="bloco">
@@ -302,29 +302,6 @@
   </div>
 </div>
 
-<div class="modal" id="modal-recusa" role="dialog" aria-modal="true" aria-labelledby="rec-titulo" aria-hidden="true">
-  <div class="modal__caixa" role="document">
-    <span class="fita"></span>
-    <div class="modal__corpo">
-      <h2 id="rec-titulo" style="font-size:1.375rem">Recusar documento</h2>
-      <p class="txt-peq txt-suave" id="rec-sub">—</p>
-      <form id="form-recusa" data-validar>
-        <input type="hidden" id="r-jogador"><input type="hidden" id="r-tipo">
-        <div class="campo">
-          <label for="r-motivo">Motivo da recusa <span class="obrigatorio">*</span></label>
-          <textarea id="r-motivo" required placeholder="Ex.: assinatura ilegível — reenviar a via assinada."></textarea>
-          <p class="campo__ajuda">O responsável vê este texto no painel e recebe por e-mail.</p>
-          <p class="campo__erro" hidden>Explique o motivo para o responsável poder corrigir.</p>
-        </div>
-        <div class="modal__acoes">
-          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
-          <button type="submit" class="btn btn--perigo">Recusar documento</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/exportar.js"></script>
@@ -371,9 +348,9 @@
     }
   }
 
-  /* O segundo bloco desta página (documentação do elenco) precisa exatamente do
-     mesmo time — resolver duas vezes é como as duas metades da tela passaram a
-     divergir. */
+  /* Ficha resolvida uma vez; exposta em window.FICHA_TIME para blocos futuros
+     que precisem do mesmo trio (campeonato, time, inscrição) sem refazer a
+     resolução — evitar as duas metades da tela divergirem no mesmo problema. */
   window.FICHA_TIME = { campeonato: c, time: t, inscricao: insc };
 
   if (!c || !t) {
@@ -478,124 +455,13 @@
   });
 })();
 </script>
-<script>
-(function () {
-  var D = PB.dados;
-  var $ = function (s) { return document.querySelector(s); };
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  /* Mesmo time resolvido pelo bloco de cima. Repetir a busca aqui era o que
-     fazia a documentação ser a de um time e o elenco a de outro. */
-  var ficha = window.FICHA_TIME || {};
-  var time = ficha.time;
-  if (!time) return;
-
-  function render() {
-    var t = D.time(time.id);
-    var resumo = D.documentacaoDoTime(t);
-    $('#resumo-docs').textContent = resumo.completo
-      ? 'documentação completa'
-      : resumo.ok + ' de ' + resumo.total + ' aprovados · ' + resumo.pendencias.length + ' pendência(s)';
-
-    $('#lista-docs').innerHTML =
-      '<div class="aviso' + (resumo.completo ? ' aviso--sucesso' : ' aviso--alerta') + ' mb-3"><div>' +
-        (resumo.completo
-          ? 'Todos os documentos obrigatórios foram aprovados. O time está liberado para a arena.'
-          : 'Há documentos faltando, vencidos ou recusados. Aprovar aqui libera o atleta; recusar avisa o responsável com o motivo.') +
-      '</div></div>' +
-      (t.jogadores || []).map(function (j, i) {
-        var docs = D.documentosDoJogador(j);
-        var faltam = docs.filter(function (d) { return d.obrigatorio && d.status !== 'aprovado'; }).length;
-        return '' +
-        '<div class="doc-adm">' +
-          '<div class="doc-adm__topo">' +
-            '<span class="doc-adm__nome">' + esc(j.nome) + '</span>' +
-            (faltam ? '<span class="tag tag--amarela">' + faltam + ' pendente(s)</span>'
-                    : '<span class="tag tag--verde">Completo</span>') +
-          '</div>' +
-          docs.map(function (d) {
-            var st = D.STATUS_DOCUMENTO[d.status];
-            var acoes = '';
-            if (d.arquivo && d.status !== 'aprovado') {
-              acoes += '<button class="btn btn--primario btn--pequeno" data-aprovar="' + i + ':' + d.tipo + '">Aprovar</button>';
-            }
-            if (d.arquivo && d.status !== 'recusado') {
-              acoes += '<button class="btn btn--perigo btn--pequeno" data-recusar="' + i + ':' + d.tipo + '">Recusar</button>';
-            }
-            if (!d.arquivo) acoes = '<span class="txt-micro txt-suave">aguardando envio</span>';
-
-            return '<div class="doc-adm__linha">' +
-              '<div>' +
-                '<div style="font-weight:600;font-size:var(--t-peq)">' + esc(d.nome) + '</div>' +
-                '<div class="doc-adm__meta">' + (d.arquivo ? esc(d.arquivo) : 'não enviado') +
-                  (d.validade ? ' · válido até ' + esc(PB.fmt.data(d.validade)) : '') + '</div>' +
-                (d.observacao ? '<div class="doc-adm__meta" style="color:var(--erro)">' + esc(d.observacao) + '</div>' : '') +
-              '</div>' +
-              '<span class="tag ' + st.classe + '">' + st.rotulo + '</span>' +
-              '<div class="linha-acoes">' + acoes + '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>';
-      }).join('');
-  }
-
-  document.addEventListener('click', function (e) {
-    var ap = e.target.closest('[data-aprovar]');
-    if (ap) {
-      var p = ap.getAttribute('data-aprovar').split(':');
-      var t = D.time(time.id);
-      var doc = (t.jogadores[p[0]].documentos || []).filter(function (x) { return x.tipo === p[1]; })[0];
-      /* Recusa do servidor já vem explicada por PB.dados; comemorar em cima dela
-         mostrava dois toasts contrários e recarregava a tela sem a aprovação —
-         e o e-mail ao responsável nunca saiu. */
-      if (!D.gravarDocumento(time.id, parseInt(p[0], 10), {
-        tipo: p[1], arquivo: doc ? doc.arquivo : null,
-        validade: doc ? doc.validade : null, status: 'aprovado', observacao: null
-      })) return;
-      PB.toast('Documento aprovado', 'O responsável foi avisado por e-mail.', 'info');
-      PB.recarregar();
-      return;
-    }
-
-    var rc = e.target.closest('[data-recusar]');
-    if (rc) {
-      var q = rc.getAttribute('data-recusar').split(':');
-      var t2 = D.time(time.id);
-      $('#r-jogador').value = q[0];
-      $('#r-tipo').value = q[1];
-      $('#rec-sub').textContent = t2.jogadores[q[0]].nome + ' · ' + D.TIPOS_DOCUMENTO[q[1]].nome;
-      $('#r-motivo').value = '';
-      PB.abrirModal('modal-recusa');
-    }
-  });
-
-  $('#form-recusa').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var motivo = $('#r-motivo').value.trim();
-    if (!motivo) { $('#r-motivo').focus(); return; }
-    var i = parseInt($('#r-jogador').value, 10);
-    var t = D.time(time.id);
-    var doc = (t.jogadores[i].documentos || []).filter(function (x) { return x.tipo === $('#r-tipo').value; })[0];
-    /* Falhou: o modal continua aberto com o motivo digitado, para o admin
-       tentar de novo sem reescrever tudo. */
-    if (!D.gravarDocumento(time.id, i, {
-      tipo: $('#r-tipo').value,
-      arquivo: doc ? doc.arquivo : null,
-      validade: doc ? doc.validade : null,
-      status: 'recusado', observacao: motivo
-    })) return;
-    PB.fecharModal('modal-recusa');
-    PB.toast('Documento recusado', 'O responsável recebeu o motivo por e-mail.', 'info');
-    PB.recarregar();
-  });
-
-  render();
-})();
-</script>
+<!--
+  Bloco de aprovar/recusar documentação do elenco removido do fluxo do admin:
+  a UI de conferência de RG, autorização de imagem e atestado saiu da ficha.
+  As funções em PB.dados (documentacaoDoTime, documentosDoJogador,
+  gravarDocumento) e a tabela `documentos` no esquema seguem intactos — se a
+  organização voltar a exigir conferência, este é o ponto de reintrodução.
+-->
 
 </body>
 </html>
