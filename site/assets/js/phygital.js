@@ -639,9 +639,15 @@
 
   /* Os mesmos tetos de server/rotas/upload.js. Conferir aqui não substitui a
      conferência do servidor: evita gastar a subida inteira de um arquivo que
-     vai levar 413 no fim. Só vale quando a tela informa `classe`. */
+     vai levar 413 no fim. Só vale quando a tela informa `classe`.
+
+     'imagem-blog' é o teto especial da redação do blog: foto principal e
+     galeria sobem no tamanho original. O servidor só aceita o hint quando a
+     conta tem 'blog:escrever'; em todas as outras telas 'imagem' padrão
+     continua sendo 5 MB. */
   var TETOS_ENVIO = {
     imagem: 5 * 1024 * 1024,
+    'imagem-blog': 100 * 1024 * 1024,
     documento: 100 * 1024 * 1024,
     video: 50 * 1024 * 1024
   };
@@ -656,8 +662,13 @@
       : Math.round(bytes / 1024) + ' KB';
   }
 
-  function urlDoEnvio() {
-    return ((global.PB && PB.api && PB.api.BASE) || '/api') + '/upload';
+  function urlDoEnvio(classe) {
+    var base = ((global.PB && PB.api && PB.api.BASE) || '/api') + '/upload';
+    /* Hoje só uma dica sobe pelo query: 'imagem-blog', que o servidor honra
+       apenas para quem tem 'blog:escrever'. Outros valores são ignorados no
+       cliente para não vazarem para a URL. */
+    if (classe === 'imagem-blog') return base + '?classe=imagem-blog';
+    return base;
   }
 
   /* O texto que o usuário lê. O status importa porque a saída é diferente em
@@ -731,7 +742,7 @@
     if (teto && arquivo.size > teto) {
       var comeco = op.classe === 'video' ? 'O vídeo tem '
         : op.classe === 'documento' ? 'O documento tem '
-        : 'A imagem tem ';
+        : 'A imagem tem ';                       /* imagem e imagem-blog */
       return envioRecusado(pronto,
         comeco + tamanhoLegivel(arquivo.size) +
         ' e o limite é ' + tamanhoLegivel(teto) + '.');
@@ -755,7 +766,7 @@
 
     pacote.append('arquivo', arquivo, arquivo.name);
 
-    req.open('POST', urlDoEnvio(), true);
+    req.open('POST', urlDoEnvio(op.classe), true);
     req.setRequestHeader('Accept', 'application/json');
 
     req.upload.addEventListener('progress', function (e) {

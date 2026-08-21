@@ -33,6 +33,7 @@ const crypto = require('node:crypto');
 
 const db = require('../db');
 const regras = require('../regras');
+const auth = require('../auth');
 const { ErroHttp, erro400, erro404, erro429, CORPO_MAX_ARQUIVO } = require('../http');
 
 /* --------------------------------------------------------------------------
@@ -64,17 +65,28 @@ const PERMISSAO = 'banners:escrever';
    pedido do briefing e cobre com folga. O vídeo continua em 50 MB: quem quer
    filme longo sobe para o YouTube e cola o link, é como o banner de vídeo já
    funciona.
+
+   'imagem-blog' é um teto especial: pedido do dono para a redação subir foto
+   principal e galeria de posts em resolução original, sem cortar. É a MESMA
+   assinatura de imagem (PNG/JPEG/WEBP/GIF); só o limite muda, e só quando o
+   cliente pede explicitamente com ?classe=imagem-blog E a conta tem
+   'blog:escrever'. Sem esses dois vales o padrão de 5 MB continua valendo em
+   todo o resto — escudo de time, foto de atleta, banner do site.
    -------------------------------------------------------------------------- */
 
 const TETOS = {
   imagem: 5 * 1024 * 1024,
+  'imagem-blog': 100 * 1024 * 1024,
   documento: 100 * 1024 * 1024,
   video: 50 * 1024 * 1024
 };
 
 /* Para a mensagem de 413 sair em português inteiro, e não "A imagem" para um
    PDF. */
-const ARTIGO = { imagem: 'A imagem', documento: 'O documento', video: 'O vídeo' };
+const ARTIGO = {
+  imagem: 'A imagem', 'imagem-blog': 'A imagem',
+  documento: 'O documento', video: 'O vídeo'
+};
 
 /* --------------------------------------------------------------------------
    FREIO POR CONTA
@@ -346,14 +358,17 @@ function classeNaJanela(buffer) {
   return null;
 }
 
-function corpoDoArquivo(req, limiteMaximo) {
+function corpoDoArquivo(req, limiteMaximo, tetoImagem = TETOS.imagem) {
   return new Promise((resolver, rejeitar) => {
     const pedacos = [];
     let tamanho = 0;
     let excedeu = false;
 
-    /* Presume o mais barato até o conteúdo dizer o contrário. */
-    let limite = Math.min(TETOS.imagem, limiteMaximo);
+    /* Presume o mais barato até o conteúdo dizer o contrário. `tetoImagem`
+       sobe para 100 MB quando quem envia é a redação do blog com permissão
+       para tanto — nos outros casos o padrão de 5 MB continua sendo o piso
+       da progressão. */
+    let limite = Math.min(tetoImagem, limiteMaximo);
     let classeConhecida = false;
 
     req.on('data', (p) => {
@@ -370,7 +385,12 @@ function corpoDoArquivo(req, limiteMaximo) {
           const classe = classeNaJanela(Buffer.concat(pedacos));
           if (classe) {
             classeConhecida = true;
-            limite = Math.min(TETOS[classe] || TETOS.imagem, limiteMaximo);
+            /* Imagem herda o teto negociado (`tetoImagem`); qualquer outra
+               classe volta a valer o seu próprio TETOS. */
+            const tetoDaClasse = classe === 'imagem'
+              ? tetoImagem
+              : (TETOS[classe] || TETOS.imagem);
+            limite = Math.min(tetoDaClasse, limiteMaximo);
           } else if (tamanho >= JANELA_ASSINATURA) {
             /* Passou da janela sem casar com nada da lista branca: o teto de
                imagem fica valendo, porque continuar lendo dezenas de MB de um
@@ -576,8 +596,18 @@ async function enviar(ctx) {
   const declarado = Number(ctx.req.headers['content-length'] || 0);
   if (declarado > CORPO_MAX_ARQUIVO) throw erro413();
 
+  /* Dica opcional do cliente: hoje só existe uma — 'imagem-blog' — para a
+     redação subir capa e galeria em resolução original. O hint é honrado
+     apenas se a conta pode escrever no blog; sem essa permissão o padrão de
+     5 MB fica valendo e escudos/fotos de atleta seguem no mesmo teto. Uma
+     dica desconhecida é silenciosamente ignorada, para não quebrar clientes
+     antigos. */
+  const dicaClasse = String(ctx.query && ctx.query.get('classe') || '').trim();
+  const ehBlogFoto = dicaClasse === 'imagem-blog' && auth.podeFazer(conta, 'blog:escrever');
+  const tetoImagem = ehBlogFoto ? TETOS['imagem-blog'] : TETOS.imagem;
+
   const contentType = String(ctx.req.headers['content-type'] || '');
-  const bruto = await corpoDoArquivo(ctx.req, CORPO_MAX_ARQUIVO);
+  const bruto = await corpoDoArquivo(ctx.req, CORPO_MAX_ARQUIVO, tetoImagem);
   if (!bruto.length) throw erro400('Nenhum arquivo foi enviado.');
 
   let dados;
@@ -598,10 +628,15 @@ async function enviar(ctx) {
 
   const assinatura = reconhecer(dados);
 
-  const teto = TETOS[assinatura.classe];
+  /* A dica 'imagem-blog' só sobe o teto quando a assinatura confirma que é
+     mesmo imagem — um vídeo ou PDF enviado com ?classe=imagem-blog cai no
+     teto da classe real, sem folga. */
+  const classeEfetiva = (ehBlogFoto && assinatura.classe === 'imagem')
+    ? 'imagem-blog' : assinatura.classe;
+  const teto = TETOS[classeEfetiva];
   if (dados.length > teto) {
     throw new ErroHttp(413,
-      `${ARTIGO[assinatura.classe]} passa do limite de `
+      `${ARTIGO[classeEfetiva]} passa do limite de `
       + `${Math.round(teto / (1024 * 1024))} MB.`);
   }
 
