@@ -58,6 +58,20 @@
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
       <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
@@ -179,7 +193,7 @@
           <span class="fita"></span>
           <div class="modal__corpo">
             <h2 id="usuario-titulo" style="font-size:1.375rem">Cadastrar novo usuário</h2>
-            <form data-validar data-demo="Usuário criado. A senha temporária foi enviada por e-mail.">
+            <form id="form-novo-usuario" data-validar>
               <div class="campo">
                 <label for="u-nome">Nome do usuário <span class="obrigatorio">*</span></label>
                 <input type="text" id="u-nome" required>
@@ -195,13 +209,12 @@
                 <input type="tel" id="u-tel" data-mascara="telefone" placeholder="(11) 90000-0000">
               </div>
               <div class="campo">
-                <label for="u-senha">Senha temporária <span class="obrigatorio">*</span></label>
+                <label for="u-senha">Senha temporária</label>
                 <div class="flex gap-2">
-                  <input type="text" id="u-senha" required>
+                  <input type="text" id="u-senha" placeholder="(gerada automaticamente)">
                   <button type="button" class="btn btn--contorno btn--pequeno" id="gerar-senha">Gerar</button>
                 </div>
-                <p class="campo__ajuda">O usuário será obrigado a trocar esta senha no primeiro acesso.</p>
-                <p class="campo__erro" hidden>Informe ou gere a senha temporária.</p>
+                <p class="campo__ajuda">Deixe em branco para que o sistema gere e envie a senha temporária por e-mail. O usuário será obrigado a trocá-la no primeiro acesso.</p>
               </div>
               <div class="campo">
                 <label for="u-nivel">Nível de acesso</label>
@@ -296,6 +309,65 @@
     (window.crypto || window.msCrypto).getRandomValues(vals);
     for (var i = 0; i < 12; i++) s += abc[vals[i] % abc.length];
     document.getElementById('u-senha').value = s;
+  });
+
+  /* Cadastro de usuário: o phygital.js já validou os obrigatórios em captura
+     (data-validar) e barra o submit se algum campo faltar. Aqui chega só quem
+     passou. O payload aceito pelo servidor é nome/e-mail/telefone/nivel — a
+     senha temporária é gerada por lá e enviada ao endereço cadastrado; o campo
+     u-senha ficou opcional só para o operador poder anotar o valor sugerido
+     antes de enviar. NÃO mandamos senha no body: `adminUsuarios.preparar` em
+     dados.js já descarta esse campo, então incluí-lo aqui seria fumaça. */
+  document.getElementById('form-novo-usuario').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var nome = document.getElementById('u-nome').value.trim();
+    var email = document.getElementById('u-email').value.trim();
+    var telefone = document.getElementById('u-tel').value.trim();
+    var nivel = document.getElementById('u-nivel').value;
+
+    /* Redundância defensiva: se por algum motivo o validador falhar, não
+       chega ao servidor um POST vazio que devolveria 400. */
+    if (!nome || !email) return;
+
+    /* Bloqueio de duplicidade no cliente: o servidor devolve 409 no e-mail
+       repetido, mas checar aqui evita gastar a rede e deixar o operador
+       na dúvida se o modal fechou por acidente. Só ativa quando há cache
+       local carregado; no modo API o servidor continua sendo a autoridade. */
+    var jaExiste = usuarios.some(function (u) {
+      return String(u.email || '').toLowerCase() === email.toLowerCase();
+    });
+    if (jaExiste) {
+      PB.toast('E-mail já cadastrado', 'Já existe um usuário com este endereço.', 'alerta');
+      document.getElementById('u-email').focus();
+      return;
+    }
+
+    var novo = {
+      /* id só é usado no modo local; no modo API o servidor devolve o id
+         real e absorver() sobrescreve este provisório. */
+      id: 'u' + Date.now(),
+      nome: nome,
+      email: email,
+      telefone: telefone,
+      nivel: nivel,
+      criadoEm: new Date().toISOString().slice(0, 10)
+    };
+
+    var salvou = D.gravar('adminUsuarios', novo);
+    /* gravar() devolve false quando o servidor recusa e já mostrou o aviso.
+       Deixa o modal aberto para o operador corrigir e tentar de novo. */
+    if (!salvou) return;
+
+    /* Eco na auditoria depois do servidor aceitar (o servidor também registra
+       — em modo API este eco é sobrescrito pelo próximo bootstrap). */
+    D.registrar('usuario', nome, 'cadastrou um administrador',
+                email + ' · nível ' + nivel);
+
+    PB.fecharModal('modal-usuario');
+    PB.toast('Usuário cadastrado',
+             'A senha temporária foi enviada para ' + email + '.', 'info');
+    PB.recarregar();
   });
 
   render();
