@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Times cadastrados — Painel do Administrador — Phygital Brasil</title>
+<meta name="description" content="Todos os times cadastrados por modalidade, com contagem de elenco, responsável e exportação individual.">
+<meta name="theme-color" content="#0E1113">
+<link rel="icon" href="../assets/img/logo/icone.png" type="image/png">
+<link rel="stylesheet" href="../assets/css/phygital.css">
+<link rel="stylesheet" href="../assets/css/painel.css">
+<style>
+  /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
+  .campo__erro[hidden] { display: none; }
+  .painel__topo { flex-wrap: wrap; }
+  .linha-acoes { display: flex; gap: var(--e-2); flex-wrap: wrap; }
+  .mono-num { font-variant-numeric: tabular-nums; }
+  .tabela-times td { vertical-align: middle; }
+  .tabela-times .col-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .resp__nome { font-weight: 600; line-height: 1.25; }
+  .resp__email { display: block; font-size: var(--t-micro); color: var(--texto-suave); }
+  @media (max-width: 640px) {
+    .painel__topo { flex-wrap: wrap; }
+    .painel__topo .flex-fim { width: 100%; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<a class="pular-para-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="painel">
+
+  <!-- ==================== MENU LATERAL ==================== -->
+  <aside class="painel__lateral">
+    <div class="painel__marca">
+      <a href="../index.html"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></a>
+      <p class="painel__tipo painel__tipo--admin">Painel do Administrador</p>
+    </div>
+    <nav class="menu" aria-label="Menu administrativo">
+      <div class="menu__item"><a class="menu__link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Dashboard</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Alterar Banner
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="banners-site.html">Site Principal</a></li>
+          <li><a href="banners.html">Página do Atleta</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+          Campeonatos
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item menu__item--ativo" aria-expanded="true">
+        <button class="menu__link" type="button" data-submenu aria-expanded="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" data-submenu-times-cadastrados>
+          <li><a href="times-cadastrados.html?modalidade=futebol" data-mod="futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete" data-mod="basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter" data-mod="shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance" data-mod="dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros" data-mod="outros">Outros</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+          Blog
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="blog.html">Publicações</a></li>
+          <li><a href="blog-categorias.html">Categorias</a></li>
+        </ul>
+      </div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg>
+          Disparo de E-mail
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="email.html">Disparar e histórico</a></li>
+          <li><a href="email-modelos.html">Modelos de E-mail</a></li>
+        </ul>
+      </div>
+      <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          Conta
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="conta.html">Meus dados</a></li>
+          <li><a href="usuarios.html">Usuários</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div class="painel__rodape">
+    <div class="painel__usuario">
+      <span class="avatar avatar--amarelo">IP</span>
+      <div><div class="nome">Inscrições Phygital</div><div class="papel">Master</div></div>
+    </div>
+    <button type="button" class="btn-sair" data-sair="../painel/login.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sair da conta
+    </button>
+    </div>
+  </aside>
+
+  <!-- ==================== CONTEÚDO ==================== -->
+  <div class="painel__conteudo">
+
+    <header class="painel__topo">
+      <button class="painel-toggle" data-painel-toggle aria-expanded="false" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1 id="titulo-pagina">Times cadastrados</h1>
+        <p class="sub" id="sub-pagina">Todos os times já cadastrados na plataforma.</p>
+      </div>
+      <div class="flex-fim">
+        <a class="btn btn--contorno btn--pequeno" href="../index.html">Ver o site</a>
+        <button class="btn btn--primario btn--pequeno" type="button" id="btn-exportar-todos" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Exportar todos
+        </button>
+      </div>
+    </header>
+
+    <main class="painel__corpo" id="conteudo">
+
+      <div class="bloco">
+        <div class="bloco__topo">
+          <h2 id="titulo-bloco">Times cadastrados</h2>
+          <span class="txt-peq txt-suave" id="conta-times">—</span>
+        </div>
+        <div class="bloco__corpo bloco__corpo--flat" id="corpo-lista">
+          <!-- preenchido em JS -->
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/dados.js"></script>
+<script src="../assets/js/exportar.js"></script>
+<script src="../assets/js/phygital.js"></script>
+<script>
+/* ==========================================================================
+   ADMIN — TIMES CADASTRADOS POR MODALIDADE
+
+   Lê ?modalidade= da URL, apresenta os times daquela modalidade e permite
+   exportar time a time ou o conjunto inteiro. A exportação usa PB.exportar,
+   o mesmo módulo que a tela do campeonato já usa — assim o .zip sai com o
+   mesmo layout (pasta por time, logo nomeado, planilha .xlsx) que o
+   organizador está acostumado a receber.
+   ========================================================================== */
+(function () {
+  var D = PB.dados;
+
+  var MODALIDADES_VALIDAS = { futebol: 1, basquete: 1, shooter: 1, dance: 1, outros: 1 };
+  var ROTULO = {
+    futebol: 'Futebol',
+    basquete: 'Basquete',
+    shooter: 'Shooter',
+    dance: 'Dança',
+    outros: 'Outros'
+  };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function parametro(nome) {
+    var busca = (location.search || '').replace(/^\?/, '').split('&');
+    for (var i = 0; i < busca.length; i++) {
+      var p = busca[i].split('=');
+      if (decodeURIComponent(p[0]) === nome) return decodeURIComponent((p[1] || '').replace(/\+/g, ' '));
+    }
+    return '';
+  }
+
+  function formatarData(iso) {
+    if (!iso) return '—';
+    var s = String(iso).substring(0, 10);
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return s;
+    return m[3] + '/' + m[2] + '/' + m[1];
+  }
+
+  function contarTitulares(time) {
+    return (time.jogadores || []).filter(function (j) { return !j.reserva; }).length;
+  }
+  function contarReservas(time) {
+    return (time.jogadores || []).filter(function (j) { return j.reserva; }).length;
+  }
+  function textoJogadores(time) {
+    var t = contarTitulares(time);
+    var r = contarReservas(time);
+    if (r) return t + ' + ' + r + ' reserva' + (r === 1 ? '' : 's');
+    return String(t);
+  }
+
+  function nomeResponsavel(time) {
+    if (time.contaNome) return time.contaNome;
+    /* Local: os times da semente pertencem ao usuário logado. */
+    var u = D.usuario ? D.usuario() : null;
+    if (u && u.nome) return u.nome;
+    return '—';
+  }
+  function emailResponsavel(time) {
+    if (time.contaEmail) return time.contaEmail;
+    var u = D.usuario ? D.usuario() : null;
+    if (u && u.email) return u.email;
+    return '';
+  }
+
+  /* Sublinha o item do submenu correspondente à modalidade atual. */
+  function marcarSubmenuAtivo(modalidade) {
+    var links = document.querySelectorAll('[data-submenu-times-cadastrados] a[data-mod]');
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute('data-mod') === modalidade) {
+        links[i].className = 'ativo';
+        links[i].setAttribute('aria-current', 'page');
+      }
+    }
+  }
+
+  /* --------- resolução da modalidade --------- */
+  var modalidadeId = String(parametro('modalidade') || '').toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(MODALIDADES_VALIDAS, modalidadeId)) {
+    modalidadeId = 'futebol';
+  }
+  marcarSubmenuAtivo(modalidadeId);
+
+  var rotuloBonito = ROTULO[modalidadeId] || 'Modalidade';
+  document.title = 'Times cadastrados · ' + rotuloBonito + ' — Painel do Administrador — Phygital Brasil';
+  document.getElementById('titulo-pagina').textContent = 'Times cadastrados · ' + rotuloBonito;
+  document.getElementById('titulo-bloco').textContent = 'Times de ' + rotuloBonito;
+  document.getElementById('sub-pagina').textContent =
+    'Lista completa de times já cadastrados em ' + rotuloBonito +
+    '. Use a exportação para gerar o .zip com fotos e planilha.';
+
+  /* --------- coleta dos times --------- */
+  function carregarTimes() {
+    if (typeof D.todosTimes === 'function') return D.todosTimes(modalidadeId);
+    /* Segurança caso alguém carregue a página com dados.js muito antigo. */
+    return (D.meusTimes ? D.meusTimes() : []).filter(function (t) {
+      return t.modalidade === modalidadeId;
+    });
+  }
+
+  var lista = carregarTimes();
+
+  /* --------- render --------- */
+  function renderVazio() {
+    document.getElementById('corpo-lista').innerHTML =
+      '<div class="vazio" style="border:0">' +
+        '<svg class="vazio__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+        '<h3 style="font-size:1.125rem">Nenhum time cadastrado nesta modalidade</h3>' +
+        '<p>Quando um competidor cadastrar o primeiro time em ' + esc(rotuloBonito) +
+        ', ele aparece aqui.</p>' +
+      '</div>';
+    document.getElementById('conta-times').textContent = '0 times';
+    document.getElementById('btn-exportar-todos').hidden = true;
+  }
+
+  function renderLista() {
+    var linhas = lista.map(function (t, i) {
+      var jog = textoJogadores(t);
+      var staff = (t.staff || []).length;
+      var resp = nomeResponsavel(t);
+      var mail = emailResponsavel(t);
+      var criadoEm = formatarData(t.criadoEm);
+      var atributos = 'data-time-id="' + esc(t.id) + '" data-indice="' + i + '"';
+
+      return '' +
+      '<tr>' +
+        '<td><strong>' + esc(t.nome) + '</strong>' +
+          (t.categoria ? '<span class="txt-micro txt-suave" style="display:block">' + esc(t.categoria) + '</span>' : '') +
+        '</td>' +
+        '<td>' +
+          '<span class="resp__nome">' + esc(resp) + '</span>' +
+          (mail ? '<span class="resp__email">' + esc(mail) + '</span>' : '') +
+        '</td>' +
+        '<td class="col-num">' + esc(jog) + '</td>' +
+        '<td class="col-num">' + staff + '</td>' +
+        '<td>' + esc(criadoEm) + '</td>' +
+        '<td>' +
+          '<div class="linha-acoes">' +
+            '<a class="btn btn--contorno btn--pequeno" href="campeonato-time.html?time=' + encodeURIComponent(t.id) + '">Ver detalhes</a>' +
+            '<button class="btn btn--fantasma btn--pequeno" type="button" data-exportar-time ' + atributos + '>' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>' +
+              'Exportar' +
+            '</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('corpo-lista').innerHTML =
+      '<div class="tabela-wrap" style="border:0;border-radius:0">' +
+        '<table class="tabela-times">' +
+          '<caption class="sr-only">Times cadastrados em ' + esc(rotuloBonito) + '</caption>' +
+          '<thead><tr>' +
+            '<th scope="col">Nome do time</th>' +
+            '<th scope="col">Responsável</th>' +
+            '<th scope="col" class="col-num">Jogadores</th>' +
+            '<th scope="col" class="col-num">Staff</th>' +
+            '<th scope="col">Criado em</th>' +
+            '<th scope="col"><span class="sr-only">Ações</span></th>' +
+          '</tr></thead>' +
+          '<tbody>' + linhas + '</tbody>' +
+        '</table>' +
+      '</div>';
+
+    document.getElementById('conta-times').textContent =
+      lista.length === 1 ? '1 time' : lista.length + ' times';
+    document.getElementById('btn-exportar-todos').hidden = false;
+  }
+
+  if (!lista.length) renderVazio(); else renderLista();
+
+  /* --------- exportação --------- */
+  function contextoCampeonato() {
+    /* PB.exportar precisa de um "campeonato" para saber se é dança (planilha
+       de página única, fotos soltas). Como esta tela não está amarrada a um
+       campeonato específico, monta um contexto sintético com a modalidade. */
+    return {
+      id: 'times-' + modalidadeId,
+      nome: 'Times cadastrados - ' + rotuloBonito,
+      modalidade: modalidadeId
+    };
+  }
+
+  document.addEventListener('click', function (ev) {
+    var alvo = ev.target.closest ? ev.target.closest('[data-exportar-time]') : null;
+    if (!alvo) return;
+    ev.preventDefault();
+    var id = alvo.getAttribute('data-time-id');
+    var indice = Number(alvo.getAttribute('data-indice') || 0);
+    var time = null;
+    for (var i = 0; i < lista.length; i++) {
+      if (lista[i].id === id) { time = lista[i]; break; }
+    }
+    if (!time) return;
+    alvo.disabled = true;
+    var textoOriginal = alvo.textContent;
+    alvo.textContent = 'Gerando...';
+    PB.exportar.time(contextoCampeonato(), time, indice)
+      .then(function () {
+        if (PB && PB.toast) PB.toast('Download iniciado', 'Arquivo .zip do time "' + time.nome + '".', 'info');
+      })
+      .catch(function (e) {
+        if (PB && PB.toast) PB.toast('Falha na exportação', String(e && e.message ? e.message : e), 'erro');
+      })
+      .then(function () {
+        alvo.disabled = false;
+        alvo.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Exportar';
+      });
+  });
+
+  var btnTodos = document.getElementById('btn-exportar-todos');
+  btnTodos.addEventListener('click', function () {
+    if (!lista.length) return;
+    btnTodos.disabled = true;
+    var textoOriginal = btnTodos.innerHTML;
+    btnTodos.innerHTML = 'Gerando arquivo...';
+    PB.exportar.campeonato(contextoCampeonato(), lista)
+      .then(function (r) {
+        if (PB && PB.toast) PB.toast('Download iniciado',
+          r && r.danca
+            ? 'Arquivo .zip com fotos nomeadas e planilha de página única.'
+            : 'Arquivo .zip com uma pasta por time, logos, fotos nomeadas e planilha.',
+          'info');
+      })
+      .catch(function (e) {
+        if (PB && PB.toast) PB.toast('Falha na exportação', String(e && e.message ? e.message : e), 'erro');
+      })
+      .then(function () {
+        btnTodos.disabled = false;
+        btnTodos.innerHTML = textoOriginal;
+      });
+  });
+
+  /* Contador do menu lateral igual ao número de chamados em aberto */
+  try {
+    var met = D.metricas ? D.metricas() : null;
+    if (met) {
+      var badges = document.querySelectorAll('[data-conta-chamados]');
+      for (var i = 0; i < badges.length; i++) {
+        if (met.chamadosAbertos) {
+          badges[i].textContent = met.chamadosAbertos;
+          badges[i].hidden = false;
+        }
+      }
+    }
+  } catch (e) { /* ignora */ }
+})();
+</script>
+
+</body>
+</html>

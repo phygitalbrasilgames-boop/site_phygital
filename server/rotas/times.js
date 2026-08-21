@@ -362,12 +362,37 @@ function registrar(rotas) {
 
     const filtro = condicoes.length ? ` AND ${condicoes.join(' AND ')}` : '';
 
-    return ctx.ok({
-      ok: true,
-      times: montarTimes(db.todos(
-        `SELECT * FROM times WHERE arquivado_em IS NULL${filtro} ORDER BY criado_em, id`, ...params
-      ))
-    });
+    const times = montarTimes(db.todos(
+      `SELECT * FROM times WHERE arquivado_em IS NULL${filtro} ORDER BY criado_em, id`, ...params
+    ));
+
+    /* Painel do administrador precisa mostrar o responsável do time (nome e
+       e-mail da conta dona), não só o id. Busca em lote para não virar N+1. */
+    if (times.length) {
+      const contaIds = [];
+      const vistos = {};
+      times.forEach((t) => {
+        if (t.conta && !vistos[t.conta]) { vistos[t.conta] = true; contaIds.push(t.conta); }
+      });
+      if (contaIds.length) {
+        const donos = db.todos(
+          `SELECT id, nome, email, telefone FROM contas WHERE id IN (${marcadores(contaIds)})`,
+          ...contaIds
+        );
+        const porId = {};
+        donos.forEach((d) => { porId[d.id] = d; });
+        times.forEach((t) => {
+          const d = porId[t.conta];
+          if (d) {
+            t.contaNome = d.nome;
+            t.contaEmail = d.email;
+            t.contaTelefone = d.telefone;
+          }
+        });
+      }
+    }
+
+    return ctx.ok({ ok: true, times });
   });
 
   rotas.get('/api/times/:id', async (ctx) => {
