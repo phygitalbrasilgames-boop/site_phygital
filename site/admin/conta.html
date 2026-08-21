@@ -13,8 +13,6 @@
   /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
   .campo__erro[hidden] { display: none; }
   .painel__topo { flex-wrap: wrap; }
-  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
-  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
   .barra-ocupacao { height: 8px; background: var(--claro); border-radius: var(--r-pill); overflow: hidden; }
   .barra-ocupacao i { display: block; height: 100%; background: var(--fita-verde); }
   .barra-ocupacao i.cheia { background: var(--fita-amarela); }
@@ -53,16 +51,27 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub" hidden>
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -85,7 +94,6 @@
           <li><a href="email-modelos.html">Modelos de E-mail</a></li>
         </ul>
       </div>
-      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
       <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
       <div class="menu__item menu__item--ativo" aria-expanded="true">
         <button class="menu__link" type="button" data-submenu aria-expanded="true">
@@ -127,100 +135,94 @@
 
     <main class="painel__corpo" id="conteudo">
 
-      <div class="painel-grade">
-        <div>
-          <div class="bloco">
-            <div class="bloco__topo"><h2>Informações do usuário</h2></div>
-            <div class="bloco__corpo">
-              <div class="aviso mb-4">
-                <div>
-                  Toda alteração só é validada depois da confirmação de um código enviado por e-mail.
-                  Se você trocar o e-mail, o código vai antes para o <strong>endereço atual</strong>.
-                </div>
+      <div class="bloco">
+        <div class="bloco__topo"><h2>Informações do usuário</h2></div>
+        <div class="bloco__corpo">
+          <div class="aviso mb-4">
+            <div>
+              Toda alteração só é validada depois da confirmação de um código enviado por e-mail.
+              Se você trocar o e-mail, o código vai antes para o <strong>endereço atual</strong>.
+            </div>
+          </div>
+
+          <form id="form-conta" data-validar>
+            <div class="form-grade">
+              <div class="campo col-2">
+                <label for="nome">Nome <span class="obrigatorio">*</span></label>
+                <input type="text" id="nome" required>
+                <p class="campo__erro" hidden>Informe o nome.</p>
               </div>
-
-              <form id="form-conta" data-validar>
-                <div class="form-grade">
-                  <div class="campo col-2">
-                    <label for="nome">Nome <span class="obrigatorio">*</span></label>
-                    <input type="text" id="nome" required>
-                    <p class="campo__erro" hidden>Informe o nome.</p>
-                  </div>
-                  <div class="campo col-2">
-                    <label for="email">E-mail <span class="obrigatorio">*</span></label>
-                    <input type="email" id="email" required>
-                    <p class="campo__erro" hidden>Informe um e-mail válido.</p>
-                  </div>
-                  <div class="campo">
-                    <label for="telefone">Telefone</label>
-                    <input type="tel" id="telefone" data-mascara="telefone">
-                  </div>
-                  <div class="campo">
-                    <label for="nivel">Nível de acesso</label>
-                    <input type="text" id="nivel" value="Master" readonly>
-                    <p class="campo__ajuda">Só outro Master pode alterar o seu nível.</p>
-                  </div>
-                </div>
-                <div class="flex-fim">
-                  <button type="submit" class="btn btn--primario">Salvar alterações</button>
-                </div>
-              </form>
+              <div class="campo col-2">
+                <label for="email">E-mail <span class="obrigatorio">*</span></label>
+                <input type="email" id="email" required>
+                <p class="campo__erro" hidden>Informe um e-mail válido.</p>
+              </div>
+              <div class="campo">
+                <label for="telefone">Telefone</label>
+                <input type="tel" id="telefone" data-mascara="telefone">
+              </div>
+              <div class="campo">
+                <label for="nivel">Nível de acesso</label>
+                <input type="text" id="nivel" value="Master" readonly>
+                <p class="campo__ajuda">Só outro Master pode alterar o seu nível.</p>
+              </div>
             </div>
-          </div>
-
-          <div class="bloco">
-            <div class="bloco__topo"><h2>Segurança</h2></div>
-            <div class="bloco__corpo">
-              <form data-validar data-demo="Senha alterada. Um aviso foi enviado ao seu e-mail.">
-                <div class="form-grade">
-                  <div class="campo col-2">
-                    <label for="senha-atual">Senha atual <span class="obrigatorio">*</span></label>
-                    <input type="password" id="senha-atual" required autocomplete="current-password">
-                    <p class="campo__erro" hidden>Informe a senha atual.</p>
-                  </div>
-                  <div class="campo">
-                    <label for="senha-nova">Nova senha <span class="obrigatorio">*</span></label>
-                    <input type="password" id="senha-nova" data-senha required autocomplete="new-password">
-                    <p class="campo__erro" hidden>Informe a nova senha.</p>
-                  </div>
-                  <div class="campo">
-                    <label for="senha-conf">Repetir nova senha <span class="obrigatorio">*</span></label>
-                    <input type="password" id="senha-conf" data-senha-confirma required autocomplete="new-password">
-                    <p class="campo__erro" hidden>As senhas não conferem.</p>
-                  </div>
-                </div>
-                <div class="flex-fim">
-                  <button type="submit" class="btn btn--contorno">Alterar senha</button>
-                </div>
-              </form>
+            <div class="flex-fim">
+              <button type="submit" class="btn btn--primario">Salvar alterações</button>
             </div>
-          </div>
+          </form>
         </div>
+      </div>
 
-        <div>
-          <div class="bloco">
-            <div class="bloco__topo"><h2>Notificações por e-mail</h2></div>
-            <div class="bloco__corpo">
-              <label class="check"><input type="checkbox" checked> Novo chamado aberto</label>
-              <label class="check"><input type="checkbox" checked> Nova inscrição recebida</label>
-              <label class="check"><input type="checkbox" checked> Encerramento de inscrições se aproximando</label>
-              <label class="check"><input type="checkbox"> Resumo diário da operação</label>
-              <label class="check"><input type="checkbox" checked> Falha no envio de e-mail pelo SMTP</label>
-              <button class="btn btn--contorno btn--pequeno btn--bloco mt-3" id="salvar-notif">Salvar preferências</button>
+      <div class="bloco">
+        <div class="bloco__topo"><h2>Segurança</h2></div>
+        <div class="bloco__corpo">
+          <form data-validar data-demo="Senha alterada. Um aviso foi enviado ao seu e-mail.">
+            <div class="form-grade">
+              <div class="campo col-2">
+                <label for="senha-atual">Senha atual <span class="obrigatorio">*</span></label>
+                <input type="password" id="senha-atual" required autocomplete="current-password">
+                <p class="campo__erro" hidden>Informe a senha atual.</p>
+              </div>
+              <div class="campo">
+                <label for="senha-nova">Nova senha <span class="obrigatorio">*</span></label>
+                <input type="password" id="senha-nova" data-senha required autocomplete="new-password">
+                <p class="campo__erro" hidden>Informe a nova senha.</p>
+              </div>
+              <div class="campo">
+                <label for="senha-conf">Repetir nova senha <span class="obrigatorio">*</span></label>
+                <input type="password" id="senha-conf" data-senha-confirma required autocomplete="new-password">
+                <p class="campo__erro" hidden>As senhas não conferem.</p>
+              </div>
             </div>
-          </div>
+            <div class="flex-fim">
+              <button type="submit" class="btn btn--contorno">Alterar senha</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
-          <div class="bloco">
-            <div class="bloco__topo"><h2>Acesso</h2></div>
-            <div class="bloco__corpo">
-              <a class="btn btn--contorno btn--bloco btn--pequeno mb-3" href="usuarios.html">Gerenciar usuários do painel</a>
-              <button class="btn btn--perigo btn--bloco btn--pequeno"
-                data-confirmar="Você será desconectado do painel administrativo. Deseja sair?"
-                data-confirmar-titulo="Sair do painel"
-                data-confirmar-ok="Sessão encerrada."
-                data-ir-para="../painel/login.html">Sair</button>
-            </div>
-          </div>
+      <div class="bloco">
+        <div class="bloco__topo"><h2>Acesso</h2></div>
+        <div class="bloco__corpo">
+          <a class="btn btn--contorno btn--bloco btn--pequeno mb-3" href="usuarios.html">Gerenciar usuários do painel</a>
+          <button class="btn btn--perigo btn--bloco btn--pequeno"
+            data-confirmar="Você será desconectado do painel administrativo. Deseja sair?"
+            data-confirmar-titulo="Sair do painel"
+            data-confirmar-ok="Sessão encerrada."
+            data-ir-para="../painel/login.html">Sair</button>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <div class="bloco__topo"><h2>Notificações por e-mail</h2></div>
+        <div class="bloco__corpo">
+          <label class="check"><input type="checkbox" checked> Novo chamado aberto</label>
+          <label class="check"><input type="checkbox" checked> Nova inscrição recebida</label>
+          <label class="check"><input type="checkbox" checked> Encerramento de inscrições se aproximando</label>
+          <label class="check"><input type="checkbox"> Resumo diário da operação</label>
+          <label class="check"><input type="checkbox" checked> Falha no envio de e-mail pelo SMTP</label>
+          <button class="btn btn--contorno btn--pequeno btn--bloco mt-3" id="salvar-notif">Salvar preferências</button>
         </div>
       </div>
 
@@ -250,6 +252,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>

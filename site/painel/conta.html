@@ -34,7 +34,6 @@
     color: var(--erro); text-decoration: underline; cursor: pointer;
   }
   .link-risco:hover { color: #8f2416; }
-  .sessao-atual { white-space: nowrap; }
 
   /* Em telas estreitas o selo do topo desce para a segunda linha */
   @media (max-width: 640px) {
@@ -60,7 +59,7 @@
       <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
       <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item menu__item--ativo"><a class="menu__link" href="conta.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
     </nav>
     <div class="painel__rodape">
@@ -207,66 +206,6 @@
             </div>
           </form>
 
-          <hr>
-
-          <h3 class="sub-titulo">Sessões ativas</h3>
-          <p class="txt-peq txt-suave mb-4">
-            Estes são os dispositivos com a sua conta conectada. Não reconhece algum? Encerre a sessão e
-            troque a senha em seguida.
-          </p>
-
-          <div class="tabela-wrap">
-            <table>
-              <caption class="sr-only">Dispositivos com sessão ativa na sua conta</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Dispositivo</th>
-                  <th scope="col">Local aproximado</th>
-                  <th scope="col">Último acesso</th>
-                  <th scope="col"><span class="sr-only">Ação</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Chrome 126 · macOS</strong><br><span class="txt-micro txt-suave sessao-atual">Sessão atual</span></td>
-                  <td>São Paulo, SP</td>
-                  <td>Hoje, 08:42</td>
-                  <td><span class="tag tag--verde">Este dispositivo</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Safari · iPhone</strong><br><span class="txt-micro txt-suave">Aplicativo móvel</span></td>
-                  <td>São Paulo, SP</td>
-                  <td>Ontem, 21:07</td>
-                  <td>
-                    <button class="btn btn--fantasma btn--pequeno" type="button"
-                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
-                            data-confirmar-titulo="Encerrar a sessão do iPhone?"
-                            data-confirmar-ok="Sessão do iPhone encerrada.">Encerrar</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td><strong>Chrome · Windows 11</strong><br><span class="txt-micro txt-suave">Computador do clube</span></td>
-                  <td>Campinas, SP</td>
-                  <td>28/07/2026, 14:12</td>
-                  <td>
-                    <button class="btn btn--fantasma btn--pequeno" type="button"
-                            data-confirmar="O dispositivo será desconectado e precisará entrar de novo com e-mail e senha."
-                            data-confirmar-titulo="Encerrar a sessão do Windows?"
-                            data-confirmar-ok="Sessão do computador de Campinas encerrada.">Encerrar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="flex-fim mt-3">
-            <button class="btn btn--perigo btn--pequeno" type="button"
-                    data-confirmar="Todos os outros dispositivos serão desconectados agora. Esta sessão continua aberta."
-                    data-confirmar-titulo="Encerrar todas as outras sessões?"
-                    data-confirmar-ok="Todas as outras sessões foram encerradas.">
-              Encerrar todas as outras sessões
-            </button>
-          </div>
         </div>
       </div>
 
@@ -420,6 +359,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>

@@ -6,10 +6,10 @@
    nenhuma rota daqui monta e-mail por conta própria.
 
    Níveis (auth.PERMISSOES):
-     · leitura (modelos, variáveis, SMTP, histórico) → qualquer admin
+     · leitura (modelos, variáveis, SMTP, histórico, fila) → qualquer admin
      · disparo em massa                              → permissão 'email:enviar'
        (master e gestor)
-     · edição de modelo, SMTP e teste                → só master
+     · edição de modelo, SMTP, teste e verificação   → só master
 
    "Só master" é expresso pedindo uma permissão que nenhum outro nível tem:
    master é o único com '*', então exigirAdmin('email:configurar') já barra
@@ -21,6 +21,8 @@ const db = require('../db');
 const mapa = require('../mapa');
 const regras = require('../regras');
 const email = require('../email');
+const fila = require('../fila-email');
+const smtp = require('../smtp');
 const { erro400, erro404 } = require('../http');
 
 /* Teto do histórico devolvido de uma vez. */
@@ -44,20 +46,122 @@ function variaveisConhecidas() {
 }
 
 /**
- * Anexo entra como METADADO, nunca como conteúdo: o corpo da requisição tem
- * teto de 2 MB e guardar arquivo em base64 no banco estouraria o histórico.
- * O conteúdo real será tratado pelo conector de SMTP quando existir.
+ * Anexo entra como METADADO. O binário fica em site/assets/enviados/ (gravado
+ * antes por POST /api/upload, que valida assinatura e limita tamanho por classe)
+ * e o dispatcher lê os bytes do disco na hora de montar o multipart do SMTP.
+ * Guardar o conteúdo em base64 aqui estouraria o histórico e o teto de corpo
+ * de requisição — o caminho é a ponte.
+ *
+ * O campo `caminho`, quando vem, precisa casar EXATO com o formato que
+ * server/rotas/upload.js grava: `assets/enviados/<uuid v4>.<ext curta>`. Sem
+ * essa amarra o cliente escolheria qualquer caminho e teríamos travessia de
+ * diretório — o dispatcher lê arquivo. Fora do padrão, o campo é DESCARTADO
+ * (não bloqueia o disparo): o anexo continua na prévia como metadado, mas o
+ * dispatcher entrega só o corpo, como faz há muito tempo.
  */
+const CAMINHO_ENVIADO = /^assets\/enviados\/[0-9a-f-]{36}\.[a-z0-9]{2,5}$/;
+const MAX_ANEXOS_POR_DISPARO = 10;
+
 function limparAnexos(bruto) {
   if (!Array.isArray(bruto)) return [];
-  return bruto.slice(0, 10).map((a) => ({
-    nome: String((a && a.nome) || 'arquivo').slice(0, 160),
-    tipo: String((a && a.tipo) || '').slice(0, 80),
-    tamanho: Number(a && a.tamanho) || 0
-  }));
+  return bruto.slice(0, MAX_ANEXOS_POR_DISPARO).map((a) => {
+    const caminho = String((a && a.caminho) || '');
+    const item = {
+      nome: String((a && a.nome) || 'arquivo').slice(0, 160),
+      tipo: String((a && a.tipo) || '').slice(0, 80),
+      tamanho: Number(a && a.tamanho) || 0
+    };
+    if (caminho && CAMINHO_ENVIADO.test(caminho)) item.caminho = caminho;
+    return item;
+  });
 }
 
 const texto = (v) => String(v === undefined || v === null ? '' : v).trim();
+
+/* Validação de e-mail. RFC 5322 completo não vale a pena: cobre casos que
+   nenhum provedor real aceita. O que interessa é o formato "algo@algo.algo",
+   sem espaço em branco. O tamanho é limitado para não guardar linha gigante
+   no histórico. */
+const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TAMANHO_MAX_EMAIL = 254;   /* limite prático de e-mail em SMTP */
+const MAX_DESTINATARIOS_MANUAIS = 500;   /* teto por disparo, para o histórico não explodir */
+
+/**
+ * Recebe qualquer coisa que a tela mandou como lista de e-mails (array de
+ * string, string única separada por vírgula/ponto-e-vírgula/nova-linha) e
+ * devolve os endereços válidos, únicos, na ordem em que apareceram.
+ */
+function normalizarListaManual(bruto) {
+  if (bruto === undefined || bruto === null) return [];
+  const partes = Array.isArray(bruto) ? bruto : String(bruto).split(/[\s,;]+/);
+  const vistos = new Set();
+  const saida = [];
+  for (const item of partes) {
+    const e = String(item || '').trim();
+    if (!e || e.length > TAMANHO_MAX_EMAIL) continue;
+    if (!RE_EMAIL.test(e)) continue;
+    const chave = e.toLowerCase();
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    saida.push(e);
+    if (saida.length >= MAX_DESTINATARIOS_MANUAIS) break;
+  }
+  return saida;
+}
+
+/* Teto de espera de cada rota que despacha na hora. O envio de teste é o
+   diagnóstico que o admin pediu e vale esperar; o disparo em massa é chamado
+   pelo painel por XHR SÍNCRONO, então segurar a resposta congela a tela do
+   admin — passado o prazo a resposta sai com o que a linha já diz e o
+   despachante termina sozinho em segundo plano. */
+const ESPERA_TESTE_MS = 60000;
+const ESPERA_DISPARO_MS = 15000;
+
+/**
+ * Espera a promessa por no máximo `ms`. NÃO cancela nada: o despacho continua
+ * rodando, só a resposta HTTP deixa de esperar por ele.
+ */
+function comPrazo(promessa, ms) {
+  return new Promise((pronto) => {
+    const relogio = setTimeout(() => pronto(false), ms);
+    if (relogio.unref) relogio.unref();
+    const fim = () => { clearTimeout(relogio); pronto(true); };
+    promessa.then(fim, fim);
+  });
+}
+
+/**
+ * Enfileirou, então despacha na hora e devolve o desfecho REAL da linha.
+ *
+ * A tela de configuração precisa dizer "entregue" ou o motivo da falha; dizer
+ * "enfileirado" não prova nada — é justamente o que o admin está testando. O
+ * status é relido do banco em vez de deduzido do retorno de despachar(), porque
+ * uma rodada do despachante periódico pode ter pegado esta mesma linha antes.
+ */
+async function despacharAgora(resultado, { esperaMaxMs = ESPERA_TESTE_MS } = {}) {
+  const desfecho = {
+    status: resultado.status,
+    motivo: resultado.motivo,
+    registro: resultado.registro,
+    tentativas: 0
+  };
+
+  if (resultado.status !== 'fila') return desfecho;
+
+  await comPrazo(fila.despachar(), esperaMaxMs);
+
+  const linha = db.um('SELECT * FROM emails_enviados WHERE id = ?', resultado.id);
+  if (!linha) return desfecho;
+
+  return {
+    status: linha.status,
+    /* fila.semSegredo já passou pelo erro antes de ele ir para o banco; aqui é
+       cinto e suspensório, porque este texto vai direto para a tela. */
+    motivo: fila.semSegredo(linha.erro) || resultado.motivo,
+    registro: mapa.emailEnviado(linha),
+    tentativas: Number(linha.tentativas) || 0
+  };
+}
 
 /* --------------------------------------------------------------------------
    DESTINATÁRIOS
@@ -95,11 +199,50 @@ const SQL_DESTINATARIOS = `
 
 /**
  * Resolve o público do disparo.
- * @param alvo 'todos' | 'abertos' | id de campeonato (aceita o prefixo 'camp:'
- *             que o seletor da tela usa)
+ * @param alvo 'todos' | 'abertos' | 'manual' | id de campeonato (aceita o
+ *             prefixo 'camp:' que o seletor da tela usa)
+ * @param opcoes.destinatarios  lista de e-mails para o modo 'manual'.
+ *
+ * O modo 'manual' NÃO consulta o banco: entrega para os endereços que o admin
+ * digitou na tela. É a única forma de mandar e-mail para alguém que não é
+ * responsável de time em algum campeonato ativo. Se a lista chega vazia
+ * (nenhum endereço válido), a função lança 400 em vez de cair no público
+ * padrão — o silêncio disfarçado de sucesso é o bug que motivou este ramo.
  */
-function resolverDestinatarios(alvo) {
+function resolverDestinatarios(alvo, opcoes = {}) {
   const escolha = texto(alvo).replace(/^camp:/, '') || 'todos';
+
+  if (escolha === 'manual') {
+    const lista = normalizarListaManual(opcoes.destinatarios);
+    if (!lista.length) {
+      throw erro400(
+        'Informe ao menos um e-mail válido para a lista manual. '
+        + 'Use vírgula, ponto e vírgula ou quebras de linha para separar.'
+      );
+    }
+    /* Destinatário manual não tem time, campeonato nem protocolo — as
+       variáveis {{campeonato.*}} e {{inscricao.*}} ficam vazias, e o corpo
+       digitado pelo admin sai como está. É o comportamento pedido: o disparo
+       manual é um comunicado avulso, não um lembrete de inscrição. */
+    return {
+      rotulo: 'Lista manual',
+      escolha: 'manual',
+      destinatarios: lista.map((email) => ({
+        email,
+        nome: null,
+        contaId: null,
+        telefone: null,
+        time: null,
+        modalidade: null,
+        jogadores: 0,
+        campeonatoId: null,
+        campeonato: null,
+        protocolo: null,
+        statusInscricao: null
+      })),
+      inscricoes: 0
+    };
+  }
 
   let sql = SQL_DESTINATARIOS;
   const params = [];
@@ -292,14 +435,20 @@ function registrar(rotas) {
 
     /* mapa.smtp() não tem campo de senha e a tabela não tem coluna para ela:
        a senha vive só em PHYGITAL_SMTP_SENHA. Devolvemos apenas se ela existe,
-       porque a tela precisa dizer se a configuração está completa. */
+       porque a tela precisa dizer se a configuração está completa.
+       resumoConfiguracao() é o mesmo diagnóstico da faixa de inicialização e
+       também não carrega senha: só host, porta, usuário e remetente. */
+    const envio = fila.resumoConfiguracao();
+
     ctx.ok({
       ok: true,
       smtp: mapa.smtp(db.um('SELECT * FROM smtp WHERE id = 1')),
       senhaConfigurada: Boolean(process.env.PHYGITAL_SMTP_SENHA),
       modo: process.env.PHYGITAL_MODO || 'dev',
-      /* Deixa explícito na resposta que, fora de produção, nada sai. */
-      envioReal: email.statusDeEnvio() === 'fila'
+      /* Deixa explícito na resposta se o envio sai de verdade e, quando não
+         sai, o que está faltando. */
+      envioReal: envio.ok,
+      envio
     });
   });
 
@@ -368,19 +517,97 @@ function registrar(rotas) {
       qtd: 1
     });
 
+    /* Havendo configuração, o teste é ENVIO DE VERDADE e a resposta espera o
+       desfecho: um teste que só enfileira não testa nada. */
+    const desfecho = await despacharAgora(resultado);
+
     regras.registrar(ctx, 'email', para, 'enviou e-mail de teste',
-      `Servidor ${cfg ? cfg.servidor_saida : '—'} · status ${resultado.status}`);
+      `Servidor ${cfg ? cfg.servidor_saida : '—'} · status ${desfecho.status}`);
 
     ctx.ok({
-      ok: resultado.ok,
-      status: resultado.status,
-      motivo: resultado.motivo,
+      ok: desfecho.status === 'entregue' || desfecho.status === 'simulado',
+      status: desfecho.status,
+      entregue: desfecho.status === 'entregue',
+      motivo: desfecho.motivo,
       para: resultado.para,
       previa: resultado.html,
-      /* Em desenvolvimento o e-mail é gravado, não entregue — a tela precisa
+      /* Sem senha de SMTP o e-mail é gravado, não entregue — a tela precisa
          dizer isso ao admin em vez de fingir sucesso. */
-      simulado: resultado.status === 'simulado',
-      registro: resultado.registro
+      simulado: desfecho.status === 'simulado',
+      /* 'fila' aqui significa falha temporária: o despacho rodou e a linha
+         voltou para a fila com recuo. */
+      tentativas: desfecho.tentativas,
+      registro: desfecho.registro
+    });
+  });
+
+  /* ---- Verificação da conexão ------------------------------------------- */
+
+  /**
+   * Testa servidor, porta, TLS e AUTH SEM enviar mensagem nenhuma.
+   *
+   * É o que responde a pergunta que o admin realmente faz — "a senha está
+   * certa?" — sem gastar reputação de remetente nem entulhar o histórico com
+   * mensagem de teste. A senha nunca sai na resposta: o diálogo devolvido já
+   * vem com a credencial trocada por asteriscos pelo próprio cliente SMTP.
+   */
+  rotas.post('/api/email/verificar', async (ctx) => {
+    ctx.exigirAdmin('email:configurar');
+
+    const cfg = fila.configuracaoSmtp();
+
+    if (!cfg.ok) {
+      /* 200 com ok:false: não é erro da requisição, é o diagnóstico pedido. */
+      ctx.ok({
+        ok: false,
+        motivo: cfg.motivo,
+        banner: '',
+        extensoes: [],
+        cifrado: false,
+        autenticado: false,
+        dialogo: []
+      });
+      return;
+    }
+
+    const r = await smtp.verificarConexao(cfg.config);
+
+    regras.registrar(ctx, 'email', cfg.config.host, 'verificou a conexão de e-mail',
+      `${cfg.config.host}:${cfg.config.porta} · ${r.ok ? 'conexão e autenticação ok' : 'falhou'}`);
+
+    ctx.ok({
+      ok: r.ok,
+      motivo: r.erro ? fila.semSegredo(r.erro) : null,
+      servidor: cfg.config.host,
+      porta: cfg.config.porta,
+      usuario: cfg.config.usuario,
+      banner: r.banner,
+      extensoes: r.extensoes,
+      cifrado: r.cifrado,
+      autenticado: r.autenticado,
+      /* Temporário quer dizer "tente de novo"; permanente pede correção. */
+      temporario: r.temporario,
+      dialogo: (r.dialogo || []).map((l) => fila.semSegredo(l))
+    });
+  });
+
+  /* ---- Fila pendente ---------------------------------------------------- */
+
+  rotas.get('/api/email/fila', async (ctx) => {
+    ctx.exigirAdmin();
+
+    const pendentes = fila.pendentes(Number(ctx.query.get('limite')) || 100);
+    const configuracao = fila.resumoConfiguracao();
+
+    ctx.ok({
+      ok: true,
+      fila: pendentes,
+      total: db.valor("SELECT COUNT(*) FROM emails_enviados WHERE status = 'fila'") || 0,
+      falhas: db.valor("SELECT COUNT(*) FROM emails_enviados WHERE status = 'falhou'") || 0,
+      /* resumoConfiguracao não devolve senha nenhuma — só o que a tela mostra. */
+      envio: configuracao,
+      maxTentativas: fila.MAX_TENTATIVAS,
+      recuosMin: fila.RECUOS_MIN
     });
   });
 
@@ -397,6 +624,53 @@ function registrar(rotas) {
       enviados: email.ultimos(limite),
       fila: email.fila().length,
       total: db.valor('SELECT COUNT(*) FROM emails_enviados') || 0
+    });
+  });
+
+  /* ---- Prévia de UM envio já registrado -------------------------------- */
+
+  /**
+   * Devolve o HTML final do e-mail entregue, para o admin ver no histórico
+   * exatamente o que saiu. A coluna `corpo` guarda só o fragmento; o envelope
+   * (logo, fita tricolor, rodapé) é remontado por email.montarHtml — mesmo
+   * caminho usado no despacho, então o que a tela mostra é o que foi enviado.
+   *
+   * Registros semente (`corpo` NULL) caem num aviso dentro do envelope, para
+   * a tela não abrir um iframe em branco sem explicação. Nada de senha ou
+   * dado alheio: só o assunto, o corpo e a estrutura pública do e-mail.
+   */
+  rotas.get('/api/email/enviados/:id', async (ctx) => {
+    ctx.exigirAdmin();
+
+    const linha = db.um('SELECT * FROM emails_enviados WHERE id = ?', ctx.params.id);
+    if (!linha) throw erro404(`E-mail enviado não encontrado: ${ctx.params.id}.`);
+
+    const registro = mapa.emailEnviado(linha);
+    const temCorpo = registro.corpo && String(registro.corpo).trim().length > 0;
+
+    /* Sem corpo gravado o envelope monta uma nota discreta em vez de um miolo
+       vazio: o admin entende que a mensagem é antiga e não perdemos o layout. */
+    const corpoFinal = temCorpo
+      ? registro.corpo
+      : '<p style="color:#6E7377;font-style:italic">'
+        + 'O corpo desta mensagem não foi gravado no histórico. '
+        + 'Só o assunto e o público continuam disponíveis.'
+        + '</p>';
+
+    const html = email.montarHtml({
+      assunto: registro.assunto || '',
+      corpo: corpoFinal,
+      /* Anexos vêm do metadado gravado no banco: o binário mora em
+         site/assets/enviados/. O envelope só lista nome e tamanho — igual à
+         prévia que o dispatcher entrega para o destinatário. */
+      anexos: registro.anexos || []
+    });
+
+    ctx.ok({
+      ok: true,
+      registro,
+      html,
+      corpoGravado: Boolean(temCorpo)
     });
   });
 
@@ -453,7 +727,17 @@ function registrar(rotas) {
     if (!texto(mensagem)) throw erro400('Escreva a mensagem do e-mail.');
 
     const anexos = limparAnexos(corpoReq.anexos);
-    const alvo = resolverDestinatarios(corpoReq.campeonatoId || corpoReq.alvo || 'todos');
+
+    /* Duas formas de sinalizar lista manual: alvo='manual' explícito, ou
+       simplesmente mandar um array de destinatarios sem nomear alvo/campeonato.
+       Esta segunda deixa a rota compatível com o teste que o dono já vinha
+       fazendo (`{ destinatarios: [...] }` sem `alvo`) — antes esse payload
+       caía silenciosamente no público 'todos'; agora é lista manual. */
+    let escolhaAlvo = corpoReq.campeonatoId || corpoReq.alvo;
+    if (!escolhaAlvo && corpoReq.destinatarios !== undefined) escolhaAlvo = 'manual';
+    if (!escolhaAlvo) escolhaAlvo = 'todos';
+
+    const alvo = resolverDestinatarios(escolhaAlvo, { destinatarios: corpoReq.destinatarios });
 
     if (!alvo.destinatarios.length) {
       throw erro400(
@@ -464,9 +748,18 @@ function registrar(rotas) {
     /* O histórico guarda UMA linha por disparo, com qtd = destinatários — é o
        modelo da coluna qtd e o que a tela de histórico mostra. As variáveis são
        resolvidas com o contexto do primeiro destinatário, para o registro
-       guardar um exemplo legível do que foi enviado. Quando o conector SMTP
-       real existir, é ele que refaz a substituição para CADA destinatário
-       antes de entregar. */
+       guardar um exemplo legível do que foi enviado.
+
+       Consequência a conhecer: o despachante entrega essa linha como UMA
+       mensagem para todos os endereços, então o disparo em massa não
+       personaliza por destinatário e coloca a lista no cabeçalho To. Enquanto
+       o público for a lista de responsáveis por time, personalizar exige
+       enfileirar uma linha por destinatário — mudança no modelo da tabela, não
+       no despachante. */
+    /* Anexos vão inteiros (com `caminho`): quem grava a linha é email.enviar,
+       e é ele que persiste o metadado na coluna `anexos` para o dispatcher
+       encontrar o arquivo no disco depois. Antes esta rota mandava um array
+       vazio; o resultado é que o SMTP nunca via o anexo. */
     const resultado = email.enviar({
       para: alvo.destinatarios.map((d) => d.email),
       destino: alvo.rotulo,
@@ -477,13 +770,19 @@ function registrar(rotas) {
       anexos
     });
 
+    /* Enfileirado, o disparo sai agora: o admin fica na tela esperando o
+       resultado, e mandá-lo embora com "vai sair em algum momento" é o tipo de
+       resposta que faz ele clicar de novo e disparar duas vezes. */
+    const desfecho = await despacharAgora(resultado, { esperaMaxMs: ESPERA_DISPARO_MS });
+
     regras.registrar(ctx, 'email', assunto, 'disparou e-mail',
-      `${alvo.destinatarios.length} destinatário(s) · ${alvo.rotulo} · status ${resultado.status}`);
+      `${alvo.destinatarios.length} destinatário(s) · ${alvo.rotulo} · status ${desfecho.status}`);
 
     ctx.ok({
-      ok: resultado.ok,
-      status: resultado.status,
-      motivo: resultado.motivo,
+      ok: desfecho.status !== 'falhou',
+      status: desfecho.status,
+      entregue: desfecho.status === 'entregue',
+      motivo: desfecho.motivo,
       destino: alvo.rotulo,
       destinatarios: alvo.destinatarios.length,
       /* Inscrições ativas do público: maior que `destinatarios` quando um

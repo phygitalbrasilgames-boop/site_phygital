@@ -26,6 +26,9 @@ const db = require('../db');
 const auth = require('../auth');
 const mapa = require('../mapa');
 const regras = require('../regras');
+const traducoes = require('../traducoes');
+const correio = require('../email');
+const web = require('../http');
 const { erro400, erro401, erro409, erro429 } = require('../http');
 
 /* index.js também trata a ausência de PHYGITAL_MODO como 'dev'. As duas
@@ -179,8 +182,18 @@ function enviarModelo(modeloId, { destino, contexto, essencial = false }) {
 
   if (desligado && !essencial) return null;
 
-  const base = modelo && !desligado ? modelo : (RESERVA[modeloId] || modelo);
-  if (!base) return null;
+  const bruto = modelo && !desligado ? modelo : (RESERVA[modeloId] || modelo);
+  if (!bruto) return null;
+
+  /* Assunto e corpo no idioma de quem recebe, caindo no português campo a campo
+     quando falta tradução. Este caminho grava direto em emails_enviados em vez
+     de passar por ../email.js, então a escolha de idioma precisa acontecer aqui
+     também — senão o competidor que pôs a conta em inglês recebe justamente o
+     e-mail mais importante (o código de verificação) em português.
+     RESERVA é objeto de código, sem id, e não tem o que traduzir. */
+  const base = bruto.id
+    ? traducoes.traduzir('modelos_email', bruto, correio.idiomaDoDestinatario([destino]))
+    : bruto;
 
   /* Quebra de linha no assunto é injeção de cabeçalho: o nome vem do cadastro,
      e um nome como "Foo\r\nBcc: alguem@..." acrescentaria um cabeçalho quando o
@@ -711,6 +724,40 @@ function registrar(rotas) {
       mensagem: 'E-mail alterado. Confirme o código enviado para o novo endereço.',
       ...devCodigo(gerado)
     });
+  });
+
+  /* ------------------------------------------------------------------------
+     IDIOMA DA CONTA
+
+     Sem código de verificação, ao contrário de nome, e-mail e senha: idioma é
+     preferência de exibição, não credencial. Exigir confirmação por e-mail para
+     trocar de idioma travaria justamente quem não entende a tela em português.
+
+     Vale para competidor e para administrador — a coluna também decide em que
+     idioma a conta recebe os e-mails do sistema (server/email.js).
+     ------------------------------------------------------------------------ */
+
+  rotas.post('/api/conta/idioma', async (ctx) => {
+    const conta = ctx.exigirLogin();
+    const corpo = await ctx.corpo();
+
+    const idioma = traducoes.normalizar(corpo.idioma);
+    if (!idioma) {
+      throw erro400(`Idioma inválido. Use um destes: ${traducoes.IDIOMAS.join(', ')}.`);
+    }
+
+    db.executar(
+      'UPDATE contas SET idioma = ?, atualizado_em = ? WHERE id = ?',
+      idioma, db.agora(), conta.id
+    );
+    regras.registrar(ctx, 'conta', conta.email, 'trocou o idioma', idioma);
+
+    /* O cookie acompanha a conta: sem ele, a próxima requisição desta aba
+       continuaria caindo no cookie antigo, que tem prioridade sobre a coluna. */
+    ctx.ok(
+      { ok: true, idioma, conta: auth.contaPublica(contaPorId(conta.id)) },
+      { 'Set-Cookie': web.cookieIdioma(idioma, { seguro: ctx.seguro }) }
+    );
   });
 
   /* ------------------------------------------------------------------------

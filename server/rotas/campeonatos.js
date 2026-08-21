@@ -69,7 +69,16 @@ function buscar(id, { comArquivado = false } = {}) {
   return linha;
 }
 
-const paraFront = (linha, cont) => mapa.campeonato(linha, cont || contagens(linha.id));
+/**
+ * Linha do banco → objeto do front-end. Com `ctx`, o texto cadastrado sai no
+ * idioma da requisição (nome, descrição, local e termos), caindo no português
+ * campo a campo quando a tradução não existe. Sem `ctx` — leitura interna,
+ * export, auditoria — sai como está no banco.
+ */
+const paraFront = (linha, cont, ctx) => mapa.campeonato(
+  ctx ? ctx.traduzir('campeonatos', linha) : linha,
+  cont || contagens(linha.id)
+);
 
 const ehAdmin = (ctx) => Boolean(ctx.conta && ctx.conta.papel === 'admin');
 
@@ -556,7 +565,7 @@ async function listar(ctx) {
   ctx.ok({
     ok: true,
     total: linhas.length,
-    campeonatos: linhas.map((l) => mapa.campeonato(l, cont[l.id]))
+    campeonatos: ctx.traduzir('campeonatos', linhas).map((l) => mapa.campeonato(l, cont[l.id]))
   });
 }
 
@@ -571,9 +580,11 @@ async function abertas(ctx) {
      regras.inscricaoAberta quem sabe disso. A home esconde a seção inteira
      quando esta lista vem vazia. */
   const cont = contagensDeTodos();
-  const campeonatos = linhas
-    .filter((l) => regras.inscricaoAberta(l).aberta)
-    .map((l) => mapa.campeonato(l, cont[l.id]));
+  /* O filtro roda ANTES da tradução: quem decide o prazo é a coluna de data, que
+     não é traduzível, e traduzir o que vai ser descartado seria consulta à toa. */
+  const campeonatos = ctx.traduzir('campeonatos',
+    linhas.filter((l) => regras.inscricaoAberta(l).aberta)
+  ).map((l) => mapa.campeonato(l, cont[l.id]));
 
   ctx.ok({ ok: true, total: campeonatos.length, campeonatos });
 }
@@ -582,7 +593,7 @@ async function detalhar(ctx) {
   const linha = buscar(ctx.params.id, { comArquivado: ehAdmin(ctx) });
   ctx.ok({
     ok: true,
-    campeonato: paraFront(linha),
+    campeonato: paraFront(linha, null, ctx),
     inscricao: regras.inscricaoAberta(linha)
   });
 }

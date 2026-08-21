@@ -104,10 +104,18 @@ site/
     │   └── painel.css          Painéis
     ├── js/
     │   ├── dados.js            Dados de demonstração + regras por modalidade
+    │   ├── i18n.js             Tradução em tempo de execução (pt · en · es)
     │   └── phygital.js         Comportamentos de interface
+    ├── i18n/
+    │   ├── pt.json             Catálogo do texto em português (gerado)
+    │   ├── en.json             Traduções para inglês
+    │   └── es.json             Traduções para espanhol
     └── img/
         ├── logo/               Logos oficiais (do /ID)
         └── mock/               Imagens de demonstração
+
+ferramentas/
+└── extrair-textos.js           Regera os três .json a partir do site
 ```
 
 ### Onde mexer no visual
@@ -123,6 +131,44 @@ de verdade usada por todos os formulários e validações.
 
 > Os dados ficam salvos no navegador (localStorage). Para voltar tudo ao estado original,
 > abra o console do navegador e rode `PB.dados.resetar()`.
+
+### Onde mexer nos idiomas
+
+O português continua escrito nas páginas; inglês e espanhol são aplicados na hora, pelo
+dicionário de **`site/assets/i18n/`**. Para traduzir, preencha os valores de `en.json` e
+`es.json` — a chave é o próprio texto em português. Valor vazio significa "ainda sem
+tradução": a frase aparece em português, e nada quebra.
+
+Ao mudar texto nas páginas, regere o catálogo:
+
+```bash
+node ferramentas/extrair-textos.js
+```
+
+O seletor de idioma aparece sozinho na faixa do topo (site), no menu mobile e no rodapé da
+barra lateral (painéis). A escolha fica no cookie `phygital_idioma`.
+
+**O conteúdo cadastrado** — nome de campeonato, texto de post, título de banner — não está
+nas páginas, está no banco, e por isso tem tradução própria. Quem traduz é o administrador,
+campo a campo, e o resultado vale para o site inteiro. Os campos traduzíveis são:
+
+| Onde | O que dá para traduzir |
+|---|---|
+| Campeonato | nome, descrição, local, termos |
+| Publicação do blog | título, resumo, corpo |
+| Evento | título, local |
+| Categoria | nome, descrição |
+| Banner do site | título, texto, etiqueta, botão 1, botão 2 |
+| Banner do painel | título |
+| Parceiro | tipo |
+| Modelo de e-mail | assunto, corpo |
+
+Campo que ainda não foi traduzido **aparece em português**, e não em branco: uma tradução pela
+metade vira uma tela pela metade em português, nunca uma tela vazia.
+
+Cada conta guarda o idioma que prefere (em *Minha conta*). É esse idioma que decide em que
+língua a pessoa recebe os e-mails do sistema — confirmação de inscrição, código de
+verificação, aviso de chamado. Sem tradução do modelo, o e-mail sai em português.
 
 ---
 

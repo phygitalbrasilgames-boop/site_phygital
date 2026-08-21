@@ -32,6 +32,8 @@ const db = require('../db');
 const auth = require('../auth');
 const regras = require('../regras');
 const mapa = require('../mapa');
+const traducoes = require('../traducoes');
+const correio = require('../email');
 const { erro400, erro403, erro404, erro409 } = require('../http');
 
 /* --------------------------------------------------------------------------
@@ -281,6 +283,24 @@ async function criarUsuario(ctx) {
     );
 
     regras.registrar(ctx, 'usuario', nome, 'cadastrou um administrador', `${email} · nível ${nivel}`);
+
+    /* Entrega a senha temporária ao próprio novo administrador — sem este
+       envio ele não teria como acessar o painel, e a tela do master claramente
+       promete "a senha temporária foi enviada por e-mail". O modeloId aponta
+       para MODELOS_EMAIL['admin-conta-criada']; correio.enviar() não lança —
+       se o SMTP recusar, a linha vira 'falhou' em emails_enviados e a
+       transação não é desfeita: perder o cadastro por causa do e-mail seria
+       pior que registrar a falha e o master reenviar. */
+    correio.enviar({
+      modeloId: 'admin-conta-criada',
+      para: email,
+      destino: 'Novo administrador',
+      contexto: {
+        usuario: { nome, email, telefone: telefone || '', nivel },
+        senha: { temporaria: senha }
+      },
+      qtd: 1
+    });
   });
 
   ctx.ok({
@@ -594,64 +614,6 @@ async function salvarRankingConfig(ctx) {
 }
 
 /* ==========================================================================
-   AUDITORIA
-   ========================================================================== */
-
-/**
- * Quem fez o quê e quando, do mais recente para o mais antigo.
- *
- * Filtros: ?area= &de= &ate= &limite= &pagina=
- * As datas são AAAA-MM-DD e cobrem o dia inteiro.
- */
-async function listarAuditoria(ctx) {
-  ctx.exigirAdmin('auditoria:ler');
-
-  const area = (ctx.query.get('area') || '').trim();
-  const de = dataFiltro(ctx.query.get('de'), 'de');
-  const ate = dataFiltro(ctx.query.get('ate'), 'ate');
-  const limite = inteiro(ctx.query.get('limite'), AUDITORIA_LIMITE, 1, AUDITORIA_LIMITE_MAX);
-  const pagina = inteiro(ctx.query.get('pagina'), 1, 1);
-
-  /* Só nomes de coluna deste arquivo entram no texto do SQL; tudo que veio do
-     pedido viaja como parâmetro. */
-  const onde = [];
-  const valores = [];
-
-  if (area) { onde.push('a.area = ?'); valores.push(area); }
-  if (de) { onde.push('a.em >= ?'); valores.push(de); }
-  if (ate) {
-    /* `em` é ISO 8601, que ordena como texto: comparar com o fim do dia pega
-       qualquer horário da data informada. */
-    onde.push('a.em <= ?');
-    valores.push(`${ate}T23:59:59.999Z`);
-  }
-
-  const filtro = onde.length ? `WHERE ${onde.join(' AND ')}` : '';
-  const total = db.valor(`SELECT COUNT(*) FROM auditoria a ${filtro}`, ...valores) || 0;
-
-  /* papel não é coluna de auditoria: vem da conta que assinou o registro. */
-  const linhas = db.todos(
-    `SELECT a.*, c.papel AS papel
-       FROM auditoria a
-       LEFT JOIN contas c ON c.id = a.conta_id
-       ${filtro}
-      ORDER BY a.em DESC, a.id DESC
-      LIMIT ? OFFSET ?`,
-    ...valores, limite, (pagina - 1) * limite
-  );
-
-  ctx.ok({
-    ok: true,
-    total,
-    pagina,
-    limite,
-    paginas: Math.max(1, Math.ceil(total / limite)),
-    filtros: { area: area || null, de, ate },
-    itens: mapa.lista(linhas, mapa.auditoria)
-  });
-}
-
-/* ==========================================================================
    HISTÓRICO
 
    Exclusão em duas etapas, como no protótipo: arquivar tira de circulação,
@@ -743,6 +705,10 @@ async function excluirHistorico(ctx) {
        jogadores, comissão, documentos e inscrições, pelas chaves estrangeiras
        do esquema). É a única operação do sistema que não tem volta. */
     db.executar(`DELETE FROM ${t.tabela} WHERE id = ?`, id);
+    /* A tabela `traducoes` é genérica e não tem chave estrangeira para lugar
+       nenhum, então o CASCADE não a alcança: sem esta linha, a tradução ficaria
+       órfã e voltaria a ser lida se um registro novo reusasse o mesmo id. */
+    traducoes.apagarRegistro(t.tabela, id);
     regras.registrar(ctx, t.area, linha.nome, 'excluiu em definitivo', `${t.rotulo} · ${id}`);
   });
 
@@ -765,8 +731,6 @@ function registrar(rotas) {
   rotas.put('/api/ranking/:modalidade', salvarRanking);
   rotas.get('/api/ranking-config/:modalidade', lerRankingConfig);
   rotas.put('/api/ranking-config/:modalidade', salvarRankingConfig);
-
-  rotas.get('/api/auditoria', listarAuditoria);
 
   rotas.get('/api/historico', listarHistorico);
   rotas.post('/api/historico/restaurar', restaurarHistorico);

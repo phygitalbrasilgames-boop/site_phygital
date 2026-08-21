@@ -6,10 +6,11 @@
    status, protocolo de chamado, código de verificação, disparo em massa)
    passa por enviar() daqui. Nenhum outro módulo deve falar de e-mail.
 
-   Em desenvolvimento nada sai de verdade: o envio é gravado em
+   Sem senha de SMTP no ambiente nada sai de verdade: o envio é gravado em
    emails_enviados com status='simulado' para poder ser inspecionado nos
-   testes. O envio real só é cogitado quando o ambiente diz explicitamente que
-   é produção E existe senha de SMTP configurada.
+   testes. Havendo servidor de saída configurado E PHYGITAL_SMTP_SENHA, a linha
+   nasce com status='fila' e quem transmite é server/fila-email.js, fora das
+   transações de negócio.
 
    Decisões que valem explicar:
 
@@ -29,13 +30,26 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const db = require('./db');
 const mapa = require('./mapa');
+const traducoes = require('./traducoes');
 const { erro404 } = require('./http');
 
 /* Base para montar a URL absoluta do logo: cliente de e-mail não resolve
    caminho relativo. */
-const URL_BASE = process.env.PHYGITAL_URL || 'http://localhost:3000';
+/* Endereço público onde as imagens do e-mail carregam. Um localhost dentro do
+   HTML enviado quebra o logo para quem recebe.
+
+   - PHYGITAL_URL vence tudo, para produção em domínio próprio;
+   - Codespaces injeta CODESPACE_NAME em todo shell — traduzido para a URL
+     encaminhada, faz o e-mail funcionar sem configuração extra;
+   - o padrão local vale para desenvolvimento na máquina do autor. */
+const URL_BASE = process.env.PHYGITAL_URL
+  || (process.env.CODESPACE_NAME
+      && `https://${process.env.CODESPACE_NAME}-${process.env.PHYGITAL_PORTA || 3000}.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN || 'app.github.dev'}`)
+  || 'http://localhost:3000';
 
 /* Assunto longo é cortado pelo cliente de e-mail de qualquer jeito. */
 const ASSUNTO_MAX = 200;
@@ -141,13 +155,42 @@ function contextoCompleto(contexto = {}) {
   };
 }
 
+/* --------------------------------------------------------------------------
+   IDIOMA DO DESTINATÁRIO
+
+   O modelo tem UM id e UMA linha; assunto e corpo em inglês e espanhol ficam na
+   tabela `traducoes` (tabela='modelos_email'). Duplicar a linha por idioma
+   quebraria toda referência a modelo por id — inclusive a chave estrangeira de
+   emails_enviados.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Idioma da conta que vai receber. Endereço que não é de nenhuma conta (o
+ * disparo em massa aceita lista digitada) cai no português.
+ */
+function idiomaDoDestinatario(enderecos) {
+  for (const endereco of enderecos || []) {
+    const conta = db.um(
+      'SELECT idioma FROM contas WHERE lower(email) = ? AND arquivado_em IS NULL',
+      String(endereco).trim().toLowerCase()
+    );
+    if (conta) return traducoes.normalizarOuPadrao(conta.idioma);
+  }
+  return traducoes.IDIOMA_PADRAO;
+}
+
 /**
  * Aplica um modelo de e-mail ao contexto.
+ * @param idioma  idioma do destinatário; campo sem tradução volta em português
  * @returns {{ id, para, ativo, assunto, corpo }} — corpo já em HTML seguro.
  */
-function aplicarModelo(modeloId, contexto = {}) {
-  const modelo = db.um('SELECT * FROM modelos_email WHERE id = ?', modeloId);
-  if (!modelo) throw erro404(`Modelo de e-mail não encontrado: ${modeloId}.`);
+function aplicarModelo(modeloId, contexto = {}, idioma = traducoes.IDIOMA_PADRAO) {
+  const bruto = db.um('SELECT * FROM modelos_email WHERE id = ?', modeloId);
+  if (!bruto) throw erro404(`Modelo de e-mail não encontrado: ${modeloId}.`);
+
+  /* A troca acontece antes da substituição das variáveis: o {{...}} do texto
+     traduzido é resolvido igual ao do português. */
+  const modelo = traducoes.traduzir('modelos_email', bruto, idioma);
 
   const ctx = contextoCompleto(contexto);
 
@@ -250,18 +293,100 @@ function montarHtml({ assunto = '', corpo = '', anexos = [], rodape = '' } = {})
 }
 
 /* --------------------------------------------------------------------------
+   ANEXOS
+
+   O binário fica em site/assets/enviados/ (a rota /api/upload já grava com
+   assinatura conferida e nome no formato UUID.<ext>); a linha em
+   emails_enviados guarda só o metadado, com o `caminho` como ponte. No momento
+   de entregar, o dispatcher (server/fila-email.js) chama carregarAnexo() para
+   abrir o arquivo do disco e entregar Buffer ao smtp.js — que já sabe montar
+   multipart/mixed a partir de {nome, tipo, conteudo}.
+
+   Duas travas:
+
+   1. RESOLUÇÃO CONTIDA. path.resolve casa com a pasta PASTA_ENVIADOS e o
+      resultado precisa começar por ela — caso o `caminho` que chegou não seja
+      exatamente 'assets/enviados/<uuid>.<ext>', a rota já o descartou; aqui
+      cinto e suspensório, para o dispatcher nunca abrir arquivo fora dali.
+   2. NÃO LANÇA. Se o arquivo sumiu do disco (limpeza de órfãos, movido à mão),
+      carregarAnexo devolve um erro em texto — quem chama transforma isso na
+      coluna `erro` da linha e marca a mensagem como falha, em vez de derrubar
+      a rodada do despachante.
+   -------------------------------------------------------------------------- */
+
+const PASTA_ENVIADOS = path.resolve(__dirname, '..', 'site', 'assets', 'enviados');
+const CAMINHO_ENVIADO = /^assets\/enviados\/[0-9a-f-]{36}\.[a-z0-9]{2,5}$/;
+
+/**
+ * Lê o arquivo do anexo e devolve o que server/smtp.js pede.
+ *
+ * @param {{nome, tipo, caminho, tamanho}} a  metadado gravado no disparo
+ * @returns {{ok:true, anexo}|{ok:false, motivo}}
+ */
+function carregarAnexo(a) {
+  const nome = String((a && a.nome) || 'arquivo');
+  const tipo = String((a && a.tipo) || 'application/octet-stream');
+  const caminho = String((a && a.caminho) || '');
+
+  if (!caminho) {
+    /* Metadado sem caminho é anexo "só na prévia" — a rota nova exige o campo,
+       mas o histórico velho pode ter linhas sem ele. Sinalizamos para o
+       dispatcher entregar assim mesmo, sem esse anexo. */
+    return { ok: false, motivo: `Anexo ${nome}: caminho não gravado.` };
+  }
+
+  /* Fora do padrão de /api/upload — o próprio /disparar descarta caminhos
+     assim, mas repetimos a checagem no ponto que abre o arquivo. */
+  if (!CAMINHO_ENVIADO.test(caminho)) {
+    return { ok: false, motivo: `Anexo ${nome}: caminho fora do formato aceito.` };
+  }
+
+  const nomeArquivo = caminho.split('/').pop();
+  const alvo = path.resolve(PASTA_ENVIADOS, nomeArquivo);
+
+  /* Amarra final: o path resolvido tem que continuar DENTRO de site/assets/
+     enviados. Sem o separador no fim, '/enviados-outro/x' bateria como prefixo. */
+  if (alvo !== path.join(PASTA_ENVIADOS, nomeArquivo)
+      || !alvo.startsWith(PASTA_ENVIADOS + path.sep)) {
+    return { ok: false, motivo: `Anexo ${nome}: caminho fora da pasta de envios.` };
+  }
+
+  let conteudo;
+  try {
+    conteudo = fs.readFileSync(alvo);
+  } catch (e) {
+    if (e && e.code === 'ENOENT') {
+      return { ok: false, motivo: `Anexo ${nome}: arquivo sumiu de ${caminho}.` };
+    }
+    return { ok: false, motivo: `Anexo ${nome}: ${(e && e.message) || 'falha ao ler o arquivo.'}` };
+  }
+
+  return {
+    ok: true,
+    anexo: { nome, tipo, conteudo, codificacao: 'binary' }
+  };
+}
+
+/* --------------------------------------------------------------------------
    ENVIO
    -------------------------------------------------------------------------- */
 
 /**
- * Só tenta SMTP de verdade quando o ambiente afirma produção E há senha.
- * Fora disso o envio é simulado — é o que permite rodar os testes sem mandar
- * e-mail para pessoas reais.
+ * Decide entre entrar na fila de envio real e apenas simular.
+ *
+ * O que decide é TER COMO ENVIAR: servidor de saída na tabela smtp e senha em
+ * PHYGITAL_SMTP_SENHA. PHYGITAL_MODO não entra na conta — um servidor de
+ * homologação com credencial válida precisa mandar e-mail de verdade, e a conta
+ * de produção sem a senha no ambiente não pode fingir que mandou.
+ *
+ * Sem senha continua 'simulado', e é isso que permite rodar a suíte de testes
+ * inteira sem mandar mensagem para pessoa nenhuma.
+ *
+ * O require é tardio de propósito: fila-email.js depende deste módulo, e
+ * exigi-lo aqui em cima fecharia um ciclo de carregamento.
  */
 function statusDeEnvio() {
-  const producao = process.env.PHYGITAL_MODO === 'producao';
-  const temSenha = Boolean(process.env.PHYGITAL_SMTP_SENHA);
-  return producao && temSenha ? 'fila' : 'simulado';
+  return require('./fila-email').configuracaoSmtp().ok ? 'fila' : 'simulado';
 }
 
 /** Normaliza destinatário: aceita string, lista, ou lista separada por vírgula. */
@@ -290,15 +415,24 @@ function normalizarPara(para) {
  * @param destino   rótulo do público ('Todos os campeonatos') para o histórico
  * @param contexto  valores das variáveis {{...}}
  * @param qtd       quantos destinatários; padrão = tamanho de `para`
+ * @param idioma    força o idioma; sem ele, o da conta do primeiro destinatário
  * @returns registro gravado (nunca lança)
  */
 function enviar({
   modeloId = null, para = null, destino = null, contexto = {},
-  assunto = null, corpo = null, qtd = null, anexos = [], rodape = ''
+  assunto = null, corpo = null, qtd = null, anexos = [], rodape = '',
+  idioma = null
 } = {}) {
   let assuntoFinal = assunto;
   let corpoFinal = corpo;
   let erro = null;
+
+  /* Resolvido antes de aplicar o modelo: é ele que decide de qual idioma sai o
+     assunto e o corpo. Quem chama pode forçar (o disparo em massa do painel
+     manda no idioma escolhido pelo admin); sem isso, manda a preferência
+     gravada na conta de quem recebe. */
+  const enderecos = normalizarPara(para);
+  const idiomaFinal = traducoes.normalizar(idioma) || idiomaDoDestinatario(enderecos);
 
   /* modelo_id tem chave estrangeira para modelos_email: gravar um id que não
      existe derrubaria justamente o registro de falha que queremos guardar.
@@ -307,7 +441,7 @@ function enviar({
 
   try {
     if (modeloId) {
-      const aplicado = aplicarModelo(modeloId, contexto);
+      const aplicado = aplicarModelo(modeloId, contexto, idiomaFinal);
       modeloGravavel = aplicado.id;
 
       /* Modelo desativado pelo admin é decisão dele: não enviamos e não
@@ -329,7 +463,6 @@ function enviar({
     erro = e.message;
   }
 
-  const enderecos = normalizarPara(para);
   const html = montarHtml({ assunto: assuntoFinal || '', corpo: corpoFinal || '', anexos, rodape });
 
   let status = erro ? 'falhou' : statusDeEnvio();
@@ -340,16 +473,28 @@ function enviar({
     status = 'falhou';
   }
 
-  if (status === 'fila') {
-    /* PONTO DE INTEGRAÇÃO SMTP REAL.
-       O projeto não pode ganhar dependência npm e o Node não traz cliente
-       SMTP, então aqui o e-mail fica gravado como 'fila': tudo pronto
-       (destinatários, assunto, HTML final) esperando o conector. Quando ele
-       existir, é ESTE bloco que dispara e atualiza a linha para 'entregue' ou
-       'falhou' — nenhum outro lugar do sistema envia e-mail. */
-  }
+  /* PONTO DE INTEGRAÇÃO SMTP REAL.
+     A linha é gravada como 'fila' e a transmissão fica com o despachante de
+     server/fila-email.js, agendado logo abaixo do INSERT. enviar() continua
+     SÍNCRONO e continua só gravando: é chamado de dentro de db.transacao() e
+     uma sessão de SMTP presa não pode segurar o COMMIT nem, ao falhar,
+     desfazer a inscrição de um time. Nenhum outro lugar do sistema envia. */
 
   const id = 'em-' + crypto.randomUUID();
+
+  /* Só metadado: o binário fica em site/assets/enviados/ e o dispatcher lê o
+     arquivo do disco na hora. Guardar o conteúdo em base64 aqui estouraria o
+     histórico (100 MB por arquivo, e o painel imprime esta coluna). */
+  const anexosGravaveis = Array.isArray(anexos)
+    ? anexos.map((a) => ({
+        nome: String((a && a.nome) || 'arquivo'),
+        tipo: String((a && a.tipo) || 'application/octet-stream'),
+        tamanho: Number(a && a.tamanho) || 0,
+        /* Só grava o caminho quando ele existe: sem caminho, o dispatcher sabe
+           que é anexo "só na prévia" e entrega a mensagem sem esse arquivo. */
+        ...(a && a.caminho ? { caminho: String(a.caminho) } : {})
+      }))
+    : [];
 
   const linha = mapa.paraLinhaEmailEnviado({
     modeloId: modeloGravavel,
@@ -362,7 +507,8 @@ function enviar({
     corpo: corpoFinal || '',
     qtd: qtd === null ? (enderecos.length || 1) : Number(qtd) || 0,
     status,
-    erro
+    erro,
+    anexos: anexosGravaveis
   }, { id });
 
   const colunas = Object.keys(linha);
@@ -372,12 +518,21 @@ function enviar({
     ...colunas.map((c) => linha[c])
   );
 
+  if (status === 'fila') {
+    /* Próximo tick: o despacho começa depois que a transação desta chamada já
+       fechou e a resposta HTTP já saiu. Se o despachante estiver indisponível
+       por algum motivo, a linha simplesmente espera a próxima rodada — ela já
+       está gravada, nada se perde. */
+    try { require('./fila-email').agendar(); } catch (_) { /* fica na fila */ }
+  }
+
   return {
     ok: status !== 'falhou',
     status,
     motivo: erro,
     id,
     modeloId,
+    idioma: idiomaFinal,
     assunto: assuntoFinal || '',
     corpo: corpoFinal || '',
     html,
@@ -392,7 +547,7 @@ function enviar({
    INSPEÇÃO (testes e painel)
    -------------------------------------------------------------------------- */
 
-/** O que está esperando o conector SMTP real. */
+/** O que está esperando o despachante (server/fila-email.js). */
 function fila() {
   return mapa.lista(
     db.todos("SELECT * FROM emails_enviados WHERE status = 'fila' ORDER BY data"),
@@ -413,5 +568,7 @@ module.exports = {
   aplicarModelo, enviar, fila, ultimos,
   montarHtml, substituir, escapar, limparAssunto,
   variaveisDe, normalizarPara, statusDeEnvio, contextoCompleto,
-  VARIAVEIS_OBRIGATORIAS, RESSALVA_INSCRICAO
+  idiomaDoDestinatario, carregarAnexo,
+  VARIAVEIS_OBRIGATORIAS, RESSALVA_INSCRICAO,
+  PASTA_ENVIADOS
 };

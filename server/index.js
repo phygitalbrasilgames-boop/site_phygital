@@ -17,7 +17,10 @@
      PHYGITAL_DADOS           pasta do banco (padrão ./dados)
      PHYGITAL_ADMIN_SENHA     senha da conta master na primeira semeadura
      PHYGITAL_COMPETIDOR_SENHA
-     PHYGITAL_SMTP_SENHA      só usada em modo producao
+     PHYGITAL_SMTP_SENHA      liga o envio real de e-mail; sem ela, simulado
+     PHYGITAL_SMTP_CERT_INVALIDO
+                              aceita certificado próprio no SMTP (só ambiente
+                              interno; em produção derruba a proteção do TLS)
    ========================================================================== */
 'use strict';
 
@@ -28,6 +31,7 @@ const path = require('node:path');
 const db = require('./db');
 const auth = require('./auth');
 const web = require('./http');
+const filaEmail = require('./fila-email');
 
 const RAIZ = path.join(__dirname, '..');
 const ESTATICOS = path.join(RAIZ, 'site');
@@ -43,9 +47,17 @@ const TIPOS = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.gif': 'image/gif',
   '.ico': 'image/x-icon',
+  /* Vídeo de banner enviado por POST /api/upload. Sem o tipo certo aqui o
+     arquivo sai como application/octet-stream e o <video> não toca. */
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.woff2': 'font/woff2',
   '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.odt': 'application/vnd.oasis.opendocument.text',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   '.zip': 'application/zip'
 };
@@ -61,7 +73,7 @@ const TIPOS = {
 
 const MODULOS = [
   'bootstrap', 'auth', 'campeonatos', 'times',
-  'inscricoes', 'chamados', 'conteudo', 'admin', 'email'
+  'inscricoes', 'chamados', 'conteudo', 'admin', 'email', 'upload', 'traducoes'
 ];
 
 const rotas = web.criarRoteador();
@@ -96,6 +108,29 @@ rotas.get('/api/_saude', async (ctx) => ctx.ok({
    ESTÁTICOS
    -------------------------------------------------------------------------- */
 
+/* --------------------------------------------------------------------------
+   DOCUMENTO ENVIADO POR USUÁRIO
+
+   PDF é formato executável: o visualizador embutido do navegador roda o
+   JavaScript que o arquivo carrega, e roda NA NOSSA ORIGEM — o que dá a ele o
+   mesmo cookie e o mesmo localStorage das telas do painel. Como o envio agora
+   é liberado para qualquer conta autenticada (server/rotas/upload.js), o PDF
+   que chega vem de fora e não pode abrir embutido.
+
+   Vale a mesma cautela para Word (.doc/.docx) e ODT: um .docm ou macro em
+   Word entregue como .doc é vetor conhecido de execução, e o navegador que
+   integra com Office tenta abrir direto. Content-Disposition: attachment tira
+   qualquer um deles desse contexto — vai como download, e o operador decide
+   se abre. Vale só para assets/enviados/ — arquivo do próprio repositório é
+   conteúdo nosso.
+
+   A comparação é feita no caminho JÁ RESOLVIDO, não no texto da URL: com o
+   texto, '/assets/x/../enviados/isso.pdf' chegaria ao mesmo arquivo sem casar
+   com o prefixo, e sairia embutido.
+   -------------------------------------------------------------------------- */
+const PASTA_ENVIADOS = path.join(ESTATICOS, 'assets', 'enviados') + path.sep;
+const EXTENSOES_BAIXAR = new Set(['.pdf', '.doc', '.docx', '.odt']);
+
 function servirEstatico(req, res, caminhoUrl) {
   let relativo = decodeURIComponent(caminhoUrl);
   if (relativo.endsWith('/')) relativo += 'index.html';
@@ -114,12 +149,16 @@ function servirEstatico(req, res, caminhoUrl) {
       res.end(`<h1>404</h1><p>${relativo}</p>`);
       return;
     }
+    const extensao = path.extname(alvo).toLowerCase();
+    const baixarSempre = EXTENSOES_BAIXAR.has(extensao) && alvo.startsWith(PASTA_ENVIADOS);
+
     res.writeHead(200, {
-      'Content-Type': TIPOS[path.extname(alvo).toLowerCase()] || 'application/octet-stream',
+      'Content-Type': TIPOS[extensao] || 'application/octet-stream',
       /* Sem cache em desenvolvimento: senão o navegador serve CSS e JS antigos
          e a alteração não aparece. */
       'Cache-Control': MODO === 'producao' ? 'public, max-age=3600' : 'no-store',
-      'X-Content-Type-Options': 'nosniff'
+      'X-Content-Type-Options': 'nosniff',
+      ...(baixarSempre ? { 'Content-Disposition': 'attachment' } : {})
     });
     res.end(dados);
   });
@@ -135,14 +174,21 @@ function cabecalhosSeguranca(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'same-origin');
   /* O CSS carrega as fontes do Google Fonts por @import, então fonts.googleapis
-     e fonts.gstatic precisam estar liberados em style-src e font-src. */
+     e fonts.gstatic precisam estar liberados em style-src e font-src.
+
+     O YouTube entra por dois pontos, e só por eles: img.youtube.com/i.ytimg.com
+     servem a miniatura que o editor de banner mostra ao colar o link, e
+     youtube-nocookie.com é o player embutido do banner de vídeo. Nenhum dos
+     dois pode rodar script na página — frame-src libera o <iframe>, não o
+     documento que está dentro dele. */
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com",
     "connect-src 'self'",
+    "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'"
@@ -182,7 +228,9 @@ async function atender(req, res) {
       throw new web.ErroHttp(500, 'A rota não produziu resposta.');
     }
   } catch (e) {
-    if (!res.headersSent) web.falha(res, e);
+    /* ctx.falha traduz a mensagem para o idioma da requisição — a resposta de
+       erro é o texto que o front-end joga no toast. */
+    if (!res.headersSent) ctx.falha(e);
     else res.end();
   }
 }
@@ -209,6 +257,29 @@ function subir(porta, tentativas) {
   });
 
   servidor.listen(porta, () => {
+    /* O despachante da fila de e-mail só sobe com o servidor: ele fala com o
+       SMTP fora de qualquer transação e precisa da mesma vida útil do processo.
+       Sem configuração utilizável cada rodada não faz nada, então ligar sempre
+       é seguro — e cobre o caso de a configuração ser corrigida no painel. */
+    filaEmail.iniciarDespachante({ intervaloMs: 60000 });
+    const envio = filaEmail.resumoConfiguracao();
+
+    /* Faxina dos arquivos enviados que nenhuma linha do banco cita mais. Trocar
+       a imagem de um banner deixa a anterior no disco; sem isto a pasta só
+       cresce. A carência de 2 horas protege o upload que ainda está num
+       formulário aberto e não foi salvo. */
+    try {
+      const faxina = require('./rotas/upload');
+      faxina.iniciarFaxina({ intervaloMs: 6 * 3600000 });
+      const r = faxina.limparOrfaos();
+      if (r.apagados) {
+        console.log(`  Faxina: ${r.apagados} arquivo(s) sem uso removido(s)`
+          + ` (${Math.round(r.bytes / 1024)} KB).`);
+      }
+    } catch (e) {
+      console.error('[faxina] não foi possível iniciar:', e.message);
+    }
+
     const url = `http://localhost:${porta}`;
     const linha = '─'.repeat(52);
     console.log('');
@@ -222,6 +293,11 @@ function subir(porta, tentativas) {
     console.log(`  Modo:   ${MODO}`);
     console.log(`  Banco:  ${db.ARQUIVO}`);
     console.log(`  Rotas:  ${rotas.total} em ${carregados.length} módulo(s)`);
+    /* Nunca imprimimos a configuração inteira: ela carrega a senha. */
+    console.log(envio.ok
+      ? `  E-mail: ENVIO REAL por ${envio.host}:${envio.porta}`
+        + ` (${envio.seguro ? 'TLS implícito' : 'STARTTLS'}) como ${envio.remetente}`
+      : `  E-mail: SIMULADO — ${envio.motivo}`);
     if (falhados.length) {
       console.log(`  ATENÇÃO: ${falhados.length} módulo(s) com falha:`);
       falhados.forEach((f) => console.log(`     · ${f.modulo}: ${f.erro}`));
@@ -240,6 +316,9 @@ function subir(porta, tentativas) {
 
   const encerrar = () => {
     console.log('\nEncerrando…');
+    /* Antes de fechar o banco: uma rodada em curso escreveria numa conexão
+       morta e o que estiver na fila continua lá para a próxima subida. */
+    filaEmail.pararDespachante();
     servidor.close(() => { db.fechar(); process.exit(0); });
     /* Se alguma conexão não fechar, não ficamos presos para sempre. */
     setTimeout(() => process.exit(0), 3000).unref();
@@ -258,15 +337,28 @@ if (require.main === module) {
 
   db.abrir();
 
-  /* Banco vazio na primeira subida: semeia sozinho para o site não abrir em
-     branco e o desenvolvedor não precisar de um passo extra. */
+  /* Banco vazio na primeira subida: semeia o MÍNIMO (duas contas, SMTP,
+     modelos de e-mail, config de ranking) para o login abrir e o dono não
+     precisar de um passo extra. Para semear o pacote completo de
+     demonstração: `node server/semente.js --recriar --demo`. */
   const contas = db.valor('SELECT COUNT(*) FROM contas');
   if (!contas) {
-    console.log('Banco vazio — semeando dados de demonstração…');
+    console.log('Banco vazio — semeando dados mínimos…');
     try {
       require('./semente').semear({});
     } catch (e) {
       console.error('Falha ao semear:', e.message);
+    }
+  } else {
+    /* Banco já semeado: garante que templates de e-mail acrescentados em
+       versões posteriores (como `admin-conta-criada`) apareçam sem exigir
+       --recriar. INSERT é idempotente pela chave `id`, então o que já existe
+       fica intocado. */
+    try {
+      const novos = require('./semente').migrarModelosEmail();
+      if (novos) console.log(`Modelos de e-mail: ${novos} novo(s) template(s) instalado(s).`);
+    } catch (e) {
+      console.error('Falha ao migrar modelos de e-mail:', e.message);
     }
   }
 

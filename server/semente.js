@@ -1,15 +1,36 @@
 /* ==========================================================================
-   PHYGITAL BRASIL — SEMENTE DE DEMONSTRAÇÃO
+   PHYGITAL BRASIL — SEMENTE
 
-   Popula o banco com os mesmos dados que o protótipo mantinha em
-   localStorage (Backup_html/assets/js/dados.js), agora normalizados no
-   esquema relacional.
+   Popula o banco em dois modos, escolhidos pela chave `demo` (ou por --demo na
+   linha de comando):
+
+     · MODO MÍNIMO (padrão) — o banco nasce com o essencial para o dono já
+       conseguir usar a plataforma: exatamente duas contas (u1 master e comp1
+       competidor), o SMTP configurado, todos os modelos de e-mail, a
+       configuração base de ranking, mais o conteúdo editorial que o dono
+       pediu preservar: categorias, posts do blog e banners (site + painel
+       do competidor). Sem times, campeonatos, chamados, inscrições, entradas
+       de ranking, resultados, eventos, parceiros nem histórico de e-mails:
+       esse inventário operacional é cadastrado pelo painel durante o uso
+       real. Ideal para o Codespaces recém-criado.
+
+     · MODO DEMONSTRAÇÃO (--demo) — o banco nasce com o mesmo conjunto de
+       dados que o protótipo mantinha em localStorage
+       (Backup_html/assets/js/dados.js): três admins, um competidor, cinco
+       campeonatos, dois times completos, chamados, ranking povoado, posts,
+       eventos, parceiros, banners, traduções e histórico de e-mails. É o que
+       a suíte de testes usa e o que serve para uma apresentação ao vivo.
 
    Uso:
-     node server/semente.js              semeia o que estiver faltando
-     node server/semente.js --recriar    apaga o conteúdo de todas as tabelas
-                                         antes de popular (o arquivo do banco
-                                         é preservado)
+     node server/semente.js                     semeia o que faltar (mínimo)
+     node server/semente.js --recriar           apaga tudo e semeia MÍNIMO
+     node server/semente.js --demo              semeia o que faltar (demo)
+     node server/semente.js --recriar --demo    apaga tudo e semeia DEMO
+                                                (comportamento anterior de
+                                                --recriar sozinho)
+
+   Em qualquer forma o arquivo do banco é preservado — só o conteúdo das
+   tabelas é apagado quando `--recriar` é passado.
 
    Decisões que valem explicar:
 
@@ -62,6 +83,10 @@ const ADMINISTRADORES = [
     telefone: '(11) 3000-0003', nivel: 'operacao', criadoEm: '2026-05-08',
     variavelSenha: null, emailVerificado: false }
 ];
+
+/* Só a conta master no modo mínimo — os gestores u2/u3 são detalhe de
+   demonstração e não têm razão para existir no Codespaces recém-criado. */
+const MINIMO_ADMINISTRADORES = [ADMINISTRADORES[0]];
 
 /* Dados que o protótipo guardava no objeto `usuario`. Nome e e-mail cedem lugar
    à conta de acesso pedida para o competidor; telefone e data de criação são
@@ -525,7 +550,19 @@ const MODELOS_EMAIL = [
   { id: 'adm-falha-envio', grupo: 'Alertas do administrador', nome: 'Falha no envio de e-mail',
     quando: 'Quando o servidor SMTP recusa um envio.',
     para: 'admin', assunto: '[ADM] Falha no envio de e-mail',
-    corpo: '<p>O servidor <b>{{smtp.servidor}}</b> recusou um envio em {{data}}.</p><p>Verifique as configurações em Disparo de E-mail → Configurações.</p>' }
+    corpo: '<p>O servidor <b>{{smtp.servidor}}</b> recusou um envio em {{data}}.</p><p>Verifique as configurações em Disparo de E-mail → Configurações.</p>' },
+
+  /* Cadastro de administrador feito por outro master: o próprio recebe a senha
+     temporária no e-mail cadastrado e é levado à tela de primeiro acesso, onde
+     define a definitiva e confirma o endereço pelo código. */
+  { id: 'admin-conta-criada', grupo: 'Alertas do administrador', nome: 'Novo administrador cadastrado',
+    quando: 'Quando o master cadastra um novo usuário no painel de administração.',
+    para: 'admin', assunto: 'Sua conta no painel foi criada — senha temporária',
+    corpo: '<p>Olá, <b>{{usuario.nome}}</b>.</p>'
+      + '<p>Uma conta administrativa foi criada para você na Phygital Brasil com o e-mail <b>{{usuario.email}}</b> e o nível <b>{{usuario.nivel}}</b>.</p>'
+      + '<p>Senha temporária: <b>{{senha.temporaria}}</b></p>'
+      + '<p>No primeiro acesso o sistema pede que você defina uma nova senha e confirme o endereço pelo código enviado a este e-mail. Só depois disso o painel é liberado.</p>'
+      + '<p>Acesse a tela de primeiro acesso em <a href="/painel/primeiro-acesso.html">painel/primeiro-acesso.html</a>.</p>' }
 ];
 
 /* Histórico de disparos já feitos. `data` mantém o formato da semente porque a
@@ -553,7 +590,10 @@ const ORDEM_LIMPEZA = [
   'times', 'campeonatos', 'contas',
   'ranking', 'ranking_config', 'resultados',
   'categorias', 'posts', 'eventos', 'parceiros',
-  'banners', 'banners_site', 'smtp'
+  'banners', 'banners_site', 'smtp',
+  /* Sem chave estrangeira (a coluna `tabela` aponta para sete tabelas), então
+     o CASCADE não alcança: a limpeza tem que citar a tradução explicitamente. */
+  'traducoes'
 ];
 
 const contagens = new Map();
@@ -696,7 +736,7 @@ function esvaziar() {
   return removidas;
 }
 
-function semearContas() {
+function semearContas(admins = ADMINISTRADORES) {
   criarConta({
     id: COMPETIDOR.id, nome: COMPETIDOR.nome, email: COMPETIDOR.email,
     telefone: COMPETIDOR.telefone, papel: 'competidor', nivel: null,
@@ -704,7 +744,7 @@ function semearContas() {
     emailVerificado: true
   });
 
-  for (const a of ADMINISTRADORES) {
+  for (const a of admins) {
     criarConta({
       id: a.id, nome: a.nome, email: a.email, telefone: a.telefone,
       papel: 'admin', nivel: a.nivel, criadoEm: a.criadoEm,
@@ -902,6 +942,8 @@ function semearChamados(contaId) {
   }
 }
 
+/* Só as entradas do ranking (RANKING). A config por modalidade fica em
+   semearRankingConfig() e vale para os dois modos. */
 function semearRanking() {
   for (const [modalidade, lista] of Object.entries(RANKING)) {
     lista.forEach((r, i) => {
@@ -919,7 +961,12 @@ function semearRanking() {
       }, ['modalidade', 'nome']);
     });
   }
+}
 
+/* A configuração do ranking (pontos por vitória, bônus de título, etc.) vale
+   tanto no modo mínimo quanto no modo demonstração: sem ela, o painel do
+   admin abre as telas de ranking sem nenhum valor default. */
+function semearRankingConfig() {
   for (const [modalidade, c] of Object.entries(RANKING_CONFIG)) {
     inserir('ranking_config', {
       modalidade,
@@ -956,7 +1003,12 @@ function semearResultados() {
   }
 }
 
-function semearConteudo() {
+/* Conteúdo que entra nos DOIS modos: categorias, posts do blog e banners.
+   O dono do site pediu manter blog e banners no mínimo — as categorias vão
+   junto porque a coluna `cat` dos posts guarda o NOME da categoria e a tela
+   do blog lê essas categorias para o filtro; sem elas, os posts existentes
+   ficariam órfãos de agrupamento. */
+function semearConteudoBase() {
   for (const c of CATEGORIAS) {
     inserir('categorias', { id: c.id, nome: c.nome, descricao: c.descricao, cor: c.cor, arquivado_em: null });
   }
@@ -978,22 +1030,6 @@ function semearConteudo() {
       arquivado_em: null
     });
   }
-
-  for (const e of EVENTOS) {
-    inserir('eventos', { id: e.id, titulo: e.titulo, mod: e.mod, ano: e.ano, local: e.local, fotos: e.fotos, arquivado_em: null });
-  }
-
-  PARCEIROS.forEach((p, i) => {
-    inserir('parceiros', {
-      id: `pa${i + 1}`,
-      nome: p.nome,
-      tipo: p.tipo,
-      /* O front-end monta o logo a partir da ordem; nada a guardar aqui. */
-      logo: null,
-      ordem: i + 1,
-      arquivado_em: null
-    });
-  });
 
   for (const b of BANNERS) {
     inserir('banners', {
@@ -1022,6 +1058,118 @@ function semearConteudo() {
   }
 }
 
+/* Conteúdo só do modo demo: galeria de eventos passados e vitrine de
+   parceiros. Não são pedidos pelo dono no modo mínimo e ficam vazios para o
+   admin cadastrar a partir do painel. */
+function semearConteudoDemo() {
+  for (const e of EVENTOS) {
+    inserir('eventos', { id: e.id, titulo: e.titulo, mod: e.mod, ano: e.ano, local: e.local, fotos: e.fotos, arquivado_em: null });
+  }
+
+  PARCEIROS.forEach((p, i) => {
+    inserir('parceiros', {
+      id: `pa${i + 1}`,
+      nome: p.nome,
+      tipo: p.tipo,
+      /* O front-end monta o logo a partir da ordem; nada a guardar aqui. */
+      logo: null,
+      ordem: i + 1,
+      arquivado_em: null
+    });
+  });
+}
+
+/* --------------------------------------------------------------------------
+   TRADUÇÃO DE EXEMPLO
+
+   O suficiente para conferir o caminho inteiro de ponta a ponta: um campeonato
+   e um post completos em inglês e espanhol, uma categoria, um banner do hero e
+   um modelo de e-mail.
+
+   As lacunas são de propósito. 'cbb-2026' tem só o nome em inglês e nada em
+   espanhol, e o post p1 não tem `corpo` traduzido: é assim que dá para ver na
+   tela que o campo sem tradução volta em português em vez de sair vazio.
+   -------------------------------------------------------------------------- */
+
+const TRADUCOES = [
+  {
+    tabela: 'campeonatos', registro: 'cbf-2026',
+    en: {
+      nome: 'Phygital Football Cup 2026 — National Stage',
+      descricao: 'The main stage of the national calendar. 24 teams compete for a direct spot in the Games of the Future qualifier.',
+      local: 'Phygital Arena — São Paulo, Brazil',
+      termos: 'By registering the team, the person in charge declares that every athlete has granted image rights and is physically fit to compete.'
+    },
+    es: {
+      nome: 'Copa Phygital de Fútbol 2026 — Etapa Nacional',
+      descricao: 'La principal etapa del calendario nacional. 24 equipos disputan una plaza directa en la clasificatoria de los Games of the Future.',
+      local: 'Arena Phygital — São Paulo, Brasil',
+      termos: 'Al inscribir al equipo, el responsable declara que todos los atletas cuentan con autorización de imagen y están aptos físicamente para competir.'
+    }
+  },
+  {
+    /* Tradução incompleta de propósito: prova o fallback campo a campo. */
+    tabela: 'campeonatos', registro: 'cbb-2026',
+    en: { nome: 'Phygital 3x3 Basketball Circuit — 2nd Edition' }
+  },
+  {
+    tabela: 'posts', registro: 'p1',
+    en: {
+      titulo: 'Phygital Football Cup 2026 opens registration for 24 teams',
+      resumo: 'The national stage takes place in September, in São Paulo, with a direct spot in the Games of the Future qualifier for the champion.'
+    },
+    es: {
+      titulo: 'La Copa Phygital de Fútbol 2026 abre inscripciones para 24 equipos',
+      resumo: 'La etapa nacional se celebra en septiembre, en São Paulo, con plaza directa en la clasificatoria de los Games of the Future para el campeón.'
+    }
+  },
+  {
+    tabela: 'categorias', registro: 'campeonatos',
+    en: { nome: 'Championships' },
+    es: { nome: 'Campeonatos' }
+  },
+  {
+    tabela: 'modelos_email', registro: 'codigo-verificacao',
+    en: {
+      assunto: 'Your verification code is {{codigo}}',
+      corpo: '<p>Hello, {{usuario.nome}}.</p><p>Your verification code is <b>{{codigo}}</b>. It is valid for 15 minutes.</p><p>If you did not request it, ignore this e-mail.</p>'
+    },
+    es: {
+      assunto: 'Tu código de verificación es {{codigo}}',
+      corpo: '<p>Hola, {{usuario.nome}}.</p><p>Tu código de verificación es <b>{{codigo}}</b>. Es válido por 15 minutos.</p><p>Si no lo has solicitado, ignora este correo.</p>'
+    }
+  }
+];
+
+function semearTraducoes() {
+  const agora = db.agora();
+
+  for (const item of TRADUCOES) {
+    /* O registro pode não existir num banco parcialmente semeado; sem esta
+       guarda, a tradução ficaria órfã e nunca seria lida por ninguém. */
+    if (!db.um(`SELECT id FROM ${item.tabela} WHERE id = ?`, item.registro)) continue;
+
+    for (const idioma of ['en', 'es']) {
+      const campos = item[idioma];
+      if (!campos) continue;
+
+      for (const [campo, texto] of Object.entries(campos)) {
+        inserir('traducoes', {
+          tabela: item.tabela,
+          registro_id: item.registro,
+          campo,
+          idioma,
+          texto,
+          atualizado_em: agora
+        }, ['tabela', 'registro_id', 'campo', 'idioma']);
+      }
+    }
+  }
+}
+
+/* SMTP + modelos de e-mail — os dois valem para os dois modos. Sem o SMTP a
+   tela "Disparo de E-mail → Configurações" abre em branco; sem os modelos
+   nenhum alerta automático tem template para preencher. */
 function semearEmail() {
   inserir('smtp', {
     id: 1,
@@ -1044,7 +1192,11 @@ function semearEmail() {
       ativo: 1, atualizado_em: null
     });
   }
+}
 
+/* Histórico de disparos: só o modo demo — no Codespaces recém-criado o
+   histórico começa vazio, como acontece em qualquer instalação nova. */
+function semearEmailsEnviados() {
   for (const e of EMAILS_ENVIADOS) {
     inserir('emails_enviados', {
       id: e.id,
@@ -1061,11 +1213,19 @@ function semearEmail() {
 }
 
 /**
- * Popula o banco. Com `recriar`, apaga o conteúdo de todas as tabelas antes —
- * o arquivo do banco continua o mesmo.
+ * Popula o banco.
+ *
+ * · `recriar` (padrão false) — apaga o conteúdo de todas as tabelas antes; o
+ *   arquivo do banco continua o mesmo.
+ * · `demo`    (padrão false) — quando true, semeia o pacote completo de
+ *   demonstração (três admins, competidor, campeonatos, times, chamados,
+ *   ranking, resultados, conteúdo público, histórico de e-mails e
+ *   traduções). Quando false, semeia SÓ o mínimo funcional: duas contas
+ *   (u1 + comp1), SMTP, modelos de e-mail e a configuração de ranking.
+ *
  * Tudo em uma transação: se qualquer passo falhar, nada é gravado.
  */
-function semear({ recriar = false } = {}) {
+function semear({ recriar = false, demo = false } = {}) {
   contagens.clear();
   senhasGeradas.length = 0;
   avisos.length = 0;
@@ -1078,41 +1238,61 @@ function semear({ recriar = false } = {}) {
   const removidas = db.transacao(() => {
     const apagadas = recriar ? esvaziar() : 0;
 
-    semearContas();
+    semearContas(demo ? ADMINISTRADORES : MINIMO_ADMINISTRADORES);
 
     /* A conta pode já existir de uma execução anterior: os times se ligam à
        que está no banco, não à que acabamos de tentar criar. */
     const conta = db.um('SELECT id FROM contas WHERE lower(email) = ?', EMAIL_COMPETIDOR.toLowerCase());
     if (!conta) throw new Error('Conta do competidor não encontrada depois da criação.');
 
-    semearCampeonatos();
-    semearTimes(conta.id);
-    semearInscricoes();
-    semearChamados(conta.id);
-    semearRanking();
-    semearResultados();
-    semearConteudo();
+    /* SMTP e modelos entram nos dois modos: são o que o painel de e-mail
+       precisa para abrir configurado. */
     semearEmail();
+    /* Config do ranking também — sem ela o painel do ranking abre em branco. */
+    semearRankingConfig();
+    /* Blog (categorias + posts) e banners: o dono pediu esses no mínimo.
+       Modelos, config de ranking e blog são o "sistema montado"; o resto é
+       inventário operacional (times, campeonatos, chamados). */
+    semearConteudoBase();
 
-    conferirElencos();
+    if (demo) {
+      semearCampeonatos();
+      semearTimes(conta.id);
+      semearInscricoes();
+      semearChamados(conta.id);
+      semearRanking();
+      semearResultados();
+      semearConteudoDemo();
+      semearEmailsEnviados();
+
+      conferirElencos();
+    }
+
+    /* Traduções entram nos dois modos, mas cada linha só cola se o registro
+       traduzido existir (semearTraducoes já filtra) — no mínimo isso cobre
+       posts e o modelo de código de verificação; no demo cobre também os
+       campeonatos e a categoria de exemplo. */
+    semearTraducoes();
 
     const inseridas = total();
     /* Só registra auditoria quando algo foi realmente escrito — auditar uma
        execução que não mudou nada encheria a trilha e quebraria a
        idempotência. */
     if (inseridas > 0 || apagadas > 0) {
+      const rotuloModo = demo ? ' (demo)' : ' (mínimo)';
       regras.registrar(null, 'sistema', 'semente',
-        recriar ? 'recriou o banco' : 'semeou o banco',
+        recriar ? `recriou o banco${rotuloModo}` : `semeou o banco${rotuloModo}`,
         `${inseridas} linha(s) inserida(s)` + (apagadas ? ` · ${apagadas} removida(s)` : ''));
     }
 
     return apagadas;
   });
 
-  imprimirResumo({ recriar, removidas });
+  imprimirResumo({ recriar, demo, removidas });
 
   return {
     recriado: recriar,
+    demo,
     removidas,
     inseridas: total(),
     contagens: Object.fromEntries(contagens),
@@ -1133,11 +1313,12 @@ function total() {
 
 const LINHA = '='.repeat(72);
 
-function imprimirResumo({ recriar, removidas }) {
+function imprimirResumo({ recriar, demo, removidas }) {
   console.log('');
   console.log(LINHA);
   console.log('SEMENTE PHYGITAL BRASIL');
   console.log(`Banco: ${db.ARQUIVO}`);
+  console.log(`Modo:  ${demo ? 'demonstração (--demo)' : 'mínimo (padrão)'}`);
   if (recriar) console.log(`Modo --recriar: ${removidas} linha(s) apagada(s) antes de popular.`);
   console.log(LINHA);
 
@@ -1205,17 +1386,21 @@ function imprimirSenhas() {
 
 if (require.main === module) {
   const argumentos = process.argv.slice(2);
-  const desconhecidos = argumentos.filter((a) => a !== '--recriar');
+  const RECONHECIDOS = new Set(['--recriar', '--demo']);
+  const desconhecidos = argumentos.filter((a) => !RECONHECIDOS.has(a));
 
   if (desconhecidos.length) {
     console.error(`Argumento não reconhecido: ${desconhecidos.join(', ')}`);
-    console.error('Uso: node server/semente.js [--recriar]');
+    console.error('Uso: node server/semente.js [--recriar] [--demo]');
     process.exit(1);
   }
 
   let codigo = 0;
   try {
-    semear({ recriar: argumentos.includes('--recriar') });
+    semear({
+      recriar: argumentos.includes('--recriar'),
+      demo: argumentos.includes('--demo')
+    });
   } catch (erro) {
     console.error('');
     console.error('A semeadura falhou e nada foi gravado:');
@@ -1228,4 +1413,35 @@ if (require.main === module) {
   process.exit(codigo);
 }
 
-module.exports = { semear };
+/**
+ * Só os modelos de e-mail: usado por server/index.js em toda subida.
+ * Como `inserir()` é idempotente pela chave `id`, rodar de novo num banco já
+ * semeado não duplica nada — só acrescenta modelos novos que ainda não estão
+ * gravados (foi o que trouxe `admin-conta-criada` para bancos antigos sem
+ * precisar de --recriar).
+ *
+ * Zera as contagens antes e restaura depois: senão a próxima chamada a semear()
+ * imprimiria os modelos nesta contagem também.
+ */
+function migrarModelosEmail() {
+  const anteriores = new Map(contagens);
+  contagens.clear();
+
+  db.transacao(() => {
+    for (const m of MODELOS_EMAIL) {
+      inserir('modelos_email', {
+        id: m.id, grupo: m.grupo, nome: m.nome, quando: m.quando,
+        para: m.para, assunto: m.assunto, corpo: m.corpo,
+        ativo: 1, atualizado_em: null
+      });
+    }
+  });
+
+  const acrescentados = contagens.get('modelos_email');
+  contagens.clear();
+  for (const [k, v] of anteriores) contagens.set(k, v);
+
+  return acrescentados ? acrescentados.inseridos : 0;
+}
+
+module.exports = { semear, migrarModelosEmail };

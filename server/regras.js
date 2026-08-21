@@ -48,7 +48,7 @@ const MODALIDADES = {
     id: 'dance', nome: 'Phygital Dance', curto: 'Dance', cor: '#FCE001',
     jogadoresMin: 1, jogadoresMax: 1, reservasMax: 0, staffMax: 1,
     staffRotulo: 'Staff (opcional)',
-    temCategoria: false, temNumeroCamisa: true, temFuncao: false, temSteam: false,
+    temCategoria: false, temNumeroCamisa: false, temFuncao: false, temSteam: false,
     individual: true, staffOpcional: true, categorias: [],
     descricao: 'Atleta solo. Coreografia julgada por precisão de movimento e execução em pista.'
   },

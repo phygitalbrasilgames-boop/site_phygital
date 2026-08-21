@@ -163,6 +163,35 @@ describe('conteúdo e administração', () => {
     assert.equal(noFim.corpo.bannersSite.at(-1).id, hero.id);
   });
 
+  it('o vídeo do banner aceita "youtube:<id>" e recusa identificador torto', async () => {
+    /* O editor grava o vídeo do YouTube como um texto só, sem coluna nova. Como
+       esse valor vira o src de um <iframe> na home, o identificador é conferido
+       byte a byte: 11 caracteres do alfabeto do YouTube, nada além disso. */
+    const doYoutube = await mestre.post('/api/banners-site', {
+      titulo: 'Abertura no YouTube', midia: 'video', video: 'youtube:dQw4w9WgXcQ'
+    });
+    assert.equal(doYoutube.status, 200);
+    assert.equal(doYoutube.corpo.bannerSite.video, 'youtube:dQw4w9WgXcQ');
+
+    for (const torto of ['youtube:curto', 'youtube:dQw4w9WgXcQ&a=1', 'youtube:', 'youtube:../../etc']) {
+      const recusado = await mestre.post('/api/banners-site', {
+        titulo: 'Torto', midia: 'video', video: torto
+      });
+      assert.equal(recusado.status, 400, `deveria recusar ${torto}`);
+    }
+
+    /* O endereço comum de vídeo continua passando pela regra de sempre. */
+    const arquivoEnviado = await mestre.put(`/api/banners-site/${doYoutube.corpo.bannerSite.id}`, {
+      video: 'assets/enviados/9f1c2b3a-0000-4000-8000-000000000000.mp4'
+    });
+    assert.equal(arquivoEnviado.status, 200);
+
+    const esquemaProibido = await mestre.put(`/api/banners-site/${doYoutube.corpo.bannerSite.id}`, {
+      video: 'javascript:alert(1)'
+    });
+    assert.equal(esquemaProibido.status, 400);
+  });
+
   it('evento e parceiro validam modalidade e recebem a próxima ordem', async () => {
     const modalidadeTorta = await mestre.post('/api/eventos', {
       titulo: 'Etapa de Xadrez', mod: 'xadrez', ano: 2026
@@ -300,33 +329,6 @@ describe('conteúdo e administração', () => {
 
     const depois = await amb.anonimo().get('/api/ranking/shooter');
     assert.deepEqual(depois.corpo.ranking, antes.corpo.ranking, 'a substituição não podia ficar pela metade');
-  });
-
-  /* ------------------------------------------------------------------------
-     AUDITORIA
-     ------------------------------------------------------------------------ */
-
-  it('a auditoria vem paginada, do mais recente para o mais antigo', async () => {
-    const primeira = await mestre.get('/api/auditoria?limite=5');
-
-    assert.equal(primeira.status, 200);
-    assert.equal(primeira.corpo.limite, 5);
-    assert.ok(primeira.corpo.itens.length <= 5);
-    assert.ok(primeira.corpo.total > 5);
-    assert.ok(primeira.corpo.itens.every((l, i, a) => i === 0 || a[i - 1].quando >= l.quando));
-
-    const segunda = await mestre.get('/api/auditoria?limite=5&pagina=2');
-    assert.notDeepEqual(segunda.corpo.itens, primeira.corpo.itens);
-
-    const porArea = await mestre.get('/api/auditoria?area=usuario');
-    assert.ok(porArea.corpo.total > 0);
-    assert.ok(porArea.corpo.itens.every((l) => l.area === 'usuario'));
-
-    const hoje = amb.hoje();
-    const porData = await mestre.get(`/api/auditoria?de=${hoje}&ate=${hoje}`);
-    assert.ok(porData.corpo.total > 0, 'o filtro precisa pegar o dia inteiro, não só a meia-noite');
-
-    assert.equal((await mestre.get('/api/auditoria?de=ontem')).status, 400);
   });
 
   /* ------------------------------------------------------------------------

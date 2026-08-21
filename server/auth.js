@@ -22,6 +22,7 @@
 
 const crypto = require('node:crypto');
 const db = require('./db');
+const traducoes = require('./traducoes');
 
 /* Custo do scrypt. N=2^15 com r=8 ≈ 100 ms por hash nesta máquina:
    imperceptível no login, caro para quem tenta força bruta offline.
@@ -294,6 +295,8 @@ function contaPublica(conta) {
     telefone: conta.telefone,
     papel: conta.papel,
     nivel: conta.nivel,
+    /* Banco antigo, antes da migração da coluna, não traz o campo. */
+    idioma: traducoes.normalizarOuPadrao(conta.idioma),
     emailVerificado: db.bool(conta.email_verificado),
     senhaProvisoria: db.bool(conta.senha_provisoria),
     criadoEm: conta.criado_em,

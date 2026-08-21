@@ -764,7 +764,17 @@ function emailEnviado(l) {
     qtd: l.qtd,
     status: l.status,
     erro: l.erro,
-    data: horaLegivel(l.data)
+    data: horaLegivel(l.data),
+    /* Estado do despachante (server/fila-email.js). Numa linha recém-montada,
+       que ainda não passou pelo banco, estas colunas não existem — daí os
+       padrões em vez de undefined vazando para a resposta. */
+    tentativas: Number(l.tentativas) || 0,
+    proximaTentativa: l.proxima_tentativa || null,
+    enviadoEm: l.enviado_em || null,
+    /* Anexos vão como metadado só (nome, tipo, tamanho, caminho relativo). O
+       binário está em site/assets/enviados/ — quem entrega é o despachante,
+       que abre o arquivo do disco na hora de montar o multipart. */
+    anexos: db.json(l.anexos, []) || []
   };
 }
 
@@ -781,7 +791,11 @@ function paraLinhaEmailEnviado(e, { id } = {}) {
        para poder ser inspecionado nos testes. */
     status: e.status || 'simulado',
     erro: e.erro || null,
-    data: e.data || db.agora()
+    data: e.data || db.agora(),
+    /* Lista de metadados dos anexos, para o dispatcher achar o arquivo no
+       disco na hora de enviar. Nada de bytes: gravar base64 aqui estouraria o
+       histórico (o teto de 100 MB por arquivo bate no teto de 2 MB do corpo). */
+    anexos: Array.isArray(e.anexos) && e.anexos.length ? db.paraJson(e.anexos) : null
   });
 }
 

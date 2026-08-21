@@ -13,14 +13,14 @@ const assert = require('node:assert/strict');
 const amb = require('../apoio/ambiente');
 
 describe('fundação', () => {
-  it('todos os 9 módulos de rota carregaram, nenhum com falha', async () => {
+  it('todos os 11 módulos de rota carregaram, nenhum com falha', async () => {
     const r = await amb.anonimo().get('/api/_saude');
 
     assert.equal(r.status, 200);
     assert.deepEqual(r.corpo.modulosComFalha, []);
     assert.deepEqual(r.corpo.modulosCarregados, [
       'bootstrap', 'auth', 'campeonatos', 'times',
-      'inscricoes', 'chamados', 'conteudo', 'admin', 'email'
+      'inscricoes', 'chamados', 'conteudo', 'admin', 'email', 'upload', 'traducoes'
     ]);
     assert.ok(r.corpo.rotasRegistradas >= 100, `só ${r.corpo.rotasRegistradas} rotas registradas`);
   });

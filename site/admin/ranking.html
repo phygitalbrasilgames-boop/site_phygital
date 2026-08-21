@@ -51,16 +51,27 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub" hidden>
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item menu__item--ativo"><a class="menu__link" href="ranking.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -83,7 +94,6 @@
           <li><a href="email-modelos.html">Modelos de E-mail</a></li>
         </ul>
       </div>
-      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
       <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
@@ -240,6 +250,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -375,7 +386,12 @@
     t.camp = parseInt($('#l-camp').value, 10) || 0;
     t.titulos = parseInt($('#l-tit').value, 10) || 0;
     t.gotf = $('#l-gotf').value === 'sim';
-    D.salvar();
+
+    /* Servidor recusou: dados.js recolocou a lista do espelho no cache e já
+       avisou. A tabela atrás do modal não foi redesenhada, então continua
+       mostrando o que o banco tem; o modal fica aberto para nova tentativa. */
+    if (!D.salvar()) return;
+
     D.registrar('ranking', t.nome, 'corrigiu a colocação',
                 D.modalidade(mod).curto + ' · ' + t.v + 'V ' + t.e + 'E ' + t.d + 'D');
     PB.fecharModal('modal-linha');
@@ -396,7 +412,12 @@
       minCampeonatos: parseInt($('#cd-min').value, 10) || 0,
       ativo: $('#cd-ativo').checked
     };
-    D.salvar();
+
+    /* Servidor recusou: dados.js devolveu as condições anteriores ao cache e já
+       avisou. Sem este corte, o D.registrar abaixo ainda gravava na auditoria
+       uma alteração que não aconteceu. */
+    if (!D.salvar()) return;
+
     D.registrar('ranking', D.modalidade(mod).curto, 'alterou as condições de cálculo',
                 'vitória ' + d.rankingConfig[mod].pontosVitoria + ' · empate ' + d.rankingConfig[mod].pontosEmpate);
     PB.fecharModal('modal-cond');

@@ -47,6 +47,7 @@
   var _modo = 'local';
   var _cache = null;
   var _conta = null;      /* conta da sessão, como o servidor a enxerga */
+  var _idiomaResolvido = null; /* idioma em que o servidor traduziu o cache */
   var _espelho = null;    /* foto do cache logo após a última sincronização */
   var _arquivados = null; /* memória curta do histórico (modo api) */
 
@@ -56,25 +57,23 @@
      No modo api este array fica VAZIO: quem valida credencial é o servidor e
      nenhum e-mail ou senha precisa existir dentro deste arquivo.
 
-     Estas são contas FICTÍCIAS, de demonstração. Os endereços reais da Phygital
-     Brasil não entram aqui: este arquivo é servido publicamente pelo GitHub
-     Pages, então qualquer pessoa lê o conteúdo dele. Credencial de verdade vive
-     no banco do servidor, como hash scrypt, e nunca no front-end.
+     No modo local (site publicado no GitHub Pages, sem back-end) o array traz
+     as contas de teste, para dar como fazer login sem servidor.
      --------------------------------------------------------------------- */
   var CONTAS = [
     {
-      email: 'admin@demo.phygital',
-      senha: 'DemoAdmin2026',
+      email: 'inscricoes@phygitalgamesbr.com.br',
+      senha: 'Phygital@2026',
       papel: 'admin',
       nivel: 'master',
-      nome: 'Administração (demonstração)',
+      nome: 'Inscrições Phygital',
       destino: '../admin/index.html'
     },
     {
-      email: 'competidor@demo.phygital',
-      senha: 'DemoCompetidor2026',
+      email: 'phygitalbrasilgames@gmail.com',
+      senha: 'Phygital@2026',
       papel: 'competidor',
-      nome: 'Time de Demonstração',
+      nome: 'Phygital Brasil Games',
       destino: 'inicio.html'
     }
   ];
@@ -148,7 +147,7 @@
       staffMax: 1,
       staffRotulo: 'Staff (opcional)',
       temCategoria: false,
-      temNumeroCamisa: true,
+      temNumeroCamisa: false,
       temFuncao: false,
       temSteam: false,
       individual: true,
@@ -883,6 +882,44 @@
      DESCOBERTA E HIDRATAÇÃO
      ===================================================================== */
 
+  /* ---------------------------------------------------------------------
+     IDIOMA DA CARGA
+
+     O /api/bootstrap devolve o conteúdo cadastrado já traduzido, e quem decide
+     o idioma é o servidor. Se ninguém disser nada, ele decide pelo cookie — que
+     na primeira carga ainda é o da navegação ANTERIOR, porque quem grava o
+     cookie novo é o i18n.js. Era essa a origem da tela atrasada um carregamento
+     inteiro: abrir ?lang=en mostrava o conteúdo em português, e ?lang=es depois
+     mostrava o inglês.
+
+     Por isso o i18n.js passou a ser carregado ANTES deste arquivo nas 50
+     páginas: quando a linha abaixo roda, o idioma da URL já foi resolvido e
+     gravado, e viaja no ?lang= da requisição.
+
+     O parâmetro só viaja quando é ESCOLHA — ?lang na URL, cookie ou clique no
+     seletor. Quando o i18n apenas chutou pelo navegador, fica de fora de
+     propósito: o servidor tem uma pista melhor, que o front-end não enxerga
+     antes do bootstrap, que é a preferência gravada na conta. O idioma que ele
+     escolheu volta no corpo, e o i18n.js se alinha a ele quando o DOM fica
+     pronto.
+
+     Sem o i18n.js na página (GitHub Pages, página avulsa) nada disso acontece e
+     a requisição sai exatamente como saía antes.
+     --------------------------------------------------------------------- */
+
+  function idiomaEscolhido() {
+    var i18n = global.PB && global.PB.i18n;
+    if (!i18n || typeof i18n.escolhido !== 'function') return null;
+    try { return i18n.escolhido(); } catch (e) { return null; }
+  }
+
+  function comIdioma(caminho) {
+    var codigo = idiomaEscolhido();
+    if (!codigo) return caminho;
+    return caminho + (caminho.indexOf('?') >= 0 ? '&' : '?')
+      + 'lang=' + encodeURIComponent(codigo);
+  }
+
   /* /api/ping é a pergunta "existe back-end aqui?". Em GitHub Pages responde
      404, em file:// nem chega a sair — os dois caem no modo local. */
   function descobrir() {
@@ -897,11 +934,15 @@
      vem só conteúdo público, com login vêm os próprios times, inscrições e
      chamados. Por isso todo login e todo logout precisa passar por aqui. */
   function hidratar() {
-    var r = pedirSync('GET', '/bootstrap');
+    var r = pedirSync('GET', comIdioma('/bootstrap'));
     if (!r.ok || !r.dados || !r.dados.dados) return false;
 
     _cache = r.dados.dados;
     _conta = r.dados.conta || null;
+
+    /* Em que idioma o servidor traduziu ESTE payload. É o que o i18n.js lê para
+       alinhar a interface ao conteúdo quando quem decidiu foi o servidor. */
+    _idiomaResolvido = r.dados.idioma || null;
 
     /* As regras de elenco passam a ser as do servidor: uma cópia divergente no
        cliente deixaria o formulário aceitar o que a API recusa. */
@@ -936,11 +977,13 @@
     return _cache;
   }
 
+  /** @returns {boolean} true quando tudo foi gravado. */
   function salvar() {
-    if (_modo === 'api') { sincronizar(); return; }
+    if (_modo === 'api') return sincronizar();
     try {
       if (global.localStorage) localStorage.setItem(CHAVE, JSON.stringify(_cache));
     } catch (e) { /* modo privado / cota — segue em memória */ }
+    return true;
   }
 
   function resetar() {
@@ -1015,8 +1058,10 @@
   }
 
   function sincronizar() {
-    if (_modo !== 'api' || !_cache) return;
-    if (!_espelho) { fotografar(); return; }
+    /* true, não vazio: salvar() repassa este retorno, e sair sem valor faria uma
+       sincronização que nada tinha a enviar ser lida como recusa pela tela. */
+    if (_modo !== 'api' || !_cache) return true;
+    if (!_espelho) { fotografar(); return true; }
 
     var falhas = [];
 
@@ -1069,6 +1114,11 @@
 
     if (falhas.length) avisar(falhas[0]);
     fotografar();
+
+    /* Devolve se TUDO passou. Sem retorno, as telas que gravam por
+       tudo() + salvar() não tinham como distinguir sucesso de recusa e
+       comemoravam sempre. */
+    return falhas.length === 0;
   }
 
   /* Troca o item do cache pelo que o servidor devolveu (ids gerados, carimbos
@@ -1103,7 +1153,17 @@
     /** 'api' quando há back-end, 'local' quando o site é só estático. */
     modo: function () { return _modo; },
 
-    /** Busca o payload de novo no servidor. No modo local, relê o localStorage. */
+    /**
+     * Idioma em que o servidor traduziu o conteúdo que está em cache agora.
+     * null no modo local, onde a semente é sempre a portuguesa.
+     */
+    idiomaResolvido: function () { return _idiomaResolvido; },
+
+    /**
+     * Busca o payload de novo no servidor, no idioma vigente — o ?lang= sai
+     * junto, então trocar de idioma e recarregar traz o conteúdo já traduzido.
+     * No modo local, relê o localStorage.
+     */
     recarregar: recarregar,
 
     /* -------------------------------------------------------------------
@@ -1363,7 +1423,11 @@
         if (existia) d[colecao][i] = antes;
         else retirar(d[colecao], item);
         avisar(r.erro);
-        return item;
+        /* FALSO, não o item. Devolver o item aqui — igual ao sucesso — deixava
+           a tela sem como saber que o servidor recusou: aparecia o aviso de erro
+           E o toast verde de "salvo", e algumas telas ainda navegavam para uma
+           lista onde o registro não existe. */
+        return false;
       }
 
       absorver(colecao, r.dados, id);
@@ -1526,7 +1590,10 @@
          não tem rota própria e fica no cache até a próxima rehidratação. */
       if (caminho === 'smtp' && ehAdmin()) {
         var r = pedirSync('PUT', '/email/smtp', valor);
-        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return antes; }
+        /* FALSO no fracasso. Devolver `antes` — um objeto, portanto truthy —
+           deixava admin/email.html sem como saber que o servidor recusou: a tela
+           mostrava o erro E "Configurações salvas" logo em seguida. */
+        if (!r.ok) { d[caminho] = antes; avisar(r.erro); return false; }
         if (r.dados && r.dados.smtp) d.smtp = r.dados.smtp;
       }
 
@@ -1586,6 +1653,16 @@
     },
     meusTimes: function () {
       return carregar().meusTimes.filter(function (t) { return !t.arquivado; });
+    },
+    /* Todos os times visíveis nesta sessão, opcionalmente filtrados por
+       modalidade. No painel do administrador o /api/bootstrap enche a coleção
+       `meusTimes` com o conjunto retornado por GET /times — que para admin já
+       vem sem o WHERE conta_id, então esta função devolve o parque inteiro.
+       No painel do competidor devolve apenas os times do dono. */
+    todosTimes: function (modalidade) {
+      var lista = carregar().meusTimes.filter(function (t) { return !t.arquivado; });
+      if (modalidade) lista = lista.filter(function (t) { return t.modalidade === modalidade; });
+      return lista;
     },
     time: function (id) { return carregar().meusTimes.filter(function (t) { return t.id === id; })[0] || null; },
     minhasInscricoes: function () {
@@ -1899,6 +1976,7 @@
   function alvoDoDestino(destino) {
     if (destino === 'Todos os campeonatos') return 'todos';
     if (destino === 'Campeonatos com inscrições abertas') return 'abertos';
+    if (destino === 'Lista manual') return 'manual';
 
     var camp = (_cache.campeonatos || []).filter(function (c) { return c.nome === destino; })[0];
     return camp ? camp.id : null;
@@ -1909,15 +1987,35 @@
 
     var alvo = alvoDoDestino(item.destino);
     if (!alvo) {
-      /* "Lista manual" não tem equivalente na API: o servidor só conhece os
-         responsáveis com inscrição ativa. Fica registrado só no cache. */
-      avisar('Envio para lista manual ainda não é aceito pelo servidor. Nada foi disparado.');
+      /* Rótulo desconhecido: sem público resolvido, o histórico local fica
+         gravado mas nada sai. É o comportamento de segurança — o servidor não
+         adivinha para onde mandar. */
+      avisar('Destino de e-mail não reconhecido. Nada foi disparado.');
       return;
     }
 
-    var r = pedirSync('POST', '/email/disparar', {
-      assunto: item.assunto, corpo: item.corpo || '', alvo: alvo
-    });
+    var carga = { assunto: item.assunto, corpo: item.corpo || '', alvo: alvo };
+    /* Lista manual: os endereços digitados na tela vão junto. Sem eles o
+       servidor responde 400, e o disparo é retirado do histórico. */
+    if (alvo === 'manual') carga.destinatarios = item.destinatarios || [];
+
+    /* Anexos: só os metadados (nome, caminho, tipo, tamanho). O arquivo já subiu
+       antes por POST /api/upload; o `caminho` devolvido é o que aponta para o
+       binário em site/assets/enviados/, e o dispatcher no servidor lê os bytes
+       do disco na hora de entregar. Sem esse repasse o anexo nunca chegaria ao
+       SMTP — era exatamente o gargalo antigo. */
+    if (Array.isArray(item.anexos) && item.anexos.length) {
+      carga.anexos = item.anexos.map(function (a) {
+        return {
+          nome: (a && a.nome) || 'arquivo',
+          caminho: (a && a.caminho) || '',
+          tipo: (a && a.tipo) || '',
+          tamanho: Number(a && a.tamanho) || 0
+        };
+      });
+    }
+
+    var r = pedirSync('POST', '/email/disparar', carga);
 
     if (!r.ok) {
       retirar(_cache.emailsEnviados || [], item);
@@ -1929,6 +2027,9 @@
       item.qtd = r.dados.destinatarios || item.qtd;
       item.destino = r.dados.destino || item.destino;
       item.status = r.dados.status || item.status;
+      /* O campo local `destinatarios` só serve para o POST — depois de
+         gravado, sai (não precisa ficar em localStorage). */
+      delete item.destinatarios;
     }
   }
 
@@ -1957,7 +2058,7 @@
 
     /* ---- Descoberta e sessão ---- */
     ping: function () { return pedir('GET', '/ping'); },
-    bootstrap: function () { return pedir('GET', '/bootstrap'); },
+    bootstrap: function () { return pedir('GET', comIdioma('/bootstrap')); },
     entrar: function (email, senha) { return pedir('POST', '/auth/login', { email: email, senha: senha }); },
     sair: function () { return pedir('POST', '/auth/logout', {}); },
     sessao: function () { return pedir('GET', '/auth/sessao'); },
@@ -1992,7 +2093,15 @@
     },
 
     /* ---- Times e elenco ---- */
-    times: function () { return pedir('GET', '/times'); },
+    /* Aceita { modalidade } — o servidor aplica o filtro só no painel do
+       administrador; no painel do competidor o filtro é ignorado e a resposta
+       vem restrita ao dono da sessão. */
+    times: function (filtro) {
+      var q = [];
+      if (filtro && filtro.modalidade) q.push('modalidade=' + encodeURIComponent(filtro.modalidade));
+      if (filtro && filtro.conta) q.push('conta=' + encodeURIComponent(filtro.conta));
+      return pedir('GET', '/times' + (q.length ? '?' + q.join('&') : ''));
+    },
     time: function (id) { return pedir('GET', '/times/' + encodeURIComponent(id)); },
     salvarTime: function (time) {
       return time && time.id
@@ -2108,6 +2217,9 @@
     salvarSmtp: function (cfg) { return pedir('PUT', '/email/smtp', cfg); },
     testarSmtp: function (para) { return pedir('POST', '/email/testar', { para: para }); },
     emailsEnviados: function () { return pedir('GET', '/email/enviados'); },
+    /* Registro único do histórico: usado pela tela de disparo para mostrar
+       no modal o HTML remontado pelo servidor (com envelope da marca). */
+    emailEnviado: function (id) { return pedir('GET', '/email/enviados/' + encodeURIComponent(id)); },
     previaEmail: function (dados) { return pedir('POST', '/email/previa', dados); },
     dispararEmail: function (dados) { return pedir('POST', '/email/disparar', dados); }
   };

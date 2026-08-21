@@ -199,6 +199,35 @@
 .hero__slide > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hero__slide .hero__conteudo { position: relative; z-index: 2; width: 100%; }
 
+/* Vídeo do YouTube como fundo do slide.
+
+   O embed é 16:9 e o banner não é. Para cobrir a área toda sem tarja preta, o
+   iframe é esticado pelo lado que falta e o excedente é cortado pelo overflow.
+   As medidas em vh/vw são a reserva — servem porque o hero ocupa quase a janela
+   inteira. Onde existem unidades de contêiner (cqh/cqw) elas substituem as
+   primeiras e passam a medir o próprio banner: é disso que o painel do
+   competidor precisa, onde o banner tem ~320px de altura e a janela não.
+   Exatamente um dos dois min-* entra em ação, conforme o banner esteja mais
+   largo ou mais alto que 16:9.
+
+   O escurecimento de .hero__slide::after cobre o iframe e já intercepta o
+   clique; pointer-events reforça, para o player não reagir nem ao hover. */
+.banner-yt {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  container-type: size;
+}
+.banner-yt__quadro {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border: 0;
+  pointer-events: none;
+  width: 177.78vh; min-width: 100%;
+  height: 56.25vw; min-height: 100%;
+  width: 177.78cqh;
+  height: 56.25cqw;
+}
+
 /* Zoom lento na mídia enquanto o slide está no ar: dá vida sem distrair */
 .hero__slide.ativo > img,
 .hero__slide.ativo > video { animation: hero-zoom 11s ease-out both; }
@@ -256,11 +285,18 @@
 
 .hero__conteudo { position: relative; z-index: 2; padding-block: var(--e-8); }
 .hero__titulo {
+  /* Declarado aqui, e não herdado do h1: só o primeiro slide é h1 — os demais
+     são <p> para a página não ter vários h1. Sem isto, o <p> caía no Barlow do
+     corpo e cada banner aparecia com uma fonte diferente. */
+  font-family: var(--fonte-display);
+  font-weight: 700;
+  letter-spacing: -.02em;   /* tracking −2% — branding book p.10 */
   font-size: var(--t-hero);
   line-height: .97;
   text-transform: uppercase;
   margin-bottom: var(--e-4);
   max-width: 16ch;
+  color: #fff;
 }
 .hero__titulo em {
   font-style: normal;

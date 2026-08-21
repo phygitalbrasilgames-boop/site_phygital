@@ -37,6 +37,11 @@
 
   .conversa-wrap { max-height: 560px; overflow-y: auto; padding: var(--e-4); }
 
+  /* .vagas__barra é flex:1 no painel.css, feita para viver numa linha ao lado
+     do rótulo; aqui ela ocupa a largura toda, embaixo do texto do envio. */
+  #resp-envio { margin-top: var(--e-2); }
+  #resp-envio .vagas__barra { display: block; width: 100%; margin-top: 6px; }
+
   /* Em telas estreitas a ação do topo desce para a segunda linha */
   @media (max-width: 640px) {
     .painel__topo { flex-wrap: wrap; }
@@ -71,7 +76,7 @@
       <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
       <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
-      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
     </nav>
     <div class="painel__rodape">
@@ -166,10 +171,18 @@
                     <div class="upload" data-upload aria-describedby="rot-anexo-resp">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:28px;height:28px;color:var(--cinza)"><path d="M21 12.5V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h6"/><path d="M16 3h5v5M21 3l-9 9"/></svg>
                       <span class="upload__titulo">Arraste um arquivo ou clique para escolher</span>
-                      <span class="upload__specs">PDF, JPG ou PNG até 5 MB</span>
+                      <span class="upload__specs">Imagem (PNG, JPG, WEBP ou GIF) até 5 MB ou documento (PDF, Word .doc/.docx, ODT) até 100 MB — foto do atestado, comprovante ou print do erro</span>
                       <button class="btn btn--contorno btn--pequeno" type="button">Escolher arquivo</button>
                       <span class="txt-micro txt-suave" data-upload-nome>Nenhum arquivo selecionado</span>
-                      <input type="file" id="resp-anexo" name="anexo" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                      <input type="file" id="resp-anexo" name="anexo"
+                             accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,.pdf,.doc,.docx,.odt" hidden>
+                    </div>
+                    <div id="resp-envio" role="status" aria-live="polite" hidden>
+                      <span class="txt-micro txt-suave" id="resp-envio-texto">Enviando o arquivo…</span>
+                      <span class="vagas__barra"><i id="resp-envio-barra" style="width:0%"></i></span>
+                      <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="resp-envio-remover" hidden>
+                        Remover anexo
+                      </button>
                     </div>
                   </div>
 
@@ -274,6 +287,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -338,6 +352,22 @@
     '<div><dt>Última atualização</dt><dd class="num" id="ch-ficha-atualizado">' + esc(F.data(c.atualizadoEm)) + '</dd></div>' +
     '<div><dt>Aberto por</dt><dd>' + esc(c.autor || usuario.nome) + '</dd></div>';
 
+  /* O anexo viaja DENTRO do texto da mensagem porque chamado_mensagens só tem a
+     coluna `texto`: qualquer campo extra posto no objeto da mensagem some na
+     releitura que PB.dados.atualizarChamado faz do servidor. O marcador é
+     gravado por esta tela e pela do administrador no mesmo formato, e aqui volta
+     a ser um link. O caminho é restrito a letras, números, ponto, hífen e
+     sublinhado — é o nome que /api/upload devolve, e limitá-lo aqui garante que
+     nada de dentro da mensagem escape para o href. */
+  var MARCA_ANEXO = /\[anexo:\s([^\]]*?)\s—\s(assets\/enviados\/[A-Za-z0-9._-]+)\]/g;
+
+  function corpoDaMensagem(texto) {
+    return esc(texto).replace(MARCA_ANEXO, function (tudo, nome, caminho) {
+      return '<a href="../' + caminho + '" target="_blank" rel="noopener" ' +
+             'style="color:var(--verde);font-weight:600">Anexo: ' + nome + '</a>';
+    });
+  }
+
   /* ---- Conversa, na ordem cronológica dos dados ---- */
   function bloco(m) {
     if (m.de === 'sistema') {
@@ -348,7 +378,7 @@
     var org = m.de === 'org';
     return '<div class="msg ' + (org ? 'msg--org' : 'msg--usuario') + '">' +
       '<div class="msg__autor">' + esc(m.autor || (org ? 'Organização Phygital' : usuario.nome)) + '</div>' +
-      '<div>' + esc(m.texto) + '</div>' +
+      '<div>' + corpoDaMensagem(m.texto) + '</div>' +
       (m.hora ? '<div class="msg__hora">' + esc(m.hora) + '</div>' : '') +
     '</div>';
   }
@@ -356,7 +386,7 @@
   var mensagens = c.mensagens || [];
   document.getElementById('ch-conversa').innerHTML = mensagens.map(bloco).join('');
   document.getElementById('ch-qtd-msg').textContent =
-    mensagens.length + ' mensagem' + (mensagens.length === 1 ? '' : 's') + ' no protocolo';
+    mensagens.length + (mensagens.length === 1 ? ' mensagem' : ' mensagens') + ' no protocolo';
 
   /* ---- Linha do tempo do status ---- */
   function primeiraOrg() {
@@ -421,15 +451,59 @@
           var pad = function (n) { return String(n).padStart(2, '0'); };
           var carimbo = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
                         ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-          D.atualizarChamado(c.protocolo, {
+          var salvou = D.atualizarChamado(c.protocolo, {
             status: 'encerrado',
             atualizadoEm: carimbo,
             mensagem: { de: 'sistema', texto: 'Chamado encerrado pelo responsável do time.', hora: carimbo }
           });
+
+          /* Recusada (a organização pode ter encerrado o chamado enquanto esta
+             tela estava aberta): dados.js já avisou. Sem isto o competidor era
+             levado para a lista achando que tinha encerrado. */
+          if (!salvou) return;
+
           PB.toast('Chamado encerrado', 'O protocolo foi para a lista de encerrados.', 'info');
           setTimeout(function () { location.href = 'chamados.html'; }, 1100);
         });
     });
+  }
+
+  /* ---- Anexo da resposta ----
+     O arquivo sobe para POST /api/upload por PB.enviarArquivo e o que fica
+     gravado é o caminho devolvido. Antes o arquivo era descartado sem nem
+     aparecer na conversa: o competidor anexava o atestado e a organização
+     recebia só o texto. */
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    document.getElementById('resp-envio').hidden = false;
+    document.getElementById('resp-envio-texto').textContent = texto;
+    document.getElementById('resp-envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    document.getElementById('resp-envio').hidden = true;
+    document.getElementById('resp-envio-barra').style.width = '0%';
+    document.getElementById('resp-envio-remover').hidden = true;
+  }
+
+  /* O botão tem ícone: trocar o texto apagaria o SVG, então só desabilita — o
+     recado de andamento é da barra. Travar evita a resposta entrar duas vezes
+     no protocolo por dois cliques. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    document.querySelector('#form-resposta button[type="submit"]').disabled = travado;
+  }
+
+  /* Sem back-end (demonstração estática) o helper devolve data: URL. Serve para
+     um <img src>, não para dentro do texto de uma mensagem: são centenas de
+     milhares de caracteres que apareceriam crus na conversa e ainda iriam para
+     o servidor no dia em que a demonstração virar produção. Ali fica só o nome,
+     como no protótipo. */
+  function marcaDoAnexo(nome, caminho) {
+    return /^assets\/enviados\//.test(caminho)
+      ? '\n[anexo: ' + nome + ' — ' + caminho + ']'
+      : '\n[anexo: ' + nome + ']';
   }
 
   /* ---- Envio de resposta (registrado depois da validação do phygital.js) ---- */
@@ -437,9 +511,22 @@
     if (encerrado) return;
     var form = document.getElementById('form-resposta');
 
+    /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto a
+       resposta não é gravada com o anexo e não há como desescolher o arquivo.
+       O botão fica FORA da área .upload de propósito — lá dentro qualquer
+       clique reabre o seletor de arquivo. */
+    document.getElementById('resp-envio-remover').addEventListener('click', function () {
+      document.getElementById('resp-anexo').value = '';
+      var rotulo = form.querySelector('[data-upload-nome]');
+      if (rotulo) rotulo.textContent = 'Nenhum arquivo selecionado';
+      esconderEnvio();
+      PB.toast('Anexo removido', 'Envie a resposta de novo — agora só com o texto.', 'info');
+    });
+
     form.addEventListener('submit', function (e) {
       if (e.defaultPrevented) return;
       e.preventDefault();
+      if (enviando) return;
 
       var texto = document.getElementById('resp-texto').value;
       var agora = new Date();
@@ -449,36 +536,85 @@
                     String(agora.getHours()).padStart(2, '0') + ':' +
                     String(agora.getMinutes()).padStart(2, '0');
 
-      var conversa = document.getElementById('ch-conversa');
-      conversa.insertAdjacentHTML('beforeend',
-        bloco({ de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }) +
-        bloco({ de: 'sistema', texto: 'Resposta registrada no protocolo ' + c.protocolo + '. Status: Em andamento.', hora: carimbo })
-      );
+      function gravar(marca) {
+        var completo = texto + marca;
 
-      var qtd = conversa.querySelectorAll('.msg').length;
-      document.getElementById('ch-qtd-msg').textContent = qtd + ' mensagens no protocolo';
-      document.getElementById('ch-ficha-status').innerHTML = tag('andamento');
-      document.getElementById('ch-tag-topo').innerHTML = tag('andamento');
-      document.getElementById('ch-ficha-atualizado').textContent = F.data(
-        agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
-      );
-      renderTimeline('andamento');
+        /* Grava ANTES de encostar na tela. Na ordem inversa, a mensagem já
+           entrava na conversa, no contador, no status e na linha do tempo — e
+           quando o servidor recusava, a recarga logo em seguida apagava tudo
+           enquanto o toast verde dizia que tinha sido enviada. */
+        var salvou = D.atualizarChamado(c.protocolo, {
+          status: 'andamento',
+          atualizadoEm: carimbo,
+          mensagem: { de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }
+        });
 
-      /* Grava de verdade: a mensagem e o novo status ficam salvos e a
-         organização vê a resposta na fila de atendimento. */
-      D.atualizarChamado(c.protocolo, {
-        status: 'andamento',
-        atualizadoEm: carimbo,
-        mensagem: { de: 'usuario', autor: usuario.nome, texto: texto, hora: carimbo }
+        /* Recusada: dados.js já mostrou o motivo. A conversa segue com o que o
+           servidor tem e o texto continua no campo, sem form.reset(). */
+        if (!salvou) return;
+
+        var conversa = document.getElementById('ch-conversa');
+        conversa.insertAdjacentHTML('beforeend',
+          bloco({ de: 'usuario', autor: usuario.nome, texto: completo, hora: carimbo }) +
+          bloco({ de: 'sistema', texto: 'Resposta registrada no protocolo ' + c.protocolo + '. Status: Em andamento.', hora: carimbo })
+        );
+
+        var qtd = conversa.querySelectorAll('.msg').length;
+        document.getElementById('ch-qtd-msg').textContent = qtd + ' mensagens no protocolo';
+        document.getElementById('ch-ficha-status').innerHTML = tag('andamento');
+        document.getElementById('ch-tag-topo').innerHTML = tag('andamento');
+        document.getElementById('ch-ficha-atualizado').textContent = F.data(
+          agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0')
+        );
+        renderTimeline('andamento');
+
+        form.reset();
+        var nomeArquivo = form.querySelector('[data-upload-nome]');
+        if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
+
+        PB.toast('Resposta enviada',
+          'Sua mensagem entrou no protocolo ' + c.protocolo + '. A organização foi notificada por e-mail.', 'info');
+        PB.recarregar();
+      }
+
+      var anexo = document.getElementById('resp-anexo').files[0];
+      if (!anexo) { gravar(''); return; }
+
+      /* A classe define só o teto que o cliente confere antes de subir — o
+         servidor decide de novo pela assinatura. Sem isto o anexo em PDF ou
+         Word (100 MB) levaria "acima de 5 MB" antes de sair da tela. */
+      var classeAnexo = /\.(pdf|docx?|odt)$/i.test(anexo.name)
+        || /pdf|word|opendocument|msword/i.test(anexo.type || '')
+        ? 'documento' : 'imagem';
+
+      travarEnvio(true);
+      PB.enviarArquivo(anexo, {
+        classe: classeAnexo,
+        /* Antes do primeiro byte o progresso é 0: a barra aparece zerada,
+           dizendo que a tela não travou. */
+        aoProgresso: function (pct) {
+          mostrarEnvio(pct > 0
+            ? 'Enviando ' + anexo.name + ' — ' + pct + '%'
+            : 'Preparando o envio de ' + anexo.name + '…', pct);
+        }
+      }, function (r) {
+        travarEnvio(false);
+
+        if (r.cancelado) { esconderEnvio(); return; }
+
+        if (!r.ok) {
+          /* Nada é gravado: o protocolo ficaria com um link para um arquivo que
+             não existe. O texto continua na tela para reenviar ou tirar o
+             anexo. */
+          mostrarEnvio(r.erro, 0);
+          document.getElementById('resp-envio-remover').hidden = false;
+          PB.toast('O anexo não subiu', r.erro, 'erro');
+          return;
+        }
+
+        esconderEnvio();
+        gravar(marcaDoAnexo(anexo.name, r.caminho));
       });
-
-      form.reset();
-      var nomeArquivo = form.querySelector('[data-upload-nome]');
-      if (nomeArquivo) nomeArquivo.textContent = 'Nenhum arquivo selecionado';
-
-      PB.toast('Resposta enviada',
-        'Sua mensagem entrou no protocolo ' + c.protocolo + '. A organização foi notificada por e-mail.', 'info');
-      PB.recarregar();
     });
   };
 })();

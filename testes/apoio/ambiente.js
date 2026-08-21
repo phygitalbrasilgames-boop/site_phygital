@@ -42,6 +42,8 @@ const auth = require(path.join(RAIZ, 'server', 'auth'));
 const regras = require(path.join(RAIZ, 'server', 'regras'));
 const mapa = require(path.join(RAIZ, 'server', 'mapa'));
 const semente = require(path.join(RAIZ, 'server', 'semente'));
+const traducoes = require(path.join(RAIZ, 'server', 'traducoes'));
+const mensagens = require(path.join(RAIZ, 'server', 'mensagens'));
 const api = require(path.join(RAIZ, 'server', 'index'));
 
 /* Contas e senhas que a semente cria. As senhas passam pela política de
@@ -98,7 +100,11 @@ function silenciar(fn) {
 
 async function subir() {
   db.abrir();
-  silenciar(() => semente.semear({ recriar: true }));
+  /* A suíte assume o banco completo (times, campeonatos, chamados, etc.):
+     `demo: true` é o antigo comportamento de --recriar sozinho — sem ele o
+     banco nasceria com o mínimo funcional (sem `t1`, `cbf-2026`, …) e
+     dezenas de casos que apontam para SEMEADOS quebrariam. */
+  silenciar(() => semente.semear({ recriar: true, demo: true }));
 
   if (api.falhados.length) {
     throw new Error(
@@ -179,9 +185,14 @@ function cliente({ ip, cookie } = {}) {
     set cookie(valor) { estado.cookie = valor; },
 
     async pedir(metodo, caminho, corpo, extra = {}) {
+      /* Buffer vai como está: os testes de upload mandam bytes de PNG e de MP4,
+         e passar por String() trocaria todo byte fora do UTF-8 válido por
+         U+FFFD — o arquivo chegaria corrompido ao servidor. */
       const carga = corpo === undefined
         ? null
-        : Buffer.from(extra.cru ? String(corpo) : JSON.stringify(corpo), 'utf8');
+        : Buffer.isBuffer(corpo)
+          ? corpo
+          : Buffer.from(extra.cru ? String(corpo) : JSON.stringify(corpo), 'utf8');
 
       const bruta = await requisitar({
         metodo,
@@ -196,12 +207,31 @@ function cliente({ ip, cookie } = {}) {
         }
       });
 
-      /* Guardamos só o par nome=valor de cada Set-Cookie, que é o que o
-         navegador manda de volta. Cookie apagado (valor vazio) esvazia o pote. */
+      /* Pote de cookies como o do navegador: cada Set-Cookie MESCLA com o que
+         já estava lá, em vez de substituir o pote inteiro. Sem isso, uma
+         resposta que só troca o cookie de idioma derrubaria o de sessão junto.
+         Valor vazio (ou Max-Age=0) apaga aquele cookie e só ele. */
       const postos = bruta.cabecalhos['set-cookie'] || [];
       if (postos.length) {
-        const par = postos.map((c) => c.split(';')[0]).join('; ');
-        estado.cookie = par.endsWith('=') ? null : par;
+        const pote = new Map(
+          (estado.cookie || '').split('; ').filter(Boolean)
+            .map((par) => [par.slice(0, par.indexOf('=')), par.slice(par.indexOf('=') + 1)])
+        );
+
+        for (const cru of postos) {
+          const [par, ...atributos] = cru.split(';');
+          const corte = par.indexOf('=');
+          const nome = par.slice(0, corte).trim();
+          const valor = par.slice(corte + 1).trim();
+          const expirado = atributos.some((a) => /^\s*max-age\s*=\s*0\s*$/i.test(a));
+
+          if (!valor || expirado) pote.delete(nome);
+          else pote.set(nome, valor);
+        }
+
+        estado.cookie = pote.size
+          ? [...pote].map(([n, v]) => `${n}=${v}`).join('; ')
+          : null;
       }
 
       let json = null;
@@ -418,7 +448,7 @@ const ultimaAuditoria = (area) => db.um(
 
 module.exports = {
   /* módulos do servidor, para os testes que precisam olhar o banco */
-  db, auth, regras, mapa, api, RAIZ,
+  db, auth, regras, mapa, api, RAIZ, traducoes, mensagens,
 
   /* ciclo de vida */
   subir, descer,

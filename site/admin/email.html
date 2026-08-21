@@ -65,16 +65,27 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub" hidden>
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -97,7 +108,6 @@
           <li><a href="email-modelos.html">Modelos de E-mail</a></li>
         </ul>
       </div>
-      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
       <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
@@ -182,8 +192,30 @@
 
                 <div class="campo">
                   <label for="anexo">Anexar arquivo</label>
-                  <input type="file" id="anexo" name="anexo">
-                  <p class="campo__ajuda">Regulamentos, tabelas e comunicados em PDF.</p>
+                  <input type="file" id="anexo" name="anexo"
+                         accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp,image/gif">
+                  <p class="campo__ajuda">
+                    PDF, Word, PNG, JPG, WEBP ou GIF até 100 MB. O arquivo vai
+                    anexado ao e-mail.
+                  </p>
+                  <div id="anexo-card" class="mt-2" hidden
+                       style="gap:var(--e-2);align-items:center;padding:var(--e-2) var(--e-3);
+                              background:var(--claro);border:1px solid var(--cinza-20);border-radius:var(--r-2);
+                              font-size:var(--t-peq)">
+                    <span id="anexo-card-info" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+                    <button type="button" id="anexo-card-remover"
+                            aria-label="Remover anexo"
+                            style="border:0;background:transparent;cursor:pointer;font-size:1.25rem;line-height:1;
+                                   width:28px;height:28px;border-radius:var(--r-1);color:var(--grafite)">×</button>
+                  </div>
+                </div>
+
+                <div class="campo" id="envio" role="status" aria-live="polite" hidden>
+                  <span class="txt-peq txt-suave" id="envio-texto">Enviando o arquivo…</span>
+                  <div class="barra-ocupacao mt-2"><i id="envio-barra" style="width:0%"></i></div>
+                  <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="envio-remover" hidden>
+                    Remover anexo
+                  </button>
                 </div>
 
                 <div class="campo">
@@ -212,7 +244,7 @@
                 </div>
 
                 <div class="flex-fim mt-4">
-                  <button type="submit" class="btn btn--primario">Enviar e-mail</button>
+                  <button type="submit" class="btn btn--primario" id="btn-enviar-email">Enviar e-mail</button>
                 </div>
               </form>
 
@@ -382,12 +414,14 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
 (function () {
   var D = PB.dados, F = PB.fmt;
   var $ = function (s) { return document.querySelector(s); };
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -519,6 +553,84 @@
     if (cmd) { e.preventDefault(); comandar(cmd); }
   });
 
+  /* ---- Anexo do disparo ----
+     O arquivo sobe assim que o admin escolhe: POST /api/upload devolve o caminho
+     em assets/enviados/ e o metadado (nome, caminho, tipo, tamanho) fica em
+     memória (anexoPronto). Na hora do submit ele viaja no POST /api/email/disparar,
+     é gravado na coluna `anexos` do banco e, na entrega, o dispatcher lê o Buffer
+     do disco e passa para o SMTP — que já sabe montar multipart/mixed.
+     Encanamento completo. */
+  var anexoPronto = null;   /* { nome, caminho, tipo, tamanho } — só depois do upload OK */
+  var enviando = false;     /* trava o botão enquanto o arquivo sobe */
+  var envioCancel = null;   /* função para abortar o XHR do upload em curso */
+
+  function tamanhoLegivel(bytes) {
+    return bytes >= 1024 * 1024
+      ? (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' MB'
+      : Math.round(bytes / 1024) + ' KB';
+  }
+
+  function mostrarEnvio(texto, pct) {
+    $('#envio').hidden = false;
+    $('#envio-texto').textContent = texto;
+    $('#envio-barra').style.width = pct + '%';
+    $('#envio-remover').hidden = true;
+  }
+
+  function esconderEnvio() {
+    $('#envio').hidden = true;
+    $('#envio-barra').style.width = '0%';
+    $('#envio-remover').hidden = true;
+  }
+
+  /* Sem back-end não dá para chamar DELETE — o "caminho" é uma data: URL que só
+     existe no navegador. A faxina do servidor pega arquivos órfãos em 2 h, então
+     mesmo em modo API isto é best-effort: falha aqui não é fatal. */
+  function apagarNoServidor(caminho) {
+    if (!caminho || !PB.dados || PB.dados.modo() !== 'api') return;
+    var m = /^assets\/enviados\/([0-9a-f-]{36}\.[a-z0-9]{2,5})$/i.exec(caminho);
+    if (!m || !PB.api || !PB.api.remover) return;
+    try {
+      PB.api.remover('/upload/' + encodeURIComponent(m[1]))
+        .then(function () {}, function () {});   /* silêncio: é limpeza */
+    } catch (_) { /* ignora */ }
+  }
+
+  /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o admin clica de
+     novo e o mesmo comunicado sai duas vezes para a lista inteira. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    var botao = $('#btn-enviar-email');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Enviar e-mail';
+  }
+
+  function mostrarCard(nome, tamanho) {
+    var el = $('#anexo-card');
+    el.hidden = false;
+    /* display inline vence [hidden]; setar aqui para o card aparecer como flex */
+    el.style.display = 'flex';
+    $('#anexo-card-info').textContent = nome + ' — ' + tamanhoLegivel(tamanho);
+  }
+
+  function esconderCard() {
+    var el = $('#anexo-card');
+    el.hidden = true;
+    el.style.display = 'none';   /* zera o display inline para o hidden pegar */
+  }
+
+  /* Zera tudo: input do arquivo, memória do anexo, card, barra de progresso.
+     Chamado quando o admin desanexa, quando o upload falha ou é cancelado. */
+  function limparAnexo(motivoToast) {
+    if (anexoPronto && anexoPronto.caminho) apagarNoServidor(anexoPronto.caminho);
+    anexoPronto = null;
+    $('#anexo').value = '';
+    esconderCard();
+    esconderEnvio();
+    atualizarPrevia();
+    if (motivoToast) PB.toast('Anexo removido', motivoToast, 'info');
+  }
+
   /* ---- Prévia ao vivo ---- */
   function atualizarPrevia() {
     $('#prev-assunto').textContent = $('#assunto').value || 'Assunto do e-mail';
@@ -526,17 +638,97 @@
     $('#prev-mensagem').innerHTML = html && html !== '<br>'
       ? html
       : '<p>O texto que você escrever aparece aqui.</p>';
-    var arq = $('#anexo').files[0];
-    $('#prev-anexo').hidden = !arq;
-    if (arq) $('#prev-anexo').textContent = 'Anexo: ' + arq.name;
+    $('#prev-anexo').hidden = !anexoPronto;
+    if (anexoPronto) $('#prev-anexo').textContent = 'Anexo: ' + anexoPronto.nome;
   }
   $('#assunto').addEventListener('input', atualizarPrevia);
-  $('#anexo').addEventListener('change', atualizarPrevia);
   atualizarPrevia();
+
+  /* Upload dispara ao escolher o arquivo — não ao enviar. O admin vê o progresso
+     na hora e sabe que o anexo já está no servidor antes de clicar em Enviar. */
+  $('#anexo').addEventListener('change', function () {
+    var arquivo = this.files[0];
+
+    /* Trocou de arquivo (ou limpou o input): o anterior perde a razão de existir. */
+    if (envioCancel) { try { envioCancel(); } catch (_) {} envioCancel = null; }
+    if (anexoPronto && anexoPronto.caminho) apagarNoServidor(anexoPronto.caminho);
+    anexoPronto = null;
+    esconderCard();
+    esconderEnvio();
+    atualizarPrevia();
+
+    if (!arquivo) { travarEnvio(false); return; }
+
+    /* Classe é dica de pré-conferência (o teto muda com ela): imagem só até
+       5 MB, documento até 100 MB. O servidor decide pelo conteúdo do arquivo. */
+    var tipoArq = String(arquivo.type || '').toLowerCase();
+    var nomeArq = String(arquivo.name || '').toLowerCase();
+    var classeArq = 'documento';
+    if (tipoArq.indexOf('image/') === 0) classeArq = 'imagem';
+    else if (/\.(png|jpe?g|webp|gif)$/i.test(nomeArq)) classeArq = 'imagem';
+
+    travarEnvio(true);
+    mostrarEnvio('Preparando o envio de ' + arquivo.name + '…', 0);
+
+    var envio = PB.enviarArquivo(arquivo, {
+      classe: classeArq,
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + arquivo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + arquivo.name + '…', pct);
+      }
+    }, function (r) {
+      envioCancel = null;
+      travarEnvio(false);
+
+      if (r.cancelado) { $('#anexo').value = ''; esconderEnvio(); return; }
+
+      if (!r.ok) {
+        /* Falhou: apaga a escolha, mostra o erro em toast + no bloco de envio.
+           Sem anexo em memória, o submit segue normalmente sem arquivo. */
+        $('#anexo').value = '';
+        mostrarEnvio(r.erro, 0);
+        $('#envio-remover').hidden = false;
+        PB.toast('O anexo não subiu', r.erro, 'erro');
+        return;
+      }
+
+      anexoPronto = {
+        nome: arquivo.name,
+        caminho: r.caminho,
+        tipo: r.tipo || tipoArq,
+        tamanho: r.tamanho || arquivo.size
+      };
+      esconderEnvio();
+      mostrarCard(anexoPronto.nome, anexoPronto.tamanho);
+      atualizarPrevia();
+    });
+
+    envioCancel = envio && envio.cancelar ? envio.cancelar : null;
+  });
+
+  /* Botão "×" do card: desanexa e apaga do servidor (best-effort). */
+  $('#anexo-card-remover').addEventListener('click', function () {
+    limparAnexo('Dispare quando quiser — agora sem anexo.');
+  });
+
+  /* Saída para quem escolheu um arquivo que o servidor recusou: o card não chega
+     a aparecer, mas o bloco de erro precisa de um "sair". */
+  $('#envio-remover').addEventListener('click', function () {
+    $('#anexo').value = '';
+    esconderEnvio();
+    atualizarPrevia();
+  });
 
   /* ---- Envio ---- */
   $('#form-email').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviando) {
+      /* Botão desabilitado já cobre — este return é defesa contra Enter no form. */
+      PB.toast('Aguarde o anexo subir', 'O arquivo ainda está sendo enviado ao servidor.', 'alerta');
+      return;
+    }
+
     var assunto = $('#assunto').value.trim();
     var corpo = editor.innerHTML.trim();
 
@@ -545,10 +737,11 @@
 
     var v = sel.value;
     var destino, qtd;
+    var listaManual = null;
     if (v === 'lista') {
-      var lista = emailsDaLista();
-      if (!lista.length) { PB.toast('Lista vazia', 'Informe ao menos um e-mail válido.', 'alerta'); return; }
-      destino = 'Lista manual'; qtd = lista.length;
+      listaManual = emailsDaLista();
+      if (!listaManual.length) { PB.toast('Lista vazia', 'Informe ao menos um e-mail válido.', 'alerta'); return; }
+      destino = 'Lista manual'; qtd = listaManual.length;
     } else {
       var alvo = v === 'todos' ? todosCamp
                : v === 'abertos' ? abertos
@@ -559,18 +752,67 @@
               : (alvo[0] ? alvo[0].nome : '—');
     }
 
-    var agora = new Date();
-    var pad = function (n) { return String(n).padStart(2, '0'); };
-    D.gravar('emailsEnviados', {
-      id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
-      data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
-            ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
-      status: 'entregue', corpo: corpo
-    });
+    /* O disparo acontece DENTRO da gravação: PB.dados.gravar('emailsEnviados', …)
+       chama POST /api/email/disparar e, quando o servidor recusa, tira a linha
+       do histórico. Só que essa gravação devolve o registro nos dois casos, então
+       o retorno não serve de resposta — quem sabe se o e-mail saiu é o histórico
+       relido: sem a linha, nada foi entregue. */
+    function saiu(id) {
+      if (D.modo() !== 'api') return true;            /* demonstração: não há servidor a consultar */
+      return D.emailsEnviados().some(function (e) { return e.id === id; });
+    }
 
-    D.registrar('email', assunto, 'disparou e-mail', qtd + ' destinatário(s) · ' + destino);
-    PB.toast('E-mail enviado', qtd + ' destinatário(s) · ' + destino + '.', 'info');
-    PB.recarregar();
+    function disparar(anexos) {
+      var agora = new Date();
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+
+      /* MODO DEMONSTRAÇÃO — sem back-end, não existe SMTP; enviar de verdade
+         daqui é impossível. A tela não pode fingir "entregue": um envio que
+         nunca aconteceu, aparecendo como sucesso no histórico, é o que fez o
+         dono acreditar que o e-mail tinha saído e cobrar por não ter chegado. */
+      if (D.modo() !== 'api') {
+        var reg = {
+          id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
+          data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
+                ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
+          status: 'simulado', corpo: corpo, anexos: anexos
+        };
+        D.gravar('emailsEnviados', reg);
+        PB.toast('Modo demonstração',
+          'Este site está sem back-end — o e-mail NÃO foi enviado. Para disparo real, rode o servidor local (node --env-file=.env server/index.js).',
+          'alerta');
+        PB.recarregar();
+        return;
+      }
+
+      var registro = {
+        id: 'em' + Date.now(), assunto: assunto, destino: destino, qtd: qtd,
+        data: pad(agora.getDate()) + '/' + pad(agora.getMonth() + 1) + '/' + agora.getFullYear() +
+              ' ' + pad(agora.getHours()) + ':' + pad(agora.getMinutes()),
+        status: 'entregue', corpo: corpo, anexos: anexos
+      };
+      /* Lista manual: os endereços viajam junto para o dispatcher da API. Ficam
+         no registro só na ida — dados.js apaga o campo depois da gravação. */
+      if (listaManual) registro.destinatarios = listaManual;
+
+      D.gravar('emailsEnviados', registro);
+
+      /* Nada de "E-mail enviado" com o disparo recusado: o aviso de PB.dados já
+         está na tela e o formulário fica como está, para o admin tentar de novo. */
+      if (!saiu(registro.id)) return;
+
+      /* qtd e destino do registro, não os desta tela: quando o envio dá certo o
+         servidor devolve quantos responsáveis receberam de fato. */
+      D.registrar('email', assunto, 'disparou e-mail', registro.qtd + ' destinatário(s) · ' + registro.destino);
+      PB.toast('E-mail enviado', registro.qtd + ' destinatário(s) · ' + registro.destino + '.', 'info');
+      PB.recarregar();
+    }
+
+    /* O anexo já subiu no change do input — aqui só entregamos o metadado. */
+    disparar(anexoPronto
+      ? [{ nome: anexoPronto.nome, caminho: anexoPronto.caminho,
+           tipo: anexoPronto.tipo, tamanho: anexoPronto.tamanho }]
+      : []);
   });
 
   /* ---- Histórico ---- */
@@ -587,18 +829,113 @@
     '</tr>';
   }).join('');
 
+  /* Envelope mínimo usado no modo demonstração (sem servidor) para embrulhar
+     o fragmento `e.corpo` guardado no cache do navegador. No modo API o HTML
+     vem pronto do servidor (mesmo envelope de server/email.js#montarHtml),
+     então esta função só entra em cena quando não há back-end pra remontar. */
+  function envelopeLocal(assunto, corpo) {
+    var t = esc(assunto || '');
+    var c = corpo && String(corpo).trim()
+      ? corpo
+      : '<p style="color:#6E7377;font-style:italic">'
+        + 'O corpo desta mensagem não foi gravado no histórico. '
+        + 'Só o assunto e o público continuam disponíveis.'
+        + '</p>';
+    return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+      + '<title>' + t + '</title></head>'
+      + '<body style="margin:0;padding:24px 12px;background:#F5F6F4;'
+      + 'font-family:Barlow,Arial,Helvetica,sans-serif;color:#0E1113;line-height:1.6">'
+      + '<div style="max-width:600px;margin:0 auto;background:#FFF;border-radius:14px;overflow:hidden">'
+      + '<div style="background:#0E1113;padding:26px 24px;text-align:center">'
+      +   '<img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil" '
+      +      'style="width:180px;max-width:70%">'
+      + '</div>'
+      + '<div style="height:5px;display:flex">'
+      +   '<div style="flex:1;background:#009B4A"></div>'
+      +   '<div style="flex:1;background:#FCE001"></div>'
+      +   '<div style="flex:1;background:#0A66B1"></div>'
+      + '</div>'
+      + '<div style="padding:32px">'
+      +   '<h1 style="margin:0 0 18px;font-family:Saira,Arial,Helvetica,sans-serif;'
+      +     'font-size:22px;line-height:1.25;letter-spacing:-0.02em">' + t + '</h1>'
+      +   '<div style="font-size:15px">' + c + '</div>'
+      + '</div>'
+      + '<div style="padding:20px 32px 28px;background:#F5F6F4;font-size:12px;color:#6E7377">'
+      +   '<strong style="color:#0E1113">Esportes Phygital Brasil</strong><br>'
+      +   'contato@phygitalgamesbr.com.br<br>'
+      +   'Você recebe este e-mail porque é responsável por um time inscrito.'
+      + '</div>'
+      + '</div></body></html>';
+  }
+
+  /* Injeta no modal: um cabeçalho com os metadados do disparo e o iframe com
+     o HTML final. O iframe isola o CSS do e-mail (que redefine body, tabelas,
+     fontes) do painel administrativo — sem isso o estilo do e-mail vazaria
+     para a tela. */
+  function mostrarPrevia(registro, html, avisoCorpo) {
+    var anexos = registro.anexos || [];
+    var para = registro.para || '';
+    var listaAnexos = anexos.map(function (a) {
+      var noServidor = /^assets\/enviados\/[A-Za-z0-9._-]+$/.test((a && a.caminho) || '');
+      var nome = esc(a && a.nome);
+      return '<li>' + (noServidor
+        ? '<a href="../' + a.caminho + '" target="_blank" rel="noopener" '
+          + 'style="color:var(--verde);font-weight:600">' + nome + '</a>'
+        : nome) + '</li>';
+    }).join('');
+
+    /* srcdoc mantém o HTML inteiro numa "página" separada e sandbox tira
+       scripts/formulários — o corpo do e-mail é conteúdo, não aplicação. */
+    var iframe = '<iframe title="Prévia do e-mail enviado" '
+      + 'style="width:100%;height:520px;border:1px solid var(--borda);'
+      + 'border-radius:10px;background:#FFF" sandbox="allow-same-origin" '
+      + 'srcdoc="' + esc(html) + '"></iframe>';
+
+    $('#enviado-conteudo').innerHTML =
+      '<div class="mt-3">'
+      +   '<p class="txt-peq"><strong>Assunto:</strong> ' + esc(registro.assunto || '(sem assunto)') + '</p>'
+      +   '<p class="txt-peq"><strong>Público:</strong> ' + esc(registro.destino || '—')
+      +     ' · <strong>Destinatários:</strong> ' + (registro.qtd || 0)
+      +     ' · <strong>Enviado em:</strong> ' + esc(registro.data || '—') + '</p>'
+      +   (para ? '<p class="txt-peq"><strong>Para:</strong> ' + esc(para) + '</p>' : '')
+      +   (listaAnexos ? '<p class="txt-peq"><strong>Anexos:</strong></p><ul class="txt-peq">' + listaAnexos + '</ul>' : '')
+      +   (avisoCorpo ? '<p class="txt-peq txt-suave"><em>' + esc(avisoCorpo) + '</em></p>' : '')
+      +   '<p class="txt-micro txt-suave mt-2">Prévia exatamente como o destinatário recebeu:</p>'
+      +   iframe
+      + '</div>';
+    PB.abrirModal('modal-enviado');
+  }
+
   $('#tabela-enviados').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-ver]');
     if (!b) return;
     var e = enviados[parseInt(b.getAttribute('data-ver'), 10)];
-    $('#enviado-conteudo').innerHTML =
-      '<div class="email-preview mt-3"><div class="email-preview__corpo">' +
-        '<div class="email-preview__topo"><img src="../assets/img/logo/logo-colorido.png" alt="Phygital Brasil"></div>' +
-        '<div class="email-preview__conteudo"><h2>' + esc(e.assunto) + '</h2>' +
-          '<p class="txt-peq">Enviado para ' + esc(e.destino) + ' · ' + e.qtd + ' destinatários · ' + esc(e.data) + '.</p></div>' +
-        '<div class="email-preview__rodape"><strong>Esportes Phygital Brasil</strong><br>contato@phygitalgamesbr.com.br</div>' +
-      '</div></div>';
-    PB.abrirModal('modal-enviado');
+    if (!e) return;
+
+    /* Modo API: pede ao servidor o HTML final remontado por montarHtml —
+       o admin vê o mesmo envelope que saiu para o destinatário. */
+    if (D.modo() === 'api' && PB.api && PB.api.emailEnviado && e.id) {
+      $('#enviado-conteudo').innerHTML = '<p class="txt-peq txt-suave mt-3">Carregando prévia…</p>';
+      PB.abrirModal('modal-enviado');
+      PB.api.emailEnviado(e.id).then(function (r) {
+        if (!r.ok || !r.dados || !r.dados.html) {
+          var motivo = (r.dados && r.dados.erro) || r.erro || 'Não foi possível carregar a prévia deste envio.';
+          $('#enviado-conteudo').innerHTML =
+            '<p class="txt-peq mt-3" style="color:var(--erro,#c00)">' + esc(motivo) + '</p>';
+          return;
+        }
+        var avisoCorpo = r.dados.corpoGravado
+          ? ''
+          : 'O corpo desta mensagem não ficou gravado no histórico — o envelope é reconstruído para referência.';
+        mostrarPrevia(r.dados.registro || e, r.dados.html, avisoCorpo);
+      });
+      return;
+    }
+
+    /* Modo demonstração: sem servidor, embrulhamos o fragmento que ficou no
+       cache local (o disparo desta sessão gravou `corpo`). Seed antigo sem
+       corpo cai no aviso interno do envelope. */
+    mostrarPrevia(e, envelopeLocal(e.assunto, e.corpo || ''), '');
   });
 
   /* ---- SMTP: carrega o que está gravado e grava ao salvar ---- */
@@ -635,7 +972,11 @@
       novo[chave] = (chave === 'smtp' || chave === 'imap' || chave === 'pop3')
         ? (parseInt(el.value, 10) || 0) : el.value.trim();
     });
-    D.definir('smtp', novo);
+    /* Servidor recusou: `definir` devolve false e o aviso de erro já saiu de
+       dados.js. O formulário fica aberto com o que foi digitado — anunciar
+       "Configurações salvas" por cima do erro é o que confundia a pessoa. */
+    if (!D.definir('smtp', novo)) return;
+
     D.registrar('configuracao', 'SMTP', 'alterou as configurações de envio',
                 novo.servidorSaida + ':' + novo.smtp);
     PB.toast('Configurações salvas', 'Todos os e-mails do sistema passam a sair por ' + novo.servidorSaida + ':' + novo.smtp + '.', 'info');

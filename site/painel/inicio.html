@@ -39,14 +39,41 @@
     opacity: 1; visibility: visible;
     transition: opacity 320ms var(--curva) 240ms, visibility 0s linear 240ms;
   }
-  .banner-painel .hero__slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .banner-painel .hero__slide > img,
+  .banner-painel .hero__slide > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Vídeo do YouTube como fundo — mesmas regras de site.css, repetidas aqui
+     porque as páginas do painel não carregam aquele arquivo. O embed é 16:9 e
+     o banner não é: as unidades de contêiner (cqh/cqw) medem o próprio banner
+     para cobrir a área sem tarja preta; vh/vw ficam de reserva. O gradiente de
+     ::after já cobre o iframe e intercepta o clique. */
+  .banner-painel .banner-yt {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    container-type: size;
+  }
+  .banner-painel .banner-yt__quadro {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border: 0;
+    pointer-events: none;
+    width: 177.78vh; min-width: 100%;
+    height: 56.25vw; min-height: 100%;
+    width: 177.78cqh;
+    height: 56.25cqw;
+  }
   .banner-painel .hero__slide::after {
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(90deg, rgba(14,17,19,.94) 0%, rgba(14,17,19,.82) 46%, rgba(14,17,19,.34) 100%);
   }
   .banner-painel__conteudo { position: relative; z-index: 2; padding: var(--e-5) var(--e-5) var(--e-6); max-width: 62ch; min-width: 0; }
   .banner-painel .eyebrow { color: var(--amarelo); margin-bottom: var(--e-2); }
-  .banner-painel__titulo { font-size: clamp(1.375rem, 2.6vw, 2rem); text-transform: uppercase; margin-bottom: var(--e-2); color: #fff; }
+  /* Mesma fonte do banner da home: declarada, não herdada, porque nem todo
+     título do banner é um elemento de cabeçalho. */
+  .banner-painel__titulo {
+    font-family: var(--fonte-display); font-weight: 700; letter-spacing: -.02em;
+    font-size: clamp(1.375rem, 2.6vw, 2rem); text-transform: uppercase;
+    margin-bottom: var(--e-2); color: #fff;
+  }
   .banner-painel__meta { font-size: var(--t-peq); color: rgba(255,255,255,.78); margin-bottom: var(--e-3); }
   .banner-painel__acoes { display: flex; align-items: center; gap: var(--e-3); flex-wrap: wrap; }
   /* Sobre o fundo escuro do banner as etiquetas viram versão sólida (contraste).
@@ -75,9 +102,8 @@
   .acao__seta { width: 18px; height: 18px; flex: none; margin-left: auto; color: var(--verde); transition: transform var(--medio) var(--curva); }
   .acao:hover .acao__seta { transform: translateX(4px); }
 
-  /* ---- Grade de dois blocos ---- */
-  .painel-grade { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: var(--e-4); align-items: start; }
-  @media (max-width: 1100px) { .painel-grade { grid-template-columns: 1fr; } }
+  /* ---- Grade de dois blocos (agora empilhada em coluna única) ---- */
+  .painel-grade { display: grid; grid-template-columns: 1fr; gap: var(--e-4); align-items: start; }
 
   /* ---- Linhas de pendência / inscrição (reaproveita .chamado-item) ---- */
   .linha-icone { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--claro); color: var(--cinza); }
@@ -132,7 +158,7 @@
       <div class="menu__item"><a class="menu__link" href="meus-times.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Meus Times</a></div>
       <div class="menu__item"><a class="menu__link" href="inscricoes.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg> Inscrições</a></div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta">1</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item"><a class="menu__link" href="conta.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg> Conta</a></div>
     </nav>
     <div class="painel__rodape">
@@ -231,48 +257,21 @@
         </div>
       </section>
 
-      <!-- ---------- PENDÊNCIAS + PRÓXIMO CAMPEONATO ---------- -->
+      <!-- ---------- PRÓXIMO CAMPEONATO + PENDÊNCIAS ---------- -->
       <div class="painel-grade">
+
+        <!-- O bloco do próximo campeonato é 100% dinâmico: o script inline
+             logo abaixo insere o HTML aqui quando encontra um campeonato em
+             inscrições ou em andamento. Se não houver, o container permanece
+             hidden e nada é renderizado. -->
+        <section id="proximo-campeonato-container" hidden></section>
 
         <section class="bloco lista-linhas" aria-labelledby="titulo-pendencias">
           <div class="bloco__topo">
             <h2 id="titulo-pendencias">Suas pendências</h2>
-            <span class="tag tag--amarela" id="conta-pendencias">3 itens</span>
+            <span class="tag tag--amarela" id="conta-pendencias" hidden></span>
           </div>
           <div class="bloco__corpo bloco__corpo--flat" id="lista-pendencias"></div>
-        </section>
-
-        <section class="bloco" aria-labelledby="titulo-proximo">
-          <div class="bloco__topo">
-            <h2 id="titulo-proximo">Próximo campeonato</h2>
-            <span class="tag tag--verde">Inscrições abertas</span>
-          </div>
-          <div class="bloco__corpo">
-            <p class="eyebrow" style="margin-bottom:var(--e-2)">Phygital Futebol</p>
-            <h3 style="font-size:1.25rem">Copa Phygital Futebol 2026 — Etapa Nacional</h3>
-            <p class="txt-peq txt-suave">A principal etapa do calendário nacional. 24 times disputam vaga direta na seletiva do Games of the Future.</p>
-
-            <div class="contagem" data-contagem="2026-09-19">
-              <div class="contagem__caixa"><strong class="num" data-campo="dias">00</strong><span>dias</span></div>
-              <div class="contagem__caixa"><strong class="num" data-campo="horas">00</strong><span>horas</span></div>
-              <div class="contagem__caixa"><strong class="num" data-campo="min">00</strong><span>min</span></div>
-            </div>
-            <p class="txt-micro txt-suave txt-centro" style="margin-top:calc(-1 * var(--e-2))">Tempo até a bola rolar em São Paulo</p>
-
-            <dl class="lista-info">
-              <div><dt>Disputa</dt><dd>19–21 set 2026</dd></div>
-              <div><dt>Local</dt><dd>Arena Phygital · São Paulo, SP</dd></div>
-              <div><dt>Vagas</dt><dd>24 times</dd></div>
-              <div><dt>Inscrições até</dt><dd id="prox-encerramento">05/09/2026</dd></div>
-              <div><dt>Premiação</dt><dd>R$ 60.000,00</dd></div>
-              <div><dt>Seu time</dt><dd>Tigres Phygital · lista oficial</dd></div>
-            </dl>
-
-            <a class="btn btn--contorno btn--bloco btn--pequeno" href="../inscricoes.html#cbf-2026">Ver o campeonato</a>
-            <p class="txt-micro txt-suave mt-3" style="margin-bottom:0">
-              Edições no elenco são livres até 05/09/2026. Depois dessa data, qualquer alteração só por chamado.
-            </p>
-          </div>
         </section>
 
       </div>
@@ -301,6 +300,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -374,7 +374,9 @@
 
       return '' +
       '<div class="hero__slide' + (i === 0 ? ' ativo' : '') + '">' +
-        '<img src="' + esc(img(b.img)) + '" alt="">' +
+        /* Mesmo fundo da home: YouTube, arquivo de vídeo ou imagem. O '../'
+           é o caminho daqui até a raiz do site, onde ficam os assets. */
+        PB.midiaBanner(b, '../', '') +
         '<div class="banner-painel__conteudo">' +
           '<p class="eyebrow">' + esc(m ? m.nome : 'Phygital Brasil') + (c ? ' · Inscrições abertas' : '') + '</p>' +
           '<h3 class="banner-painel__titulo">' + esc(c ? c.nome : b.titulo) + '</h3>' +
@@ -569,6 +571,114 @@
     }).join('');
   }
 
+  /* ---- Próximo campeonato ----
+     Substitui o bloco que era 100% estático. Aceita PB.dados.campeonatos()
+     como array (modo local) ou Promise (modo API), do mesmo jeito que o
+     contador de chamados em phygital.js. Filtra campeonatos em 'inscricoes'
+     ou 'andamento' cuja data ainda não passou, pega o próximo e monta o
+     bloco inline. Se não há candidato, o container permanece hidden. */
+  function renderProximoCampeonato() {
+    var container = document.getElementById('proximo-campeonato-container');
+    if (!container) return;
+
+    var fonte;
+    try { fonte = D.campeonatos(); } catch (_) { return; }
+
+    Promise.resolve(fonte).then(function (lista) {
+      if (!Array.isArray(lista) || !lista.length) return;
+
+      var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      var candidatos = lista.filter(function (c) {
+        if (!c || (c.status !== 'inscricoes' && c.status !== 'andamento')) return false;
+        if (!c.data) return true;
+        var d = new Date(c.data + 'T00:00:00');
+        return d >= hoje;
+      });
+      if (!candidatos.length) return;
+
+      candidatos.sort(function (a, b) {
+        return String(a.data || '') < String(b.data || '') ? -1 : 1;
+      });
+      var c = candidatos[0];
+      var m = D.modalidade(c.modalidade);
+      var s = D.STATUS_CAMPEONATO ? D.STATUS_CAMPEONATO[c.status] : null;
+
+      /* Tempo até o primeiro dia da disputa — texto muda para "até o
+         encerramento das inscrições" quando o campeonato já começou. */
+      var contagemAte = c.data || c.encerramentoInscricoes || '';
+      var notaContagem = c.status === 'andamento'
+        ? 'Campeonato já em andamento'
+        : 'Tempo até o início em ' + (c.local ? String(c.local).split('—').pop().trim() : 'campo');
+
+      /* Premiação: exibe valor total quando há dinheiro; senão a descrição. */
+      var premiacao = '';
+      if (c.premiacao && c.premiacao.tipo === 'dinheiro' && c.premiacao.total) {
+        premiacao = F.moeda(c.premiacao.total);
+      } else if (c.premiacao && c.premiacao.descricao) {
+        premiacao = c.premiacao.descricao;
+      }
+
+      /* Time do usuário nesse campeonato — só exibe se existir vínculo. */
+      var minha = inscricoes.filter(function (i) { return i.campeonato === c.id; })[0];
+      var linhaSeuTime = '';
+      if (minha) {
+        var t = D.time(minha.time);
+        var st = D.STATUS_INSCRICAO[minha.status] || { rotulo: minha.status };
+        linhaSeuTime = '<div><dt>Seu time</dt><dd id="prox-time">' +
+          esc((t ? t.nome : '—') + ' · ' + st.rotulo) + '</dd></div>';
+      }
+
+      /* Nota final: só faz sentido se houver data de encerramento definida
+         e o campeonato ainda estiver com inscrições abertas. */
+      var nota = '';
+      if (c.status === 'inscricoes' && c.encerramentoInscricoes) {
+        nota = 'Edições no elenco são livres até ' + esc(F.data(c.encerramentoInscricoes)) +
+               '. Depois dessa data, qualquer alteração só por chamado.';
+      }
+
+      var linhaEncerramento = c.encerramentoInscricoes
+        ? '<div><dt>Inscrições até</dt><dd id="prox-encerramento">' +
+            esc(F.data(c.encerramentoInscricoes)) + '</dd></div>'
+        : '';
+
+      container.className = 'bloco';
+      container.setAttribute('data-proximo-campeonato', '');
+      container.setAttribute('aria-labelledby', 'titulo-proximo');
+      container.innerHTML = '' +
+        '<div class="bloco__topo">' +
+          '<h2 id="titulo-proximo">Próximo campeonato</h2>' +
+          (s ? '<span class="tag ' + esc(s.classe) + '">' + esc(s.rotulo) + '</span>' : '') +
+        '</div>' +
+        '<div class="bloco__corpo">' +
+          '<p class="eyebrow" id="prox-modalidade" style="margin-bottom:var(--e-2)">' + esc(m.nome) + '</p>' +
+          '<h3 id="prox-nome" style="font-size:1.25rem">' + esc(c.nome) + '</h3>' +
+          (c.descricao ? '<p class="txt-peq txt-suave" id="prox-descricao">' + esc(c.descricao) + '</p>' : '') +
+          '<div class="contagem" data-contagem="' + esc(contagemAte) + '">' +
+            '<div class="contagem__caixa"><strong class="num" data-campo="dias">00</strong><span>dias</span></div>' +
+            '<div class="contagem__caixa"><strong class="num" data-campo="horas">00</strong><span>horas</span></div>' +
+            '<div class="contagem__caixa"><strong class="num" data-campo="min">00</strong><span>min</span></div>' +
+          '</div>' +
+          '<p class="txt-micro txt-suave txt-centro" style="margin-top:calc(-1 * var(--e-2))">' + esc(notaContagem) + '</p>' +
+          '<dl class="lista-info">' +
+            (c.data ? '<div><dt>Disputa</dt><dd id="prox-disputa">' + esc(F.periodo(c.data, c.dataFim)) + '</dd></div>' : '') +
+            (c.local ? '<div><dt>Local</dt><dd id="prox-local">' + esc(c.local) + '</dd></div>' : '') +
+            (c.vagas ? '<div><dt>Vagas</dt><dd id="prox-vagas">' + esc(c.vagas + ' times') + '</dd></div>' : '') +
+            linhaEncerramento +
+            (premiacao ? '<div><dt>Premiação</dt><dd id="prox-premiacao">' + esc(premiacao) + '</dd></div>' : '') +
+            linhaSeuTime +
+          '</dl>' +
+          '<a class="btn btn--contorno btn--bloco btn--pequeno" id="prox-link" href="../inscricoes.html#' + esc(c.id) + '">Ver o campeonato</a>' +
+          (nota ? '<p class="txt-micro txt-suave mt-3" id="prox-nota" style="margin-bottom:0">' + nota + '</p>' : '') +
+        '</div>';
+
+      container.hidden = false;
+
+      /* O bloco foi inserido dentro de uma microtask (Promise.resolve) — que
+         drena antes de DOMContentLoaded — então phygital.js encontra o
+         [data-contagem] recém-criado quando dispara iniciarRegressiva(). */
+    }).catch(function () { /* sem backend: container permanece hidden */ });
+  }
+
   /* ---- Últimas notícias ---- */
   function renderPosts() {
     document.getElementById('lista-posts').innerHTML = D.posts(2).map(function (p, i) {
@@ -587,6 +697,7 @@
   renderBanners();
   renderStats();
   renderAcoes();
+  renderProximoCampeonato();
   renderPendencias();
   renderInscricoes();
   renderPosts();

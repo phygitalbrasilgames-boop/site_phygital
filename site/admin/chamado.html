@@ -63,16 +63,27 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub" hidden>
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
-      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item menu__item--ativo"><a class="menu__link" href="chamados.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -95,7 +106,6 @@
           <li><a href="email-modelos.html">Modelos de E-mail</a></li>
         </ul>
       </div>
-      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
       <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
@@ -172,11 +182,23 @@
                 </div>
                 <div class="campo">
                   <label for="anexo">Anexo (opcional)</label>
-                  <input type="file" id="anexo" name="anexo">
-                  <p class="campo__ajuda">Anexos são enviados junto com o e-mail de notificação.</p>
+                  <input type="file" id="anexo" name="anexo"
+                         accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,.pdf,.doc,.docx,.odt">
+                  <p class="campo__ajuda">
+                    Imagem (PNG, JPG, WEBP ou GIF) até 5 MB, ou documento (PDF, Word .doc/.docx
+                    ou OpenDocument .odt) até 100 MB. O arquivo fica guardado no protocolo e vira um
+                    link na conversa — o e-mail de aviso não leva o arquivo junto.
+                  </p>
+                </div>
+                <div class="campo" id="envio" role="status" aria-live="polite" hidden>
+                  <span class="txt-peq txt-suave" id="envio-texto">Enviando o arquivo…</span>
+                  <div class="barra-ocupacao mt-2"><i id="envio-barra" style="width:0%"></i></div>
+                  <button type="button" class="btn btn--fantasma btn--pequeno mt-2" id="envio-remover" hidden>
+                    Remover anexo
+                  </button>
                 </div>
                 <div class="flex-fim">
-                  <button type="submit" class="btn btn--primario">Enviar resposta</button>
+                  <button type="submit" class="btn btn--primario" id="btn-responder">Enviar resposta</button>
                 </div>
               </form>
             </div>
@@ -189,11 +211,7 @@
             <div class="bloco__corpo">
               <div class="campo">
                 <label for="mudar-status">Alterar status manualmente</label>
-                <select id="mudar-status">
-                  <option value="aberto">Aberto</option>
-                  <option value="andamento">Em andamento</option>
-                  <option value="respondido">Respondido</option>
-                  <option value="encerrado">Encerrado</option>
+                <select id="mudar-status" data-preencher="status-chamado">
                 </select>
                 <p class="campo__ajuda">Mudanças de status também notificam o responsável.</p>
               </div>
@@ -226,6 +244,7 @@
   </div>
 </div>
 
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/phygital.js"></script>
 <script>
@@ -260,6 +279,22 @@
     { de: 'sistema', texto: 'Chamado recebido — protocolo ' + ch.protocolo + '. Status: ' + st.rotulo + '.', hora: ch.abertoEm }
   ];
 
+  /* O anexo viaja DENTRO do texto da mensagem porque chamado_mensagens só tem a
+     coluna `texto`: qualquer campo extra posto no objeto da mensagem some na
+     releitura que PB.dados.atualizarChamado faz do servidor. O marcador é
+     gravado por esta tela e pela do competidor no mesmo formato, e aqui volta a
+     ser um link. O caminho é restrito a letras, números, ponto, hífen e
+     sublinhado — é o nome que /api/upload devolve, e limitá-lo aqui garante que
+     nada de dentro da mensagem escape para o href. */
+  var MARCA_ANEXO = /\[anexo:\s([^\]]*?)\s—\s(assets\/enviados\/[A-Za-z0-9._-]+)\]/g;
+
+  function corpoDaMensagem(texto) {
+    return esc(texto).replace(MARCA_ANEXO, function (tudo, nome, caminho) {
+      return '<a href="../' + caminho + '" target="_blank" rel="noopener" ' +
+             'style="color:var(--verde);font-weight:600">Anexo: ' + nome + '</a>';
+    });
+  }
+
   $('#conversa').innerHTML = msgs.map(function (m) {
     if (m.de === 'sistema') {
       return '<div class="msg msg--sistema">' + esc(m.texto) + '<div class="msg__hora">' + esc(m.hora) + '</div></div>';
@@ -267,7 +302,7 @@
     var org = m.de === 'org';
     return '<div class="msg msg--' + (org ? 'org' : 'usuario') + '">' +
       '<div class="msg__autor">' + esc(m.autor || (org ? 'Organização Phygital' : ch.time)) + '</div>' +
-      esc(m.texto) +
+      corpoDaMensagem(m.texto) +
       '<div class="msg__hora">' + esc(m.hora) + '</div>' +
     '</div>';
   }).join('');
@@ -302,9 +337,58 @@
            ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
+  /* ---- Anexo da resposta ----
+     O arquivo escolhido sobe para POST /api/upload por PB.enviarArquivo e o que
+     fica gravado é o caminho devolvido. Antes o arquivo era descartado e só o
+     nome entrava no texto: a conversa dizia "[anexo: laudo.png]" e não havia
+     laudo nenhum para abrir. */
+  var enviando = false;
+
+  function mostrarEnvio(texto, pct) {
+    $('#envio').hidden = false;
+    $('#envio-texto').textContent = texto;
+    $('#envio-barra').style.width = pct + '%';
+  }
+
+  function esconderEnvio() {
+    $('#envio').hidden = true;
+    $('#envio-barra').style.width = '0%';
+    $('#envio-remover').hidden = true;
+  }
+
+  /* Trava o botão enquanto o arquivo sobe: sem retorno na tela o operador clica
+     de novo e a mesma resposta entra duas vezes no protocolo. */
+  function travarEnvio(travado) {
+    enviando = travado;
+    var botao = $('#btn-responder');
+    botao.disabled = travado;
+    botao.textContent = travado ? 'Enviando…' : 'Enviar resposta';
+  }
+
+  /* Sem back-end (demonstração estática) o helper devolve data: URL. Serve para
+     um <img src>, não para dentro do texto de uma mensagem: são centenas de
+     milhares de caracteres que apareceriam crus na conversa e ainda iriam para
+     o servidor no dia em que a demonstração virar produção. Ali fica só o nome,
+     como no protótipo. */
+  function marcaDoAnexo(nome, caminho) {
+    return /^assets\/enviados\//.test(caminho)
+      ? '\n[anexo: ' + nome + ' — ' + caminho + ']'
+      : '\n[anexo: ' + nome + ']';
+  }
+
+  /* Saída para quem escolheu um arquivo que o servidor recusa: sem isto a
+     resposta não é gravada com o anexo e não há como desescolher o arquivo. */
+  $('#envio-remover').addEventListener('click', function () {
+    $('#anexo').value = '';
+    esconderEnvio();
+    PB.toast('Anexo removido', 'Envie a resposta de novo — agora só com o texto.', 'info');
+  });
+
   /* ---- Responder: grava a mensagem, muda o status e recarrega ---- */
   $('#form-resposta').addEventListener('submit', function (e) {
     e.preventDefault();
+    if (enviando) return;
+
     var texto = $('#resposta').value.trim();
     if (!texto) {
       $('#resposta').closest('.campo').classList.add('campo--erro');
@@ -312,20 +396,67 @@
       $('#resposta').focus();
       return;
     }
+
+    function gravar(marca) {
+      var salvou = D.atualizarChamado(ch.protocolo, {
+        status: 'respondido',
+        atualizadoEm: agora(),
+        mensagem: {
+          de: 'org', autor: 'Organização Phygital',
+          texto: texto + marca,
+          hora: agora()
+        }
+      });
+
+      /* Recusada pelo servidor (chamado encerrado, texto acima do limite, rede
+         fora): dados.js já mostrou o motivo e desfez a mudança no cache. Dizer
+         "enviada" aqui deixava os dois avisos na tela ao mesmo tempo. O texto
+         continua no campo para o operador corrigir e reenviar. */
+      if (!salvou) return;
+
+      D.registrar('chamado', ch.protocolo, 'respondeu', ch.time + ' · ' + ch.assunto);
+      PB.toast('Resposta enviada',
+        'O chamado passou para "Respondido" e um e-mail foi disparado ao responsável.', 'info');
+      PB.recarregar();
+    }
+
     var anexo = $('#anexo').files[0];
-    D.atualizarChamado(ch.protocolo, {
-      status: 'respondido',
-      atualizadoEm: agora(),
-      mensagem: {
-        de: 'org', autor: 'Organização Phygital',
-        texto: texto + (anexo ? ' [anexo: ' + anexo.name + ']' : ''),
-        hora: agora()
+    if (!anexo) { gravar(''); return; }
+
+    /* A classe define só o teto que o cliente confere antes de subir — o
+       servidor decide de novo pela assinatura. Sem isto o anexo em PDF ou
+       Word (100 MB) levaria "acima de 5 MB" antes de sair da tela. */
+    var classeAnexo = /\.(pdf|docx?|odt)$/i.test(anexo.name)
+      || /pdf|word|opendocument|msword/i.test(anexo.type || '')
+      ? 'documento' : 'imagem';
+
+    travarEnvio(true);
+    PB.enviarArquivo(anexo, {
+      classe: classeAnexo,
+      /* Antes do primeiro byte o progresso é 0: a barra aparece zerada, dizendo
+         que a tela não travou. */
+      aoProgresso: function (pct) {
+        mostrarEnvio(pct > 0
+          ? 'Enviando ' + anexo.name + ' — ' + pct + '%'
+          : 'Preparando o envio de ' + anexo.name + '…', pct);
       }
+    }, function (r) {
+      travarEnvio(false);
+
+      if (r.cancelado) { esconderEnvio(); return; }
+
+      if (!r.ok) {
+        /* Nada é gravado: o protocolo ficaria com um link para um arquivo que
+           não existe. O texto continua na tela para reenviar ou tirar o anexo. */
+        mostrarEnvio(r.erro, 0);
+        $('#envio-remover').hidden = false;
+        PB.toast('O anexo não subiu', r.erro, 'erro');
+        return;
+      }
+
+      esconderEnvio();
+      gravar(marcaDoAnexo(anexo.name, r.caminho));
     });
-    D.registrar('chamado', ch.protocolo, 'respondeu', ch.time + ' · ' + ch.assunto);
-    PB.toast('Resposta enviada',
-      'O chamado passou para "Respondido" e um e-mail foi disparado ao responsável.', 'info');
-    PB.recarregar();
   });
 
   /* ---- Alterar o status manualmente ---- */
@@ -336,11 +467,16 @@
       return;
     }
     var st = D.STATUS_CHAMADO[novoStatus];
-    D.atualizarChamado(ch.protocolo, {
+    var salvou = D.atualizarChamado(ch.protocolo, {
       status: novoStatus,
       atualizadoEm: agora(),
       mensagem: { de: 'sistema', texto: 'Status alterado para "' + st.rotulo + '" pela organização.', hora: agora() }
     });
+
+    /* Recusada: dados.js já avisou. A pílula continua com o status antigo, que
+       é o que o servidor tem; o seletor guarda a escolha para tentar de novo. */
+    if (!salvou) return;
+
     D.registrar('chamado', ch.protocolo, 'alterou o status para ' + st.rotulo, ch.time);
     PB.toast('Status atualizado', 'Agora: ' + st.rotulo + '. O responsável foi notificado por e-mail.', 'info');
     PB.recarregar();
@@ -351,11 +487,17 @@
     PB.confirmar('Encerrar chamado',
       'O chamado ' + ch.protocolo + ' sai da fila de atendimento e vai para o histórico de encerrados. Deseja encerrar?',
       function () {
-        D.atualizarChamado(ch.protocolo, {
+        var salvou = D.atualizarChamado(ch.protocolo, {
           status: 'encerrado',
           atualizadoEm: agora(),
           mensagem: { de: 'sistema', texto: 'Chamado encerrado pela organização.', hora: agora() }
         });
+
+        /* Recusada: fica na ficha, com o aviso de erro que dados.js mostrou.
+           Ir para a lista era o pior desfecho — o chamado continuava lá do
+           mesmo jeito e o operador só descobria na próxima vez que abrisse. */
+        if (!salvou) return;
+
         PB.toast('Chamado encerrado', 'Movido para a lista de encerrados e responsável notificado.', 'info');
         setTimeout(function () { location.href = 'chamados.html'; }, 1100);
       });

@@ -10,12 +10,6 @@
 <link rel="stylesheet" href="../assets/css/phygital.css">
 <link rel="stylesheet" href="../assets/css/painel.css">
 <style>
-  .doc-adm { border: 1px solid var(--linha-clara); border-radius: var(--r-3); margin-bottom: var(--e-2); overflow: hidden; }
-  .doc-adm__topo { display: flex; align-items: center; justify-content: space-between; gap: var(--e-3); padding: 10px var(--e-3); background: var(--claro); flex-wrap: wrap; }
-  .doc-adm__nome { font-family: var(--fonte-display); font-weight: 700; font-size: var(--t-peq); }
-  .doc-adm__linha { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--e-3); align-items: center; padding: 10px var(--e-3); border-top: 1px solid var(--linha-clara); }
-  .doc-adm__meta { font-size: var(--t-micro); color: var(--texto-suave); }
-  @media (max-width: 760px) { .doc-adm__linha { grid-template-columns: minmax(0,1fr); } }
   /* .campo__erro é display:flex no phygital.css e venceria o atributo [hidden] */
   .campo__erro[hidden] { display: none; }
   .painel__topo { flex-wrap: wrap; }
@@ -67,16 +61,27 @@
           Campeonatos
           <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="menu__sub">
-          <li><a href="campeonato-gerenciar.html?id=cbf-2026">Copa Futebol 2026</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbb-2026">Circuito Basquete 3x3</a></li>
-          <li><a href="campeonato-gerenciar.html?id=cbs-2026">Shooter Open 2026</a></li>
-          <li><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
+        <ul class="menu__sub" hidden data-submenu-campeonatos>
+          <li data-submenu-fim><a href="campeonato-novo.html">+ Criar Novo Campeonato</a></li>
         </ul>
       </div>
       <div class="menu__item"><a class="menu__link" href="campeonatos.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg> Gerenciar Campeonatos</a></div>
+      <div class="menu__item" aria-expanded="false">
+        <button class="menu__link" type="button" data-submenu aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Times Cadastrados
+          <svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="menu__sub" hidden>
+          <li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>
+          <li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>
+          <li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>
+          <li><a href="times-cadastrados.html?modalidade=dance">Danca</a></li>
+          <li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>
+        </ul>
+      </div>
       <div class="menu__item"><a class="menu__link" href="ranking.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h4V10H3zM10 20h4V4h-4zM17 20h4v-7h-4z"/></svg> Ranking</a></div>
-      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados>3</span></a></div>
+      <div class="menu__item"><a class="menu__link" href="chamados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chamados <span class="conta conta--alerta" data-conta-chamados hidden></span></a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
@@ -99,7 +104,6 @@
           <li><a href="email-modelos.html">Modelos de E-mail</a></li>
         </ul>
       </div>
-      <div class="menu__item"><a class="menu__link" href="auditoria.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg> Registro de Atividade</a></div>
       <div class="menu__item"><a class="menu__link" href="historico.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> Histórico</a></div>
       <div class="menu__item" aria-expanded="false">
         <button class="menu__link" type="button" data-submenu aria-expanded="false">
@@ -187,14 +191,6 @@
           </div>
 
           <div class="bloco">
-            <div class="bloco__topo">
-              <h2>Documentação do elenco</h2>
-              <span class="txt-peq txt-suave" id="resumo-docs">—</span>
-            </div>
-            <div class="bloco__corpo" id="lista-docs"></div>
-          </div>
-
-          <div class="bloco">
             <div class="bloco__topo"><h2>Comissão técnica</h2></div>
             <div class="bloco__corpo bloco__corpo--flat">
               <div class="tabela-wrap" style="border:0;border-radius:0">
@@ -246,10 +242,10 @@
             <form data-validar data-demo="Time movido de lista. E-mail enviado ao responsável.">
               <div class="campo">
                 <label for="nova-lista">Nova lista</label>
-                <select id="nova-lista">
-                  <option value="oficial">Lista Oficial — vaga confirmada</option>
-                  <option value="espera">Lista de Espera</option>
-                  <option value="triagem">Lista de Inscritos (triagem)</option>
+                <select id="nova-lista"
+                        data-preencher="status-inscricao"
+                        data-preencher-apenas="oficial,espera,triagem"
+                        data-preencher-rotulos='{"oficial":"Lista Oficial — vaga confirmada","espera":"Lista de Espera","triagem":"Lista de Inscritos (triagem)"}'>
                 </select>
               </div>
               <div class="campo">
@@ -306,29 +302,7 @@
   </div>
 </div>
 
-<div class="modal" id="modal-recusa" role="dialog" aria-modal="true" aria-labelledby="rec-titulo" aria-hidden="true">
-  <div class="modal__caixa" role="document">
-    <span class="fita"></span>
-    <div class="modal__corpo">
-      <h2 id="rec-titulo" style="font-size:1.375rem">Recusar documento</h2>
-      <p class="txt-peq txt-suave" id="rec-sub">—</p>
-      <form id="form-recusa" data-validar>
-        <input type="hidden" id="r-jogador"><input type="hidden" id="r-tipo">
-        <div class="campo">
-          <label for="r-motivo">Motivo da recusa <span class="obrigatorio">*</span></label>
-          <textarea id="r-motivo" required placeholder="Ex.: assinatura ilegível — reenviar a via assinada."></textarea>
-          <p class="campo__ajuda">O responsável vê este texto no painel e recebe por e-mail.</p>
-          <p class="campo__erro" hidden>Explique o motivo para o responsável poder corrigir.</p>
-        </div>
-        <div class="modal__acoes">
-          <button type="button" class="btn btn--fantasma" data-fechar-modal>Cancelar</button>
-          <button type="submit" class="btn btn--perigo">Recusar documento</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
+<script src="../assets/js/i18n.js"></script>
 <script src="../assets/js/dados.js"></script>
 <script src="../assets/js/exportar.js"></script>
 <script src="../assets/js/phygital.js"></script>
@@ -345,15 +319,72 @@
   var p = new URLSearchParams(location.search);
   var campId = p.get('camp') || 'cbf-2026';
   var c = D.campeonato(campId) || D.campeonato('cbf-2026');
-  var t = D.meusTimes().filter(function (x) { return x.modalidade === c.modalidade; })[0] || D.meusTimes()[0];
+  var chave = p.get('time') || '';
+
+  /* Esta ficha é de UM time e quem manda é o parâmetro ?time=. A lista de
+     inscritos do campeonato linka pelo protocolo da inscrição e outras telas
+     linkam pelo id do time, então os dois resolvem aqui. Antes a tela pegava o
+     primeiro time da modalidade e ignorava o parâmetro: o administrador abria
+     um protocolo e conferia o elenco de outro time.
+
+     A lista crua (tudo()) em vez de minhasInscricoes() porque inscrição
+     cancelada também tem ficha para consultar — ela só não aparece nas
+     listagens. */
+  var insc = null;
+  var t = null;
+  if (chave) {
+    var todasInscricoes = D.tudo().minhasInscricoes || [];
+    insc = todasInscricoes.filter(function (x) {
+      return x.protocolo === chave || x.id === chave;
+    })[0] || null;
+
+    t = insc ? D.time(insc.time) : D.time(chave);
+
+    /* Veio o id do time: a inscrição a exibir é a dele neste campeonato. */
+    if (t && !insc) {
+      insc = todasInscricoes.filter(function (x) {
+        return x.time === t.id && x.campeonato === campId;
+      })[0] || null;
+    }
+  }
+
+  /* Ficha resolvida uma vez; exposta em window.FICHA_TIME para blocos futuros
+     que precisem do mesmo trio (campeonato, time, inscrição) sem refazer a
+     resolução — evitar as duas metades da tela divergirem no mesmo problema. */
+  window.FICHA_TIME = { campeonato: c, time: t, inscricao: insc };
+
+  if (!c || !t) {
+    document.getElementById('conteudo').innerHTML =
+      '<div class="vazio"><h3>Time não encontrado</h3><p>' +
+      (chave
+        ? 'Nenhum time ou inscrição corresponde a “' + esc(chave) + '”. O registro pode ter sido removido.'
+        : 'Abra a ficha pela lista de inscritos do campeonato: é de lá que vem o time a exibir.') +
+      '</p><a class="btn btn--primario" href="campeonato-gerenciar.html?id=' + esc(campId) +
+      '">Voltar ao campeonato</a></div>';
+    return;
+  }
+
   var m = D.modalidade(t.modalidade);
 
+  /* Escudo e fotos gravados pelo cadastro são o caminho que /api/upload
+     devolveu, relativo à raiz do site; esta tela está um nível abaixo. */
+  function midia(caminho) {
+    return /^(data:|https?:|\.\.\/)/.test(caminho) ? caminho : '../' + caminho;
+  }
+
   $('#voltar-camp').href = 'campeonato-gerenciar.html?id=' + campId;
+  $('#time-escudo').src = t.escudo ? midia(t.escudo) : '../assets/img/mock/escudo-1.svg';
   $('#time-nome').textContent = t.nome;
   $('#time-meta').textContent = m.curto + (t.categoria ? ' · ' + t.categoria : '') +
     ' · criado em ' + F.data(t.criadoEm) + ' · ' + c.nome;
-  $('#time-lista').textContent = 'Lista Oficial';
-  $('#time-protocolo').textContent = 'Protocolo ' + (p.get('time') || '2026-000418');
+
+  /* Lista e protocolo saem da inscrição de verdade. Sem inscrição, a ficha diz
+     isso em vez de afirmar "Lista Oficial" e inventar um número de protocolo. */
+  var stIns = insc ? (D.STATUS_INSCRICAO[insc.status] || D.STATUS_INSCRICAO.triagem) : null;
+  $('#time-lista').textContent = stIns ? stIns.rotulo : 'Sem inscrição neste campeonato';
+  $('#time-lista').className = 'tag ' + (stIns ? stIns.classe : 'tag--cinza');
+  $('#time-protocolo').textContent = insc ? 'Protocolo ' + insc.protocolo : 'Sem protocolo';
+
   if (c.modalidade === 'dance') $('#excecao-danca').hidden = false;
 
   var jog = t.jogadores || [];
@@ -362,7 +393,11 @@
 
   $('#tabela-elenco').innerHTML = jog.map(function (j, i) {
     return '<tr>' +
-      '<td><img class="foto-mini" src="../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg" alt="Foto de ' + esc(j.nome) + '"></td>' +
+      /* A foto enviada pelo responsável é o que a exportação usa; mostrar o mock
+         no lugar dela escondia justamente quem ainda não enviou foto. */
+      '<td><img class="foto-mini" src="' +
+        esc(j.foto ? midia(j.foto) : '../assets/img/mock/jogador-' + ((i % 8) + 1) + '.svg') +
+        '" alt="Foto de ' + esc(j.nome) + '"></td>' +
       '<td><strong>' + esc(j.nome) + '</strong>' + (j.reserva ? ' <span class="tag tag--cinza">Reserva</span>' : '') + '</td>' +
       '<td>' + esc(j.apelido || '—') + '</td>' +
       '<td>' + (j.numero || '—') + '</td>' +
@@ -420,118 +455,13 @@
   });
 })();
 </script>
-<script>
-(function () {
-  var D = PB.dados;
-  var $ = function (s) { return document.querySelector(s); };
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  var pr = new URLSearchParams(location.search);
-  var camp = D.campeonato(pr.get('camp') || 'cbf-2026') || D.campeonato('cbf-2026');
-  var time = D.meusTimes().filter(function (x) { return x.modalidade === camp.modalidade; })[0] || D.meusTimes()[0];
-  if (!time) return;
-
-  function render() {
-    var t = D.time(time.id);
-    var resumo = D.documentacaoDoTime(t);
-    $('#resumo-docs').textContent = resumo.completo
-      ? 'documentação completa'
-      : resumo.ok + ' de ' + resumo.total + ' aprovados · ' + resumo.pendencias.length + ' pendência(s)';
-
-    $('#lista-docs').innerHTML =
-      '<div class="aviso' + (resumo.completo ? ' aviso--sucesso' : ' aviso--alerta') + ' mb-3"><div>' +
-        (resumo.completo
-          ? 'Todos os documentos obrigatórios foram aprovados. O time está liberado para a arena.'
-          : 'Há documentos faltando, vencidos ou recusados. Aprovar aqui libera o atleta; recusar avisa o responsável com o motivo.') +
-      '</div></div>' +
-      (t.jogadores || []).map(function (j, i) {
-        var docs = D.documentosDoJogador(j);
-        var faltam = docs.filter(function (d) { return d.obrigatorio && d.status !== 'aprovado'; }).length;
-        return '' +
-        '<div class="doc-adm">' +
-          '<div class="doc-adm__topo">' +
-            '<span class="doc-adm__nome">' + esc(j.nome) + '</span>' +
-            (faltam ? '<span class="tag tag--amarela">' + faltam + ' pendente(s)</span>'
-                    : '<span class="tag tag--verde">Completo</span>') +
-          '</div>' +
-          docs.map(function (d) {
-            var st = D.STATUS_DOCUMENTO[d.status];
-            var acoes = '';
-            if (d.arquivo && d.status !== 'aprovado') {
-              acoes += '<button class="btn btn--primario btn--pequeno" data-aprovar="' + i + ':' + d.tipo + '">Aprovar</button>';
-            }
-            if (d.arquivo && d.status !== 'recusado') {
-              acoes += '<button class="btn btn--perigo btn--pequeno" data-recusar="' + i + ':' + d.tipo + '">Recusar</button>';
-            }
-            if (!d.arquivo) acoes = '<span class="txt-micro txt-suave">aguardando envio</span>';
-
-            return '<div class="doc-adm__linha">' +
-              '<div>' +
-                '<div style="font-weight:600;font-size:var(--t-peq)">' + esc(d.nome) + '</div>' +
-                '<div class="doc-adm__meta">' + (d.arquivo ? esc(d.arquivo) : 'não enviado') +
-                  (d.validade ? ' · válido até ' + esc(PB.fmt.data(d.validade)) : '') + '</div>' +
-                (d.observacao ? '<div class="doc-adm__meta" style="color:var(--erro)">' + esc(d.observacao) + '</div>' : '') +
-              '</div>' +
-              '<span class="tag ' + st.classe + '">' + st.rotulo + '</span>' +
-              '<div class="linha-acoes">' + acoes + '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>';
-      }).join('');
-  }
-
-  document.addEventListener('click', function (e) {
-    var ap = e.target.closest('[data-aprovar]');
-    if (ap) {
-      var p = ap.getAttribute('data-aprovar').split(':');
-      var t = D.time(time.id);
-      var doc = (t.jogadores[p[0]].documentos || []).filter(function (x) { return x.tipo === p[1]; })[0];
-      D.gravarDocumento(time.id, parseInt(p[0], 10), {
-        tipo: p[1], arquivo: doc ? doc.arquivo : null,
-        validade: doc ? doc.validade : null, status: 'aprovado', observacao: null
-      });
-      PB.toast('Documento aprovado', 'O responsável foi avisado por e-mail.', 'info');
-      PB.recarregar();
-      return;
-    }
-
-    var rc = e.target.closest('[data-recusar]');
-    if (rc) {
-      var q = rc.getAttribute('data-recusar').split(':');
-      var t2 = D.time(time.id);
-      $('#r-jogador').value = q[0];
-      $('#r-tipo').value = q[1];
-      $('#rec-sub').textContent = t2.jogadores[q[0]].nome + ' · ' + D.TIPOS_DOCUMENTO[q[1]].nome;
-      $('#r-motivo').value = '';
-      PB.abrirModal('modal-recusa');
-    }
-  });
-
-  $('#form-recusa').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var motivo = $('#r-motivo').value.trim();
-    if (!motivo) { $('#r-motivo').focus(); return; }
-    var i = parseInt($('#r-jogador').value, 10);
-    var t = D.time(time.id);
-    var doc = (t.jogadores[i].documentos || []).filter(function (x) { return x.tipo === $('#r-tipo').value; })[0];
-    D.gravarDocumento(time.id, i, {
-      tipo: $('#r-tipo').value,
-      arquivo: doc ? doc.arquivo : null,
-      validade: doc ? doc.validade : null,
-      status: 'recusado', observacao: motivo
-    });
-    PB.fecharModal('modal-recusa');
-    PB.toast('Documento recusado', 'O responsável recebeu o motivo por e-mail.', 'info');
-    PB.recarregar();
-  });
-
-  render();
-})();
-</script>
+<!--
+  Bloco de aprovar/recusar documentação do elenco removido do fluxo do admin:
+  a UI de conferência de RG, autorização de imagem e atestado saiu da ficha.
+  As funções em PB.dados (documentacaoDoTime, documentosDoJogador,
+  gravarDocumento) e a tabela `documentos` no esquema seguem intactos — se a
+  organização voltar a exigir conferência, este é o ponto de reintrodução.
+-->
 
 </body>
 </html>
