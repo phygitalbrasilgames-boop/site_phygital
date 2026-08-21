@@ -147,7 +147,7 @@
       staffMax: 1,
       staffRotulo: 'Staff (opcional)',
       temCategoria: false,
-      temNumeroCamisa: true,
+      temNumeroCamisa: false,
       temFuncao: false,
       temSteam: false,
       individual: true,
@@ -1654,6 +1654,16 @@
     meusTimes: function () {
       return carregar().meusTimes.filter(function (t) { return !t.arquivado; });
     },
+    /* Todos os times visíveis nesta sessão, opcionalmente filtrados por
+       modalidade. No painel do administrador o /api/bootstrap enche a coleção
+       `meusTimes` com o conjunto retornado por GET /times — que para admin já
+       vem sem o WHERE conta_id, então esta função devolve o parque inteiro.
+       No painel do competidor devolve apenas os times do dono. */
+    todosTimes: function (modalidade) {
+      var lista = carregar().meusTimes.filter(function (t) { return !t.arquivado; });
+      if (modalidade) lista = lista.filter(function (t) { return t.modalidade === modalidade; });
+      return lista;
+    },
     time: function (id) { return carregar().meusTimes.filter(function (t) { return t.id === id; })[0] || null; },
     minhasInscricoes: function () {
       return (carregar().minhasInscricoes || []).filter(function (i) { return !i.arquivado; });
@@ -2083,7 +2093,15 @@
     },
 
     /* ---- Times e elenco ---- */
-    times: function () { return pedir('GET', '/times'); },
+    /* Aceita { modalidade } — o servidor aplica o filtro só no painel do
+       administrador; no painel do competidor o filtro é ignorado e a resposta
+       vem restrita ao dono da sessão. */
+    times: function (filtro) {
+      var q = [];
+      if (filtro && filtro.modalidade) q.push('modalidade=' + encodeURIComponent(filtro.modalidade));
+      if (filtro && filtro.conta) q.push('conta=' + encodeURIComponent(filtro.conta));
+      return pedir('GET', '/times' + (q.length ? '?' + q.join('&') : ''));
+    },
     time: function (id) { return pedir('GET', '/times/' + encodeURIComponent(id)); },
     salvarTime: function (time) {
       return time && time.id
