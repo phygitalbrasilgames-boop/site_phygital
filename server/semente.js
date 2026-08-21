@@ -550,7 +550,19 @@ const MODELOS_EMAIL = [
   { id: 'adm-falha-envio', grupo: 'Alertas do administrador', nome: 'Falha no envio de e-mail',
     quando: 'Quando o servidor SMTP recusa um envio.',
     para: 'admin', assunto: '[ADM] Falha no envio de e-mail',
-    corpo: '<p>O servidor <b>{{smtp.servidor}}</b> recusou um envio em {{data}}.</p><p>Verifique as configurações em Disparo de E-mail → Configurações.</p>' }
+    corpo: '<p>O servidor <b>{{smtp.servidor}}</b> recusou um envio em {{data}}.</p><p>Verifique as configurações em Disparo de E-mail → Configurações.</p>' },
+
+  /* Cadastro de administrador feito por outro master: o próprio recebe a senha
+     temporária no e-mail cadastrado e é levado à tela de primeiro acesso, onde
+     define a definitiva e confirma o endereço pelo código. */
+  { id: 'admin-conta-criada', grupo: 'Alertas do administrador', nome: 'Novo administrador cadastrado',
+    quando: 'Quando o master cadastra um novo usuário no painel de administração.',
+    para: 'admin', assunto: 'Sua conta no painel foi criada — senha temporária',
+    corpo: '<p>Olá, <b>{{usuario.nome}}</b>.</p>'
+      + '<p>Uma conta administrativa foi criada para você na Phygital Brasil com o e-mail <b>{{usuario.email}}</b> e o nível <b>{{usuario.nivel}}</b>.</p>'
+      + '<p>Senha temporária: <b>{{senha.temporaria}}</b></p>'
+      + '<p>No primeiro acesso o sistema pede que você defina uma nova senha e confirme o endereço pelo código enviado a este e-mail. Só depois disso o painel é liberado.</p>'
+      + '<p>Acesse a tela de primeiro acesso em <a href="/painel/primeiro-acesso.html">painel/primeiro-acesso.html</a>.</p>' }
 ];
 
 /* Histórico de disparos já feitos. `data` mantém o formato da semente porque a
@@ -1401,4 +1413,35 @@ if (require.main === module) {
   process.exit(codigo);
 }
 
-module.exports = { semear };
+/**
+ * Só os modelos de e-mail: usado por server/index.js em toda subida.
+ * Como `inserir()` é idempotente pela chave `id`, rodar de novo num banco já
+ * semeado não duplica nada — só acrescenta modelos novos que ainda não estão
+ * gravados (foi o que trouxe `admin-conta-criada` para bancos antigos sem
+ * precisar de --recriar).
+ *
+ * Zera as contagens antes e restaura depois: senão a próxima chamada a semear()
+ * imprimiria os modelos nesta contagem também.
+ */
+function migrarModelosEmail() {
+  const anteriores = new Map(contagens);
+  contagens.clear();
+
+  db.transacao(() => {
+    for (const m of MODELOS_EMAIL) {
+      inserir('modelos_email', {
+        id: m.id, grupo: m.grupo, nome: m.nome, quando: m.quando,
+        para: m.para, assunto: m.assunto, corpo: m.corpo,
+        ativo: 1, atualizado_em: null
+      });
+    }
+  });
+
+  const acrescentados = contagens.get('modelos_email');
+  contagens.clear();
+  for (const [k, v] of anteriores) contagens.set(k, v);
+
+  return acrescentados ? acrescentados.inseridos : 0;
+}
+
+module.exports = { semear, migrarModelosEmail };

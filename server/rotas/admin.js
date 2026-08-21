@@ -33,6 +33,7 @@ const auth = require('../auth');
 const regras = require('../regras');
 const mapa = require('../mapa');
 const traducoes = require('../traducoes');
+const correio = require('../email');
 const { erro400, erro403, erro404, erro409 } = require('../http');
 
 /* --------------------------------------------------------------------------
@@ -282,6 +283,24 @@ async function criarUsuario(ctx) {
     );
 
     regras.registrar(ctx, 'usuario', nome, 'cadastrou um administrador', `${email} · nível ${nivel}`);
+
+    /* Entrega a senha temporária ao próprio novo administrador — sem este
+       envio ele não teria como acessar o painel, e a tela do master claramente
+       promete "a senha temporária foi enviada por e-mail". O modeloId aponta
+       para MODELOS_EMAIL['admin-conta-criada']; correio.enviar() não lança —
+       se o SMTP recusar, a linha vira 'falhou' em emails_enviados e a
+       transação não é desfeita: perder o cadastro por causa do e-mail seria
+       pior que registrar a falha e o master reenviar. */
+    correio.enviar({
+      modeloId: 'admin-conta-criada',
+      para: email,
+      destino: 'Novo administrador',
+      contexto: {
+        usuario: { nome, email, telefone: telefone || '', nivel },
+        senha: { temporaria: senha }
+      },
+      qtd: 1
+    });
   });
 
   ctx.ok({

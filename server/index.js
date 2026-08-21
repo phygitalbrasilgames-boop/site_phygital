@@ -349,6 +349,17 @@ if (require.main === module) {
     } catch (e) {
       console.error('Falha ao semear:', e.message);
     }
+  } else {
+    /* Banco já semeado: garante que templates de e-mail acrescentados em
+       versões posteriores (como `admin-conta-criada`) apareçam sem exigir
+       --recriar. INSERT é idempotente pela chave `id`, então o que já existe
+       fica intocado. */
+    try {
+      const novos = require('./semente').migrarModelosEmail();
+      if (novos) console.log(`Modelos de e-mail: ${novos} novo(s) template(s) instalado(s).`);
+    } catch (e) {
+      console.error('Falha ao migrar modelos de e-mail:', e.message);
+    }
   }
 
   subir(porta, 12);
