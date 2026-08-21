@@ -1138,6 +1138,137 @@
   }
 
   /* ---------------------------------------------------------------------
+     SELECTS POPULADOS A PARTIR DE PB.dados
+
+     Fonte única de verdade: modalidade nova ou status renomeado em dados.js
+     aparece em todos os <select data-preencher="..."> sem tocar em HTML.
+
+     Uso:
+       <select data-preencher="modalidades">
+         <option value="todas">Todas as modalidades</option>
+       </select>
+
+     Fontes reconhecidas:
+       modalidades       — PB.dados.MODALIDADES (value = id, texto = curto)
+       status-inscricao  — PB.dados.STATUS_INSCRICAO
+       status-chamado    — PB.dados.STATUS_CHAMADO
+
+     Atributos opcionais no <select>:
+       data-preencher-antes="SELETOR"  insere as opções ANTES do primeiro
+                                        elemento que casar (útil para manter
+                                        um "Outra Modalidade" no final).
+                                        Sem isso, opções são anexadas.
+       data-preencher-apenas="a,b,c"   filtra e ORDENA a coleção.
+       data-preencher-rotulos='{"a":"Rótulo customizado"}'  substitui o
+                                        rótulo default pelo texto informado.
+
+     Roda cedo (no parse do phygital.js) porque scripts inline logo abaixo já
+     costumam ler .value do select. É idempotente: opções inseridas ganham
+     data-preencher-item e são removidas em chamadas subsequentes antes de
+     recriar. Se PB.dados não estiver pronto ou uma coleção faltar, o select
+     fica com as opções hardcoded que restaram no HTML (fallback silencioso,
+     apenas console.warn).
+     --------------------------------------------------------------------- */
+  function iniciarSelectsDados() {
+    var selects = $$('select[data-preencher]');
+    if (!selects.length) return;
+    if (!global.PB || !PB.dados) return;
+
+    var fontes = {
+      modalidades: function () {
+        var m = PB.dados.MODALIDADES;
+        if (!m) return null;
+        return Object.keys(m).map(function (k) {
+          var it = m[k] || {};
+          return { valor: it.id || k, texto: it.curto || it.nome || k };
+        });
+      },
+      'status-inscricao': function () {
+        var s = PB.dados.STATUS_INSCRICAO;
+        if (!s) return null;
+        return Object.keys(s).map(function (k) {
+          var it = s[k] || {};
+          return { valor: it.id || k, texto: it.rotulo || k };
+        });
+      },
+      'status-chamado': function () {
+        var s = PB.dados.STATUS_CHAMADO;
+        if (!s) return null;
+        return Object.keys(s).map(function (k) {
+          var it = s[k] || {};
+          return { valor: it.id || k, texto: it.rotulo || k };
+        });
+      }
+    };
+
+    selects.forEach(function (sel) {
+      var tipo = sel.getAttribute('data-preencher');
+      var fn = fontes[tipo];
+      if (!fn) {
+        console.warn('[phygital] data-preencher desconhecido:', tipo);
+        return;
+      }
+      var itens = fn();
+      if (!itens || !itens.length) {
+        console.warn('[phygital] coleção vazia para data-preencher=' + tipo + '; mantendo opções do HTML');
+        return;
+      }
+
+      var apenas = sel.getAttribute('data-preencher-apenas');
+      if (apenas) {
+        var chaves = apenas.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        var mapa = {};
+        itens.forEach(function (it) { mapa[it.valor] = it; });
+        itens = chaves.map(function (k) { return mapa[k]; }).filter(Boolean);
+      }
+
+      var rot = sel.getAttribute('data-preencher-rotulos');
+      if (rot) {
+        try {
+          var rotulos = JSON.parse(rot);
+          itens = itens.map(function (it) {
+            return { valor: it.valor, texto: rotulos[it.valor] || it.texto };
+          });
+        } catch (_) {
+          console.warn('[phygital] data-preencher-rotulos com JSON inválido em', sel.id || sel);
+        }
+      }
+
+      /* Preserva o valor selecionado (querystring, script inline, ou default). */
+      var valorAtual = sel.value;
+
+      /* Ponto de inserção — antes de qual opção estática. Sem isso: append. */
+      var seletorAntes = sel.getAttribute('data-preencher-antes');
+      var alvoAntes = seletorAntes ? sel.querySelector(seletorAntes) : null;
+
+      /* Remove opções que este popularizador criou anteriormente (idempotência). */
+      Array.prototype.forEach.call(sel.querySelectorAll('option[data-preencher-item]'), function (o) {
+        o.parentNode && o.parentNode.removeChild(o);
+      });
+
+      itens.forEach(function (it) {
+        var op = doc.createElement('option');
+        op.value = it.valor;
+        op.textContent = it.texto;
+        op.setAttribute('data-preencher-item', '');
+        if (alvoAntes && alvoAntes.parentNode === sel) sel.insertBefore(op, alvoAntes);
+        else sel.appendChild(op);
+      });
+
+      if (valorAtual) {
+        var existe = Array.prototype.some.call(sel.options, function (o) { return o.value === valorAtual; });
+        if (existe) sel.value = valorAtual;
+      }
+    });
+  }
+  PB.preencherSelects = iniciarSelectsDados;
+
+  /* Roda AGORA, no parse — scripts inline abaixo desta tag <script> já leem
+     o .value do select. Chamada extra em iniciar() cobre selects que só
+     entram no DOM depois. */
+  try { iniciarSelectsDados(); } catch (_) {}
+
+  /* ---------------------------------------------------------------------
      SAIR DA CONTA
      --------------------------------------------------------------------- */
   function iniciarSair() {
@@ -1396,6 +1527,75 @@
   }
 
   /* ---------------------------------------------------------------------
+     MENU LATERAL DO ADMIN — GARANTIA DO ITEM "TIMES CADASTRADOS"
+
+     O item entra em todas as vinte páginas do admin pelo HTML. Este passo
+     é um cinto de segurança: se em alguma tela ele não estiver ali —
+     esquecido numa página nova, perdido num HTML em cache, ou escondido
+     por engano por outro passo — a função injeta o botão + submenu no
+     lugar certo (logo depois de "Gerenciar Campeonatos") e garante que
+     ele não esteja `display:none`. Roda só no admin; nas páginas do
+     competidor sai sem fazer nada.
+
+     Precisa correr ANTES de iniciarPainel() para que o botão injetado
+     receba o handler de submenu-click junto com os outros.
+     --------------------------------------------------------------------- */
+  function garantirMenuTimes() {
+    if (!/\/admin\//.test(global.location.pathname)) return;
+    var lateral = $('.painel__lateral');
+    if (!lateral) return;
+
+    /* Item já está no HTML da página: só cuida de não estar escondido. */
+    var existente = $('a[href^="times-cadastrados.html"]', lateral);
+    if (existente) {
+      var itemExistente = existente.closest('.menu__item');
+      if (itemExistente) {
+        if (itemExistente.hidden) itemExistente.hidden = false;
+        if (itemExistente.style.display === 'none') itemExistente.style.display = '';
+      }
+      return;
+    }
+
+    var item = doc.createElement('div');
+    item.className = 'menu__item';
+    item.setAttribute('aria-expanded', 'false');
+    item.innerHTML =
+      '<button class="menu__link" type="button" data-submenu aria-expanded="false">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
+          '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>' +
+          '<path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>' +
+        '</svg>' +
+        ' Times Cadastrados ' +
+        '<svg class="menu__toggle-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>' +
+      '</button>' +
+      '<ul class="menu__sub" hidden>' +
+        '<li><a href="times-cadastrados.html?modalidade=futebol">Futebol</a></li>' +
+        '<li><a href="times-cadastrados.html?modalidade=basquete">Basquete</a></li>' +
+        '<li><a href="times-cadastrados.html?modalidade=shooter">Shooter</a></li>' +
+        '<li><a href="times-cadastrados.html?modalidade=dance">Dança</a></li>' +
+        '<li><a href="times-cadastrados.html?modalidade=outros">Outros</a></li>' +
+      '</ul>';
+
+    /* Alvo primário: logo depois do link "Gerenciar Campeonatos". Se ele
+       não existir na página (menu podado por conta de papel/permissão),
+       tenta antes de "Ranking"; se nem esse existir, cai no fim da nav. */
+    var apos = $('a.menu__link[href="campeonatos.html"]', lateral);
+    var itemApos = apos && apos.closest('.menu__item');
+    if (itemApos && itemApos.parentNode) {
+      itemApos.parentNode.insertBefore(item, itemApos.nextSibling);
+      return;
+    }
+    var antes = $('a.menu__link[href="ranking.html"]', lateral);
+    var itemAntes = antes && antes.closest('.menu__item');
+    if (itemAntes && itemAntes.parentNode) {
+      itemAntes.parentNode.insertBefore(item, itemAntes);
+      return;
+    }
+    var nav = $('.menu', lateral) || lateral;
+    nav.appendChild(item);
+  }
+
+  /* ---------------------------------------------------------------------
      ANO CORRENTE NO RODAPÉ
      --------------------------------------------------------------------- */
   function iniciarAno() {
@@ -1414,6 +1614,7 @@
     iniciarAbas();
     iniciarFiltros();
     iniciarModais();
+    garantirMenuTimes();
     iniciarPainel();
     iniciarIdentidade();
     iniciarSplash();
@@ -1423,6 +1624,7 @@
     iniciarContadoresMenu();
     iniciarSubmenuAtivo();
     iniciarSubmenuCampeonatos();
+    iniciarSelectsDados();
     iniciarSair();
     iniciarAno();
     if (typeof PB.aoIniciar === 'function') PB.aoIniciar();

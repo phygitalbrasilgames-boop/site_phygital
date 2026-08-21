@@ -175,12 +175,11 @@
 
               <div class="campo">
                 <label for="modalidade">Modalidade <span class="obrigatorio">*</span></label>
-                <select id="modalidade" name="modalidade" required>
+                <select id="modalidade" name="modalidade" required
+                        data-preencher="modalidades"
+                        data-preencher-apenas="futebol,basquete,shooter,dance"
+                        data-preencher-antes='option[value="outra"]'>
                   <option value="">Selecione…</option>
-                  <option value="futebol">Futebol</option>
-                  <option value="basquete">Basquete</option>
-                  <option value="shooter">Shooter</option>
-                  <option value="dance">Dança</option>
                   <option value="outra">Outra Modalidade</option>
                 </select>
                 <p class="campo__erro" hidden>Escolha a modalidade.</p>

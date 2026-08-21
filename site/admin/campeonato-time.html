@@ -242,10 +242,10 @@
             <form data-validar data-demo="Time movido de lista. E-mail enviado ao responsável.">
               <div class="campo">
                 <label for="nova-lista">Nova lista</label>
-                <select id="nova-lista">
-                  <option value="oficial">Lista Oficial — vaga confirmada</option>
-                  <option value="espera">Lista de Espera</option>
-                  <option value="triagem">Lista de Inscritos (triagem)</option>
+                <select id="nova-lista"
+                        data-preencher="status-inscricao"
+                        data-preencher-apenas="oficial,espera,triagem"
+                        data-preencher-rotulos='{"oficial":"Lista Oficial — vaga confirmada","espera":"Lista de Espera","triagem":"Lista de Inscritos (triagem)"}'>
                 </select>
               </div>
               <div class="campo">
