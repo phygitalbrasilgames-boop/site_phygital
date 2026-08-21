@@ -502,18 +502,16 @@
       e.preventDefault();
       if (enviando) return;
 
-      function abrir(marca) {
-        var protocolo = novoProtocolo();
-        var campo = document.getElementById('ch-camp');
+      function inserirNaLista(protocolo, campeonatoId, assunto, mensagem) {
         var novo = {
           id: 'novo',
           protocolo: protocolo,
-          assunto: document.getElementById('ch-assunto').value,
-          campeonato: campo.value === 'geral' ? '' : campo.value,
+          assunto: assunto,
+          campeonato: campeonatoId,
           status: 'aberto',
           abertoEm: hojeISO(),
           atualizadoEm: hojeISO(),
-          mensagens: [{ de: 'usuario', texto: document.getElementById('ch-msg').value + marca }]
+          mensagens: [{ de: 'usuario', texto: mensagem }]
         };
 
         var lista = document.getElementById('lista-abertos');
@@ -535,6 +533,46 @@
         PB.toast('Chamado registrado',
           'Protocolo ' + protocolo + '. A confirmação foi enviada para ' + usuario.email +
           ' e a organização responde em até 2 dias úteis.', 'info');
+      }
+
+      /* Sem esta chamada o modal só inseria uma linha decorativa no DOM: o
+         chamado nunca era gravado no servidor e a fila do administrador nunca
+         via o pedido. Agora `abrir()` faz o POST /api/chamados quando há
+         back-end e, só depois da resposta, monta a linha na lista — usando o
+         protocolo real devolvido pela API. No modo estático (sem back-end) o
+         comportamento antigo de mock local é preservado. */
+      function abrir(marca) {
+        var campo = document.getElementById('ch-camp');
+        var assunto = document.getElementById('ch-assunto').value;
+        var categoria = document.getElementById('ch-categoria').value;
+        var mensagem = document.getElementById('ch-msg').value + marca;
+        var campeonatoId = campo.value === 'geral' ? '' : campo.value;
+
+        var temApi = D.modo && D.modo() === 'api' && PB.api && PB.api.abrirChamado;
+        if (!temApi) {
+          inserirNaLista(novoProtocolo(), campeonatoId, assunto, mensagem);
+          return;
+        }
+
+        travarEnvio(true);
+        PB.api.abrirChamado({
+          assunto: assunto,
+          texto: mensagem,
+          categoria: categoria,
+          campeonatoId: campeonatoId
+        }).then(function (r) {
+          travarEnvio(false);
+          if (!r || !r.ok) {
+            /* Chamado não foi criado: mantém o modal aberto para o usuário
+               tentar de novo — sem toast fake de sucesso. */
+            var msg = (r && r.erro) || 'Não foi possível abrir o chamado agora.';
+            PB.toast('O chamado não foi aberto', msg, 'erro');
+            return;
+          }
+          var chamado = r.dados && r.dados.chamado;
+          var protocolo = (chamado && chamado.protocolo) || novoProtocolo();
+          inserirNaLista(protocolo, campeonatoId, assunto, mensagem);
+        });
       }
 
       var anexo = document.getElementById('ch-anexo').files[0];
